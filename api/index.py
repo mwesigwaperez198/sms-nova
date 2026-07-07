@@ -35,8 +35,11 @@ try:
 except Exception as e:
     results["api_router"] = "err: " + str(e)
 
+app = None
+
 try:
-    from app.main import app
+    from app.main import app as _main_app
+    app = _main_app
     results["main_app"] = "ok"
 except Exception as e:
     results["main_app"] = "err: " + str(e)
