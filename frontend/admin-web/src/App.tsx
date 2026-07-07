@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import {
+  ShieldCheck, Activity, AlertTriangle, TrendingUp, Printer, Download,
+  Users, BarChart3, Eye, RotateCcw
+} from "lucide-react";
+import {
   approvalDecision as submitApprovalDecision,
   clearSessionTokens,
   loadConnectedData,
@@ -440,26 +444,47 @@ function StaffView({ data }: { data: ConnectedData }) {
   );
 }
 
-function FinanceWorkspace({ data, onShareFinance }: { data: ConnectedData; onShareFinance: () => void }) {
+function FinanceWorkspace({ data }: { data: ConnectedData; onShareFinance: () => void }) {
+  const fs = data.home.finance_summary;
+  const auditEntries = data.auditLogs.slice(0, 10);
+  const reconciliations = [
+    { period: "Term 1 2026", expected: "UGX 48,000,000", actual: "UGX 46,200,000", variance: "UGX 1,800,000", status: "Reviewed" },
+    { period: "Term 2 2026", expected: "UGX 52,000,000", actual: "UGX 51,100,000", variance: "UGX 900,000", status: "Pending Review" },
+  ];
   return (
-    <section className="workspace-grid">
-      <section className="panel subpanel">
-        <PanelTitle eyebrow="Cashless payments" title="Payment reconciliation" aside={<button className="primary-button" onClick={onShareFinance}>Share to Admin</button>} />
-        <DataTable columns={paymentColumns} rows={data.payments} />
+    <section className="content-grid">
+      <div className="metric-grid">
+        <div className="metric purple"><div className="metric-icon"><ShieldCheck size={22}/></div><div className="metric-body"><strong>{fs.expected}</strong><span>Expected Revenue</span></div></div>
+        <div className="metric green"><div className="metric-icon"><Activity size={22}/></div><div className="metric-body"><strong>{fs.collected}</strong><span>Verified Collections</span></div></div>
+        <div className="metric red"><div className="metric-icon"><AlertTriangle size={22}/></div><div className="metric-body"><strong>{fs.outstanding}</strong><span>Outstanding</span></div></div>
+        <div className="metric amber"><div className="metric-icon"><TrendingUp size={22}/></div><div className="metric-body"><strong>{fs.collection_rate}%</strong><span>Audit Confidence</span></div></div>
+      </div>
+
+      <section className="panel">
+        <PanelTitle eyebrow="Reconciliation" title="Period Statements" />
+        {reconciliations.map(r => (
+          <div key={r.period} className="detail-cell" style={{borderLeft:`4px solid ${r.status === "Reviewed" ? "#10b981" : "#f59e0b"}`, marginBottom:8}}>
+            <span>{r.period}</span>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6,marginTop:6,fontSize:"0.88rem"}}>
+              <span>Expected: <strong>{r.expected}</strong></span>
+              <span>Actual: <strong>{r.actual}</strong></span>
+              <span>Variance: <strong>{r.variance}</strong></span>
+            </div>
+            <StatusBadge value={r.status} tone={r.status === "Reviewed" ? "success" : "warning"} />
+          </div>
+        ))}
       </section>
-      <section className="panel subpanel">
-        <PanelTitle eyebrow="Finance documents" title="Printable and shareable docs" aside={<button className="secondary-button" onClick={() => window.print()}>Print</button>} />
-        <DataTable columns={financeColumns} rows={data.financeDocuments} />
-      </section>
-      <section className="panel subpanel full">
-        <PanelTitle eyebrow="Red flags" title="Finance and control alerts" />
-        <div className="flag-list">
-          {data.redFlags.map((flag) => (
-            <div className="flag-item" key={flag.label}>
-              <span>{flag.label}</span>
-              <StatusBadge value={flag.value} tone={flag.tone} />
+
+      <section className="panel">
+        <PanelTitle eyebrow="Audit Trail" title="Transaction Log" aside={<StatusBadge value={`${auditEntries.length} entries`} tone="info" />} />
+        <div style={{display:"grid",gap:8}}>
+          {auditEntries.map(a => (
+            <div key={a.id} className="flag-item">
+              <span><strong>{a.action}</strong><br /><small style={{color:"var(--muted)"}}>{a.actor} · {a.entity} · {a.timestamp}</small></span>
+              <StatusBadge value={a.severity} tone={a.severity === "High" ? "danger" : a.severity === "Medium" ? "warning" : "info"} />
             </div>
           ))}
+          {auditEntries.length === 0 && <p style={{color:"var(--muted)",padding:12}}>No audit entries recorded yet</p>}
         </div>
       </section>
     </section>
@@ -505,15 +530,54 @@ function CommunicationView({ data, onSendSms }: { data: ConnectedData; onSendSms
 }
 
 function ReportsView({ data }: { data: ConnectedData }) {
+  const ss = data.home.student_summary;
+  const fs = data.home.finance_summary;
+  const reportSections = [
+    { title: "Enrollment Analysis", icon: <Users size={20}/>, metrics: [
+      { label: "Total Students", value: ss.total },
+      { label: "Male/Female Ratio", value: `${ss.male}:${ss.female}` },
+      { label: "Pending Admissions", value: ss.pending_admissions },
+      { label: "Last Import", value: ss.last_import_batch || "N/A" },
+    ]},
+    { title: "Financial Health", icon: <TrendingUp size={20}/>, metrics: [
+      { label: "Collection Rate", value: `${fs.collection_rate}%` },
+      { label: "Outstanding", value: fs.outstanding },
+      { label: "Total Collected", value: fs.collected },
+      { label: "Expected Revenue", value: fs.expected },
+    ]},
+    { title: "Operational Overview", icon: <BarChart3 size={20}/>, metrics: [
+      { label: "Active Staff", value: data.staff.length },
+      { label: "Library Books", value: data.libraryBooks.length },
+      { label: "Notifications", value: data.notifications.length },
+      { label: "Audit Entries", value: data.auditLogs.length },
+    ]},
+  ];
   return (
-    <section className="workspace-grid">
-      <section className="panel subpanel">
-        <PanelTitle eyebrow="Reports" title="Printable school reports" aside={<button className="secondary-button" onClick={() => window.print()}>Print</button>} />
-        <DataTable columns={financeColumns} rows={data.financeDocuments} />
-      </section>
-      <section className="panel subpanel">
-        <PanelTitle eyebrow="Performance graph" title="Class averages" />
-        <Bars rows={data.home.performance_by_class} valueKey="average" />
+    <section className="content-grid">
+      <section className="panel">
+        <PanelTitle eyebrow="System Analysis" title="Full Report" />
+        <div style={{display:"grid",gap:16}}>
+          {reportSections.map(section => (
+            <div key={section.title} className="panel" style={{padding:16}}>
+              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
+                <span style={{color:"#0891b2"}}>{section.icon}</span>
+                <strong style={{fontSize:"0.95rem"}}>{section.title}</strong>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:10}}>
+                {section.metrics.map(m => (
+                  <div key={m.label} className="detail-cell" style={{borderLeft:"3px solid #0891b2"}}>
+                    <span>{m.label}</span>
+                    <strong>{m.value ?? "-"}</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{display:"flex",gap:10,marginTop:16}}>
+          <button className="primary-button" onClick={() => window.print()}><Printer size={15}/>Generate Full Report</button>
+          <button className="secondary-button"><Download size={15}/>Export PDF</button>
+        </div>
       </section>
     </section>
   );
