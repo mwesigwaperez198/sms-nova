@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "Nova SMS",
+    "slug": "nova-sms-mobile",
+    "scheme": "novasms",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "plugins": ["expo-router"]
+  }
+}

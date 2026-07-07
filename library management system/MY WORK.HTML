@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Library Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-dark: #1a237e;
+            --primary: #283593;
+            --primary-light: #5c6bc0;
+            --accent: #ff6f00;
+            --accent-light: #ffa040;
+            --sidebar-width: 260px;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+        .top-navbar {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            padding: 0 1.5rem;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1030;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+        }
+        .top-navbar .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #fff;
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .top-navbar .brand i { font-size: 1.6rem; color: var(--accent-light); }
+        .top-navbar .brand span small {
+            font-weight: 400;
+            font-size: 0.75rem;
+            opacity: 0.8;
+            display: block;
+        }
+        .top-navbar .stats-bar {
+            display: flex;
+            gap: 1.5rem;
+            color: rgba(255,255,255,0.85);
+            font-size: 0.85rem;
+        }
+        .top-navbar .stats-bar .stat-item {
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            padding: 4px 16px;
+            border-radius: 20px;
+        }
+        .top-navbar .stats-bar .stat-item strong {
+            display: block;
+            font-size: 1.1rem;
+            color: #fff;
+        }
+        .sidebar {
+            position: fixed;
+            top: 64px;
+            left: 0;
+            bottom: 0;
+            width: var(--sidebar-width);
+            background: #fff;
+            border-right: 1px solid #dee2e6;
+            padding: 1rem 0;
+            overflow-y: auto;
+            z-index: 1020;
+            transition: transform 0.3s;
+        }
+        .sidebar .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0.7rem 1.25rem;
+            color: #444;
+            font-weight: 500;
+            border-radius: 0;
+            border-left: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        .sidebar .nav-link:hover {
+            background: #e8eaf6;
+            color: var(--primary);
+        }
+        .sidebar .nav-link.active {
+            background: #e8eaf6;
+            color: var(--primary);
+            border-left-color: var(--primary);
+        }
+        .sidebar .nav-link i { font-size: 1.15rem; width: 22px; text-align: center; }
+        .sidebar .nav-section {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #999;
+            padding: 1rem 1.25rem 0.3rem;
+            font-weight: 700;
+        }
+        .main-content {
+            margin-left: var(--sidebar-width);
+            margin-top: 64px;
+            padding: 1.5rem 2rem;
+            min-height: calc(100vh - 64px);
+        }
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            margin-bottom: 1.5rem;
+        }
+        .card-header {
+            background: #fff;
+            border-bottom: 1px solid #eee;
+            padding: 1rem 1.25rem;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        .card-header i { margin-right: 8px; color: var(--primary); }
+        .stat-card {
+            border-radius: 12px;
+            padding: 1.25rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .stat-card .stat-icon { font-size: 2.5rem; opacity: 0.3; }
+        .stat-card .stat-info h3 { margin: 0; font-size: 1.8rem; font-weight: 700; }
+        .stat-card .stat-info p { margin: 0; opacity: 0.85; font-size: 0.9rem; }
+        .stat-card.bg-primary { background: linear-gradient(135deg, #3949ab, #5c6bc0); }
+        .stat-card.bg-success { background: linear-gradient(135deg, #2e7d32, #66bb6a); }
+        .stat-card.bg-warning { background: linear-gradient(135deg, #e65100, #ffa726); }
+        .stat-card.bg-info { background: linear-gradient(135deg, #00695c, #26a69a); }
+        .stat-card.bg-danger { background: linear-gradient(135deg, #c62828, #ef5350); }
+        .stat-card.bg-secondary { background: linear-gradient(135deg, #37474f, #78909c); }
+        .table th {
+            background: #f5f7fa;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            color: #555;
+            border-bottom: 2px solid #dee2e6;
+        }
+        .table td { vertical-align: middle; }
+        .shelf-badge {
+            display: inline-block;
+            background: var(--primary);
+            color: #fff;
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .shelf-badge.available { background: #2e7d32; }
+        .shelf-badge.borrowed { background: #c62828; }
+        .status-badge {
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .status-badge.available { background: #e8f5e9; color: #2e7d32; }
+        .status-badge.borrowed { background: #ffebee; color: #c62828; }
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 1.5px solid #ddd;
+            padding: 0.55rem 0.9rem;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(92,107,192,0.15);
+        }
+        .btn { border-radius: 8px; font-weight: 600; padding: 0.5rem 1.25rem; }
+        .btn-primary { background: var(--primary); border-color: var(--primary); }
+        .btn-primary:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+        .sidebar-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        @media (max-width: 991px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.show { transform: translateX(0); }
+            .main-content { margin-left: 0; padding: 1rem; }
+            .sidebar-toggle { display: block; }
+            .top-navbar .stats-bar { display: none; }
+        }
+        .page-title { font-size: 1.5rem; font-weight: 700; color: #222; margin-bottom: 1.25rem; }
+        .page-title i { color: var(--primary); margin-right: 10px; }
+        .empty-state { text-align: center; padding: 3rem; color: #999; }
+        .empty-state i { font-size: 4rem; display: block; margin-bottom: 1rem; }
+        .toast-container { position: fixed; top: 80px; right: 20px; z-index: 9999; }
+        .class-s1 { border-left: 4px solid #3949ab; }
+        .class-s2 { border-left: 4px solid #2e7d32; }
+        .class-s3 { border-left: 4px solid #e65100; }
+        .class-s4 { border-left: 4px solid #c62828; }
+        .class-s5 { border-left: 4px solid #6a1b9a; }
+        .class-s6 { border-left: 4px solid #00838f; }
+        .backup-btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+    </style>
+</head>
+<body>
+
+<nav class="top-navbar">
+    <div style="display:flex;align-items:center;gap:12px;">
+        <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+        <div class="brand">
+            <i class="bi bi-book-fill"></i>
+            <div>
+                LIBRARY MANAGEMENT SYSTEM
+                <small>KAIROS HIGH SCHOOL</small>
+            </div>
+        </div>
+    </div>
+    <div class="stats-bar" id="headerStats">
+        <div class="stat-item"><strong id="hdrTotal">0</strong>Total Books</div>
+        <div class="stat-item"><strong id="hdrAvailable">0</strong>Available</div>
+        <div class="stat-item"><strong id="hdrBorrowed">0</strong>Borrowed</div>
+    </div>
+</nav>
+
+<aside class="sidebar" id="sidebar">
+    <div class="nav-section">Main</div>
+    <a class="nav-link active" href="#" data-page="dashboard" onclick="showPage('dashboard')"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    <a class="nav-link" href="#" data-page="addBook" onclick="showPage('addBook')"><i class="bi bi-plus-circle"></i> Add Book</a>
+    <a class="nav-link" href="#" data-page="viewBooks" onclick="showPage('viewBooks')"><i class="bi bi-collection"></i> All Books</a>
+    <div class="nav-section">Transactions</div>
+    <a class="nav-link" href="#" data-page="borrowBook" onclick="showPage('borrowBook')"><i class="bi bi-box-arrow-right"></i> Borrow Book</a>
+    <a class="nav-link" href="#" data-page="returnBook" onclick="showPage('returnBook')"><i class="bi bi-box-arrow-left"></i> Return Book</a>
+    <div class="nav-section">Reports</div>
+    <a class="nav-link" href="#" data-page="shelves" onclick="showPage('shelves')"><i class="bi bi-layers"></i> Shelves View</a>
+    <a class="nav-link" href="#" data-page="history" onclick="showPage('history')"><i class="bi bi-clock-history"></i> Borrow History</a>
+    <div class="nav-section">Classes</div>
+    <a class="nav-link" href="#" data-page="classS1" onclick="showPage('classS1')"><i class="bi bi-1-square"></i> Senior 1</a>
+    <a class="nav-link" href="#" data-page="classS2" onclick="showPage('classS2')"><i class="bi bi-2-square"></i> Senior 2</a>
+    <a class="nav-link" href="#" data-page="classS3" onclick="showPage('classS3')"><i class="bi bi-3-square"></i> Senior 3</a>
+    <a class="nav-link" href="#" data-page="classS4" onclick="showPage('classS4')"><i class="bi bi-4-square"></i> Senior 4</a>
+    <a class="nav-link" href="#" data-page="classS5" onclick="showPage('classS5')"><i class="bi bi-5-square"></i> Senior 5</a>
+    <a class="nav-link" href="#" data-page="classS6" onclick="showPage('classS6')"><i class="bi bi-6-square"></i> Senior 6</a>
+    <div class="nav-section">Backup</div>
+    <a class="nav-link" href="#" onclick="exportBackup()"><i class="bi bi-download"></i> Export Backup</a>
+    <a class="nav-link" href="#" onclick="document.getElementById('importFileInput').click()"><i class="bi bi-upload"></i> Import Backup</a>
+    <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importBackup(event)">
+</aside>
+
+<div class="main-content" id="mainContent"></div>
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+    const SUBJECTS = [
+        'Mathematics','Biology','Chemistry','Physics','English',
+        'Literature','Kiswahili','History','Divinity','CRE',
+        'Computer','Art and Design','Sub Math','Geography','Entrepreneurship'
+    ];
+    const CLASSES = ['SENIOR 1','SENIOR 2','SENIOR 3','SENIOR 4','SENIOR 5','SENIOR 6'];
+    const CLASS_SHORT = ['S1','S2','S3','S4','S5','S6'];
+    const SUBJ_ABBR = {
+        'Mathematics':'MTH','Biology':'BIO','Chemistry':'CHM','Physics':'PHY',
+        'English':'ENG','Literature':'LIT','Kiswahili':'KSW','History':'HIS',
+        'Divinity':'DIV','CRE':'CRE','Computer':'COM','Art and Design':'ART',
+        'Sub Math':'SMT','Geography':'GEO','Entrepreneurship':'ENT'
+    };
+
+    const DB_KEY = 'libSys_books';
+    const HIST_KEY = 'libSys_history';
+
+    function getBooks() { try { return JSON.parse(localStorage.getItem(DB_KEY)) || []; } catch(e) { return []; } }
+    function saveBooks(books) { localStorage.setItem(DB_KEY, JSON.stringify(books)); }
+    function getHistory() { try { return JSON.parse(localStorage.getItem(HIST_KEY)) || []; } catch(e) { return []; } }
+    function saveHistory(h) { localStorage.setItem(HIST_KEY, JSON.stringify(h)); }
+    function generateId() { return 'BK-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2,5).toUpperCase(); }
+    function generateShelfCode(className, subject, copyNum) {
+        const cls = CLASS_SHORT[CLASSES.indexOf(className)];
+        const subj = SUBJ_ABBR[subject] || subject.substring(0,3).toUpperCase();
+        return `${cls}-${subj}-${String(copyNum).padStart(2,'0')}`;
+    }
+    function getNextCopyNum(className, subject) {
+        const books = getBooks();
+        const existing = books.filter(b => b.className === className && b.subject === subject);
+        let max = 0;
+        existing.forEach(b => { const p = b.shelfCode.split('-'); const n = parseInt(p[p.length-1],10); if (!isNaN(n) && n > max) max = n; });
+        return max + 1;
+    }
+    function nowISO() { return new Date().toISOString(); }
+    function formatDate(iso) {
+        if (!iso) return '—';
+        return new Date(iso).toLocaleString('en-UG', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+    }
+    function formatDateShort(iso) {
+        if (!iso) return '—';
+        return new Date(iso).toLocaleDateString('en-UG', { year:'numeric', month:'short', day:'numeric' });
+    }
+
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        const colors = { success:'bg-success text-white', danger:'bg-danger text-white', warning:'bg-warning text-dark', info:'bg-info text-white' };
+        const icons = { success:'bi-check-circle-fill', danger:'bi-exclamation-triangle-fill', warning:'bi-exclamation-circle-fill', info:'bi-info-circle-fill' };
+        const el = document.createElement('div');
+        el.className = `toast align-items-center ${colors[type] || 'bg-success text-white'} border-0 show mb-2`;
+        el.role = 'alert';
+        el.innerHTML = `<div class="d-flex"><div class="toast-body"><i class="bi ${icons[type] || 'bi-check-circle-fill'} me-2"></i>${message}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
+        container.appendChild(el);
+        setTimeout(() => el.remove(), 4000);
+    }
+
+    // ===== BACKUP / RESTORE =====
+    function exportBackup() {
+        const data = {
+            version: '1.0',
+            exportedAt: nowISO(),
+            books: getBooks(),
+            history: getHistory()
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const dateStr = new Date().toISOString().split('T')[0];
+        a.download = `library-backup-${dateStr}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast(`Backup downloaded: ${a.download}`, 'success');
+    }
+
+    function importBackup(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (!data.books || !data.history) {
+                    showToast('Invalid backup file format.', 'danger');
+                    return;
+                }
+                if (!confirm(`This will REPLACE all current data with ${data.books.length} books and ${data.history.length} history records. Continue?`)) return;
+                saveBooks(data.books);
+                saveHistory(data.history);
+                showToast(`Backup restored successfully! (${data.books.length} books, ${data.history.length} records)`, 'success');
+                showPage('dashboard');
+            } catch(err) {
+                showToast('Failed to read backup file. Invalid JSON.', 'danger');
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = '';
+    }
+
+    // ===== SEED DATA =====
+    function seedData() {
+        const books = getBooks();
+        if (books.length > 0) return;
+        const sample = [];
+        CLASSES.forEach(cls => {
+            SUBJECTS.forEach(subj => {
+                const copies = 2 + Math.floor(Math.random() * 2);
+                for (let c = 0; c < copies; c++) {
+                    const status = Math.random() > 0.35 ? 'available' : 'borrowed';
+                    let borrowedAt = null, borrower = null;
+                    if (status === 'borrowed') {
+                        borrowedAt = new Date(Date.now() - Math.floor(Math.random() * 14 + 1) * 86400000).toISOString();
+                        borrower = ['Nakato Grace','Okello Peter','Namukose Sarah','Kimani John','Nalwoga Esther','Ssempija Robert'][Math.floor(Math.random()*6)];
+                    }
+                    sample.push({
+                        id: generateId(),
+                        title: `${subj} Textbook ${String.fromCharCode(65 + c)}`,
+                        subject: subj, className: cls,
+                        shelfCode: generateShelfCode(cls, subj, c + 1),
+                        status: status, borrower: borrower,
+                        borrowedAt: borrowedAt, returnedAt: null,
+                        createdAt: nowISO()
+                    });
+                }
+            });
+        });
+        saveBooks(sample);
+        const history = [];
+        getBooks().forEach(b => {
+            if (b.status === 'borrowed') {
+                history.push({
+                    id: 'H-' + Date.now().toString(36).toUpperCase(),
+                    bookId: b.id, title: b.title, subject: b.subject,
+                    className: b.className, shelfCode: b.shelfCode,
+                    borrower: b.borrower, action: 'borrowed', timestamp: b.borrowedAt
+                });
+            }
+        });
+        saveHistory(history);
+    }
+
+    function updateHeaderStats() {
+        const books = getBooks();
+        document.getElementById('hdrTotal').textContent = books.length;
+        document.getElementById('hdrAvailable').textContent = books.filter(b => b.status === 'available').length;
+        document.getElementById('hdrBorrowed').textContent = books.filter(b => b.status === 'borrowed').length;
+    }
+
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show'); }
+
+    function showPage(page) {
+        document.querySelectorAll('.sidebar .nav-link').forEach(el => el.classList.remove('active'));
+        const link = document.querySelector(`.sidebar .nav-link[data-page="${page}"]`);
+        if (link) link.classList.add('active');
+        document.getElementById('sidebar').classList.remove('show');
+        switch(page) {
+            case 'dashboard': renderDashboard(); break;
+            case 'addBook': renderAddBook(); break;
+            case 'viewBooks': renderViewBooks(); break;
+            case 'borrowBook': renderBorrowBook(); break;
+            case 'returnBook': renderReturnBook(); break;
+            case 'shelves': renderShelves(); break;
+            case 'history': renderHistory(); break;
+            case 'classS1': renderClassView('SENIOR 1'); break;
+            case 'classS2': renderClassView('SENIOR 2'); break;
+            case 'classS3': renderClassView('SENIOR 3'); break;
+            case 'classS4': renderClassView('SENIOR 4'); break;
+            case 'classS5': renderClassView('SENIOR 5'); break;
+            case 'classS6': renderClassView('SENIOR 6'); break;
+            default: renderDashboard();
+        }
+        updateHeaderStats();
+    }
+
+    // ===== DASHBOARD =====
+    function renderDashboard() {
+        const books = getBooks();
+        const total = books.length;
+        const available = books.filter(b => b.status === 'available').length;
+        const borrowed = books.filter(b => b.status === 'borrowed').length;
+        const history = getHistory();
+        const recentHistory = history.slice(-10).reverse();
+        const classStats = CLASSES.map(cls => {
+            const bks = books.filter(b => b.className === cls);
+            return { className: cls, total: bks.length, available: bks.filter(b => b.status === 'available').length, borrowed: bks.filter(b => b.status === 'borrowed').length };
+        });
+
+        document.getElementById('mainContent').innerHTML = `
+            <h1 class="page-title"><i class="bi bi-speedometer2"></i> Dashboard</h1>
+            <div class="row g-3 mb-4">
+                <div class="col-md-3 col-6"><div class="stat-card bg-primary"><i class="bi bi-book-fill stat-icon"></i><div class="stat-info"><h3>${total}</h3><p>Total Books</p></div></div></div>
+                <div class="col-md-3 col-6"><div class="stat-card bg-success"><i class="bi bi-check-circle-fill stat-icon"></i><div class="stat-info"><h3>${available}</h3><p>Available</p></div></div></div>
+                <div class="col-md-3 col-6"><div class="stat-card bg-warning"><i class="bi bi-box-arrow-right stat-icon"></i><div class="stat-info"><h3>${borrowed}</h3><p>Borrowed</p></div></div></div>
+                <div class="col-md-3 col-6"><div class="stat-card bg-info"><i class="bi bi-layers-fill stat-icon"></i><div class="stat-info"><h3>${SUBJECTS.length}</h3><p>Subjects</p></div></div></div>
+            </div>
+            <div class="row g-3">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header"><i class="bi bi-bar-chart-fill"></i> Books Per Class</div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-borderless">
+                                    <thead><tr><th>Class</th><th>Total</th><th>Available</th><th>Borrowed</th><th>Progress</th></tr></thead>
+                                    <tbody>
+                                        ${classStats.map(cs => {
+                                            const pct = cs.total > 0 ? Math.round((cs.available / cs.total) * 100) : 0;
+                                            const barColor = pct > 50 ? 'bg-success' : pct > 25 ? 'bg-warning' : 'bg-danger';
+                                            return `<tr class="class-${CLASS_SHORT[CLASSES.indexOf(cs.className)]}"><td><strong>${cs.className}</strong></td><td>${cs.total}</td><td><span class="text-success fw-bold">${cs.available}</span></td><td><span class="text-danger fw-bold">${cs.borrowed}</span></td><td style="width:200px;"><div class="progress" style="height:8px;"><div class="progress-bar ${barColor}" style="width:${pct}%"></div></div><small class="text-muted">${pct}% available</small></td></tr>`;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><i class="bi bi-clock-history"></i> Recent Activity</div>
+                        <div class="card-body">
+                            ${recentHistory.length === 0 ? '<div class="empty-state"><i class="bi bi-inbox"></i>No recent activity</div>' : `
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead><tr><th>Book</th><th>Action</th><th>Borrower</th><th>Date</th></tr></thead>
+                                        <tbody>${recentHistory.map(h => `<tr><td>${h.title}</td><td><span class="badge ${h.action === 'borrowed' ? 'bg-warning text-dark' : 'bg-success'}">${h.action}</span></td><td>${h.borrower || '—'}</td><td>${formatDate(h.timestamp)}</td></tr>`).join('')}</tbody>
+                                    </table>
+                                </div>`}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header"><i class="bi bi-tags-fill"></i> Subjects</div>
+                        <div class="card-body">
+                            ${SUBJECTS.map(subj => {
+                                const count = books.filter(b => b.subject === subj).length;
+                                const availCount = books.filter(b => b.subject === subj && b.status === 'available').length;
+                                return `<div class="d-flex justify-content-between align-items-center mb-2 pb-2" style="border-bottom:1px solid #f0f0f0;"><div><span class="shelf-badge" style="background:#555;font-size:0.7rem;">${SUBJ_ABBR[subj]}</span><span class="ms-2">${subj}</span></div><div><span class="badge bg-success me-1">${availCount}</span><span class="badge bg-secondary">${count}</span></div></div>`;
+                            }).join('')}
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><i class="bi bi-exclamation-triangle-fill"></i> Quick Actions</div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-primary" onclick="showPage('addBook')"><i class="bi bi-plus-circle"></i> Add New Book</button>
+                                <button class="btn btn-warning" onclick="showPage('borrowBook')"><i class="bi bi-box-arrow-right"></i> Borrow a Book</button>
+                                <button class="btn btn-success" onclick="showPage('returnBook')"><i class="bi bi-box-arrow-left"></i> Return a Book</button>
+                                <button class="btn btn-info text-white" onclick="showPage('shelves')"><i class="bi bi-layers"></i> View Shelves</button>
+                                <hr>
+                                <button class="btn btn-outline-primary" onclick="exportBackup()"><i class="bi bi-download"></i> Download Backup</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ===== ADD BOOK =====
+    function renderAddBook() {
+        document.getElementById('mainContent').innerHTML = `
+            <h1 class="page-title"><i class="bi bi-plus-circle"></i> Add New Book</h1>
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header"><i class="bi bi-book"></i> Book Details</div>
+                        <div class="card-body">
+                            <form id="addBookForm" onsubmit="addBook(event)">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="fw-semibold mb-1">Book Title *</label>
+                                        <input type="text" class="form-control" id="bookTitle" required placeholder="e.g. Mathematics Textbook A">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="fw-semibold mb-1">Subject *</label>
+                                        <select class="form-select" id="bookSubject" required onchange="updateShelfPreview()"><option value="">— Select —</option>${SUBJECTS.map(s => `<option value="${s}">${s}</option>`).join('')}</select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="fw-semibold mb-1">Class *</label>
+                                        <select class="form-select" id="bookClass" required onchange="updateShelfPreview()"><option value="">— Select —</option>${CLASSES.map(c => `<option value="${c}">${c}</option>`).join('')}</select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="fw-semibold mb-1">Shelf Code</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="shelfCode" readonly style="background:#f5f5f5;font-family:monospace;">
+                                            <button class="btn btn-outline-secondary" type="button" onclick="updateShelfPreview()"><i class="bi bi-arrow-repeat"></i></button>
+                                        </div>
+                                        <small class="text-muted">Auto-generated: Class-Subject-CopyNumber</small>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="addMultiple" onchange="document.getElementById('copyCountDiv').style.display = this.checked ? 'block' : 'none'">
+                                            <label class="form-check-label">Add multiple copies</label>
+                                        </div>
+                                        <div id="copyCountDiv" style="display:none;" class="mt-2">
+                                            <label class="fw-semibold mb-1">Copies</label>
+                                            <input type="number" class="form-control" id="copyCount" min="2" max="50" value="5" style="width:120px;">
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <button type="submit" class="btn btn-primary me-2"><i class="bi bi-save"></i> Add Book(s)</button>
+                                        <button type="reset" class="btn btn-outline-secondary" onclick="document.getElementById('shelfCode').value=''">Reset</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header"><i class="bi bi-info-circle"></i> Shelf Code Guide</div>
+                        <div class="card-body" style="font-size:0.9rem;">
+                            <p><strong>Format:</strong></p>
+                            <code style="display:block;padding:8px;background:#f5f5f5;border-radius:6px;margin-bottom:12px;">[CLASS]-[SUBJECT]-[COPY]</code>
+                            <p><strong>Examples:</strong></p>
+                            <div class="mb-2"><span class="shelf-badge" style="background:#3949ab;">S1-MTH-01</span> S1 Mathematics copy 1</div>
+                            <div class="mb-2"><span class="shelf-badge" style="background:#2e7d32;">S2-BIO-03</span> S2 Biology copy 3</div>
+                            <div class="mb-2"><span class="shelf-badge" style="background:#e65100;">S3-PHY-02</span> S3 Physics copy 2</div>
+                            <div class="mb-2"><span class="shelf-badge" style="background:#6a1b9a;">S5-CHM-01</span> S5 Chemistry copy 1</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function updateShelfPreview() {
+        const subject = document.getElementById('bookSubject').value;
+        const className = document.getElementById('bookClass').value;
+        if (subject && className) {
+            document.getElementById('shelfCode').value = generateShelfCode(className, subject, getNextCopyNum(className, subject));
+        }
+    }
+
+    function addBook(event) {
+        event.preventDefault();
+        const title = document.getElementById('bookTitle').value.trim();
+        const subject = document.getElementById('bookSubject').value;
+        const className = document.getElementById('bookClass').value;
+        const addMultiple = document.getElementById('addMultiple').checked;
+        const copyCount = addMultiple ? parseInt(document.getElementById('copyCount').value) || 5 : 1;
+        if (!title || !subject || !className) { showToast('Please fill all required fields.', 'warning'); return; }
+        const books = getBooks();
+        const newBooks = [];
+        for (let i = 0; i < copyCount; i++) {
+            const nextNum = getNextCopyNum(className, subject);
+            const suffix = copyCount > 1 ? ` (Copy ${String.fromCharCode(65 + i)})` : '';
+            newBooks.push({
+                id: generateId(),
+                title: copyCount > 1 ? `${title} - ${suffix.trim()}` : title,
+                subject, className,
+                shelfCode: generateShelfCode(className, subject, nextNum),
+                status: 'available', borrower: null, borrowedAt: null, returnedAt: null,
+                createdAt: nowISO()
+            });
+        }
+        saveBooks([...books, ...newBooks]);
+        showToast(`Added ${copyCount} book(s) successfully!`, 'success');
+        document.getElementById('addBookForm').reset();
+        document.getElementById('shelfCode').value = '';
+        document.getElementById('copyCountDiv').style.display = 'none';
+        updateHeaderStats();
+    }
+
+    // ===== VIEW BOOKS =====
+    function renderViewBooks() {
+        const books = getBooks();
+        document.getElementById('mainContent').innerHTML = `
+            <h1 class="page-title"><i class="bi bi-collection"></i> All Books</h1>
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <span><i class="bi bi-book"></i> Inventory (${books.length})</span>
+                    <div class="d-flex gap-2">
+                        <input type="text" class="form-control form-control-sm" id="bookSearch" placeholder="Search..." style="width:180px;" oninput="filterBookTable()">
+                        <select class="form-select form-select-sm" id="filterStatus" style="width:130px;" onchange="filterBookTable()"><option value="all">All</option><option value="available">Available</option><option value="borrowed">Borrowed</option></select>
+                        <select class="form-select form-select-sm" id="filterClass" style="width:130px;" onchange="filterBookTable()"><option value="all">All Classes</option>${CLASSES.map(c => `<option value="${c}">${c}</option>`).join('')}</select>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="booksTable">
+                            <thead><tr><th>#</th><th>Title</th><th>Subject</th><th>Class</th><th>Shelf Code</th><th>Status</th><th>Borrower</th><th>Borrowed</th><th>Action</th></tr></thead>
+                            <tbody id="booksTableBody">${books.length === 0 ? '<tr><td colspan="9" class="text-center py-4 text-muted">No books.</td></tr>' : ''}</tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+        renderBookTable(books);
+    }
+
+    function renderBookTable(books) {
+        const tbody = document.getElementById('booksTableBody');
+        if (!tbody) return;
+        if (books.length === 0) { tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted">No books found.</td></tr>'; return; }
+        tbody.innerHTML = books.map((b, i) => `<tr class="class-${CLASS_SHORT[CLASSES.indexOf(b.className)] || 'S1'}"><td>${i+1}</td><td><strong>${b.title}</strong></td><td>${b.subject}</td><td>${b.className}</td><td><span class="shelf-badge">${b.shelfCode}</span></td><td><span class="status-badge ${b.status}">${b.status}</span></td><td>${b.borrower || '—'}</td><td>${formatDate(b.borrowedAt)}</td><td><button class="btn btn-sm btn-outline-danger" onclick="deleteBook('${b.id}')"><i class="bi bi-trash"></i></button></td></tr>`).join('');
+    }
+
+    function filterBookTable() {
+        const books = getBooks();
+        const search = document.getElementById('bookSearch').value.toLowerCase();
+        const status = document.getElementById('filterStatus').value;
+        const cls = document.getElementById('filterClass').value;
+        renderBookTable(books.filter(b => (status === 'all' || b.status === status) && (cls === 'all' || b.className === cls) && (!search || b.title.toLowerCase().includes(search) || b.subject.toLowerCase().includes(search) || b.shelfCode.toLowerCase().includes(search))));
+    }
+
+    function deleteBook(id) {
+        if (!confirm('Delete this book permanently?')) return;
+        let books = getBooks();
+        books = books.filter(b => b.id !== id);
+        saveBooks(books);
+        showToast('Book deleted.', 'danger');
+        filterBookTable();
+        updateHeaderStats();
+    }
+
+    // ===== BORROW BOOK =====
+    function renderBorrowBook() {
+        const available = getBooks().filter(b => b.status === 'available');
+        document.getElementById('mainContent').innerHTML = `
+            <h1 class="page-title"><i class="bi bi-box-arrow-right"></i> Borrow Book</h1>
+            <div class="row">
+                <div class="col-lg-7">
+                    <div class="card">
+                        <div class="card-header"><i class="bi bi-hand-index"></i> Issue Book</div>
+                        <div class="card-body">
+                            <form onsubmit="borrowBook(event)">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="fw-semibold mb-1">Book *</label>
+                                        <select class="form-select" id="borrowBookSelect" required><option value="">— Select —</option>${available.map(b => `<option value="${b.id}">[${b.shelfCode}] ${b.title} — ${b.className}</option>`).join('')}</select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="fw-semibold mb-1">Borrower *</label>
+                                        <input type="text" class="form-control" id="borrowerName" required placeholder="Student name">
+                                    </div>
+                                    <div class="col-12"><button type="submit" class="btn btn-warning"><i class="bi bi-box-arrow-right"></i> Issue Book</button></div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="card mt-3">
+                        <div class="card-header"><i class="bi bi-search"></i> Available Books</div>
+                        <div class="card-body">
+                            <input type="text" class="form-control mb-3" placeholder="Search..." oninput="filterAvailable(this.value)">
+                            <div class="table-responsive" style="max-height:250px;overflow-y:auto;">
+                                <table class="table table-sm table-hover"><thead><tr><th>Shelf</th><th>Title</th><th>Class</th><th>Subject</th></tr></thead>
+                                <tbody id="availableList">${available.map(b => `<tr style="cursor:pointer;" onclick="document.getElementById('borrowBookSelect').value='${b.id}'"><td><span class="shelf-badge">${b.shelfCode}</span></td><td>${b.title}</td><td>${b.className}</td><td>${b.subject}</td></tr>`).join('')}</tbody></table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="card"><div class="card-header"><i class="bi bi-info-circle"></i> Rules</div><div class="card-body"><ul class="mb-0"><li>Only available books can be borrowed.</li><li>Max 14 days borrowing period.</li><li>Returns must be in good condition.</li><li>Lost books must be replaced.</li></ul></div></div>
+                </div>
+            </div>
+        `;
+    }
+
+    function filterAvailable(q) {
+        const books = getBooks().filter(b => b.status === 'available');
+        const query = q.toLowerCase();
+        const filtered = books.filter(b => b.title.toLowerCase().includes(query) || b.subject.toLowerCase().includes(query) || b.shelfCode.toLowerCase().includes(query));
+        document.getElementById('availableList').innerHTML = filtered.map(b => `<tr style="cursor:pointer;" onclick="document.getElementById('borrowBookSelect').value='${b.id}'"><td><span class="shelf-badge">${b.shelfCode}</span></td><td>${b.title}</td><td>${b.className}</td><td>${b.subject}</td></tr>`).join('');
+    }
+
+    function borrowBook(event) {
+        event.preventDefault();
+        const bookId = document.getElementById('borrowBookSelect').value;
+        const borrower = document.getElementById('borrowerName').value.trim();
+        if (!bookId || !borrower) { showToast('Select a book and enter name.', 'warning'); return; }
+        const books = getBooks();
+        const book = books.find(b => b.id === bookId);
+        if (!book || book.status !== 'available') { showToast('Book not available.', 'warning'); return; }
+        book.status = 'borrowed'; book.borrower = borrower; book.borrowedAt = nowISO(); book.returnedAt = null;
+        saveBooks(books);
+        const history = getHistory();
+        history.push({ id:'H-'+Date.now().toString(36).toUpperCase(), bookId:book.id, title:book.title, subject:book.subject, className:book.className, shelfCode:book.shelfCode, borrower, action:'borrowed', timestamp:nowISO() });
+        saveHistory(history);
+        showToast(`"${book.title}" issued to ${borrower}`, 'success');
+        renderBorrowBook();
+        updateHeaderStats();
+    }
+
+    // ===== RETURN BOOK =====
+    function renderReturnBook() {
+        const borrowed = getBooks().filter(b => b.status === 'borrowed');
+        document.getElementById('mainContent').innerHTML = `
+            <h1 class="page-title"><i class="bi bi-box-arrow-left"></i> Return Book</h1>
+            <div class="row">
+                <div class="col-lg-7">
+                    <div class="card">
+                        <div class="card-header"><i class="bi bi-arrow-return-left"></i> Process Return</div>
+                        <div class="card-body">
+                            <form onsubmit="returnBook(event)">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="fw-semibold mb-1">Borrowed Book *</label>
+                                        <select class="form-select" id="returnBookSelect" required><option value="">— Select —</option>${borrowed.map(b => `<option value="${b.id}">[${b.shelfCode}] ${b.title} — ${b.borrower}</option>`).join('')}</select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="fw-semibold mb-1">Librarian</label>
+                                        <input type="text" class="form-control" id="returnLibrarian" placeholder="Your name">
+                                    </div>
+                                    <div class="col-12"><button type="submit" class="btn btn-success"><i class="bi bi-check-circle"></i> Process Return</button></div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="card mt-3">
+                        <div class="card-header"><i class="bi bi-list"></i> Currently Borrowed</div>
+                        <div class="card-body">
+                            <div class="table-responsive" style="max-height:300px;overflow-y:auto;">
+                                <table class="table table-sm table-hover"><thead><tr><th>Shelf</th><th>Title</th><th>Borrower</th><th>Borrowed</th></tr></thead>
+                                <tbody>${borrowed.map(b => `<tr style="cursor:pointer;" onclick="document.getElementById('returnBookSelect').value='${b.id}'"><td><span class="shelf-badge">${b.shelfCode}</span></td><td>${b.title}</td><td>${b.borrower}</td><td>${formatDateShort(b.borrowedAt)}</td></tr>`).join('')}</tbody></table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="card"><div class="card-header"><i class="bi bi-clock"></i> Summary</div><div class="card-body"><strong>Borrowed:</strong> ${borrowed.length}${borrowed.map(b => { const d = Math.floor((new Date()-new Date(b.borrowedAt))/86400000); return `<div class="d-flex justify-content-between p-2 mb-1 ${d>14?'bg-danger bg-opacity-10':'bg-light'}" style="border-radius:6px;"><div><small><strong>${b.title}</strong></small><br><small class="text-muted">${b.borrower}</small></div><span class="badge ${d>14?'bg-danger':'bg-warning text-dark'}">${d}d</span></div>`; }).join('')}</div></div>
+                </div>
+            </div>
+        `;
+    }
+
+    function returnBook(event) {
+        event.preventDefault();
+        const bookId = document.getElementById('returnBookSelect').value;
+        if (!bookId) { showToast('Select a book.', 'warning'); return; }
+        const books = getBooks();
+        const book = books.find(b => b.id === bookId);
+        if (!book || book.status !== 'borrowed') { showToast('Book not borrowed.', 'warning'); return; }
+        const borrower = book.borrower;
+        book.status = 'available'; book.returnedAt = nowISO(); book.borrower = null; book.borrowedAt = null;
+        saveBooks(books);
+        const history = getHistory();
+        history.push({ id:'H-'+Date.now().toString(36).toUpperCase(), bookId:book.id, title:book.title, subject:book.subject, className:book.className, shelfCode:book.shelfCode, borrower, action:'returned', timestamp:nowISO() });
+        saveHistory(history);
+        showToast(`"${book.title}" returned!`, 'success');
+        renderReturnBook();
+        updateHeaderStats();
+    }
+
+    // ===== SHELVES =====
+    function renderShelves() {
+        const books = getBooks();
+        document.getElementById('mainContent').innerHTML = `<h1 class="page-title"><i class="bi bi-layers"></i> Shelf View</h1><p class="text-muted">Books organized by class and subject.</p>${CLASSES.map(cls => {
+            const clsBooks = books.filter(b => b.className === cls);
+            const clsShort = CLASS_SHORT[CLASSES.indexOf(cls)];
+            const bySubject = {};
+            clsBooks.forEach(b => { if (!bySubject[b.subject]) bySubject[b.subject] = []; bySubject[b.subject].push(b); });
+            const keys = SUBJECTS.filter(s => bySubject[s]);
+            if (!keys.length) return '';
+            return `<div class="card mb-3 class-${clsShort}"><div class="card-header d-flex justify-content-between"><span><i class="bi bi-collection"></i> ${cls}</span><span class="badge bg-secondary">${clsBooks.length} books</span></div><div class="card-body">${keys.map(subj => {
+                const sb = bySubject[subj];
+                return `<div class="mb-3"><div class="d-flex justify-content-between mb-2"><h6 class="mb-0"><span class="shelf-badge" style="background:#555;font-size:0.7rem;">${SUBJ_ABBR[subj]}</span> ${subj}</h6><small>${sb.filter(b => b.status === 'available').length}/${sb.length} available</small></div><div class="d-flex flex-wrap gap-2">${sb.map(b => `<div class="p-2 ${b.status === 'available' ? 'bg-light' : 'bg-danger bg-opacity-10'}" style="border:1px solid #dee2e6;border-radius:6px;min-width:120px;"><div><span class="shelf-badge" style="font-size:0.65rem;padding:1px 6px;">${b.shelfCode}</span></div><small style="font-size:0.75rem;">${b.title.length > 20 ? b.title.substring(0,20)+'...' : b.title}</small><div><span class="status-badge ${b.status}" style="font-size:0.65rem;padding:1px 8px;">${b.status}</span></div></div>`).join('')}</div></div>`;
+            }).join('')}</div></div>`;
+        }).join('')}`;
+    }
+
+    // ===== HISTORY =====
+    function renderHistory() {
+        const history = getHistory();
+        document.getElementById('mainContent').innerHTML = `
+            <h1 class="page-title"><i class="bi bi-clock-history"></i> Borrow History</h1>
+            <div class="card">
+                <div class="card-header d-flex justify-content-between flex-wrap gap-2">
+                    <span><i class="bi bi-list-ol"></i> Transactions (${history.length})</span>
+                    <input type="text" class="form-control form-control-sm" id="historySearch" placeholder="Search..." style="width:200px;" oninput="filterHistory()">
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive" style="max-height:500px;overflow-y:auto;">
+                        <table class="table table-hover table-sm"><thead><tr><th>#</th><th>Book</th><th>Subject</th><th>Class</th><th>Shelf</th><th>Action</th><th>Borrower</th><th>Date</th></tr></thead>
+                        <tbody id="historyBody">${history.length === 0 ? '<tr><td colspan="8" class="text-center text-muted py-4">No transactions.</td></tr>' : ''}</tbody></table>
+                    </div>
+                </div>
+            </div>`;
+        renderHistoryTable(history);
+    }
+
+    function renderHistoryTable(history) {
+        const tbody = document.getElementById('historyBody');
+        if (!tbody) return;
+        if (!history.length) { tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No transactions.</td></tr>'; return; }
+        const rev = [...history].reverse();
+        tbody.innerHTML = rev.map((h, i) => `<tr><td>${i+1}</td><td>${h.title}</td><td>${h.subject}</td><td>${h.className}</td><td><span class="shelf-badge" style="font-size:0.7rem;">${h.shelfCode}</span></td><td><span class="badge ${h.action === 'borrowed' ? 'bg-warning text-dark' : 'bg-success'}">${h.action}</span></td><td>${h.borrower || '—'}</td><td>${formatDate(h.timestamp)}</td></tr>`).join('');
+    }
+
+    function filterHistory() {
+        const q = document.getElementById('historySearch').value.toLowerCase();
+        renderHistoryTable(getHistory().filter(h => h.title.toLowerCase().includes(q) || h.subject.toLowerCase().includes(q) || h.className.toLowerCase().includes(q) || (h.borrower && h.borrower.toLowerCase().includes(q))));
+    }
+
+    // ===== CLASS VIEW =====
+    function renderClassView(className) {
+        const books = getBooks().filter(b => b.className === className);
+        const clsShort = CLASS_SHORT[CLASSES.indexOf(className)];
+        document.getElementById('mainContent').innerHTML = `
+            <h1 class="page-title"><i class="bi bi-${clsShort.toLowerCase()}-square"></i> ${className}</h1>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4"><div class="stat-card bg-primary"><i class="bi bi-book-fill stat-icon"></i><div class="stat-info"><h3>${books.length}</h3><p>Total Books</p></div></div></div>
+                <div class="col-md-4"><div class="stat-card bg-success"><i class="bi bi-check-circle-fill stat-icon"></i><div class="stat-info"><h3>${books.filter(b => b.status === 'available').length}</h3><p>Available</p></div></div></div>
+                <div class="col-md-4"><div class="stat-card bg-warning"><i class="bi bi-box-arrow-right stat-icon"></i><div class="stat-info"><h3>${books.filter(b => b.status === 'borrowed').length}</h3><p>Borrowed</p></div></div></div>
+            </div>
+            <div class="card">
+                <div class="card-header"><i class="bi bi-collection"></i> Books in ${className}</div>
+                <div class="card-body">
+                    ${books.length === 0 ? '<div class="empty-state"><i class="bi bi-inbox"></i>No books for this class.</div>' : `
+                        <div class="table-responsive">
+                            <table class="table table-hover"><thead><tr><th>#</th><th>Title</th><th>Subject</th><th>Shelf Code</th><th>Status</th><th>Borrower</th></tr></thead>
+                            <tbody>${books.map((b,i) => `<tr class="class-${clsShort}"><td>${i+1}</td><td>${b.title}</td><td>${b.subject}</td><td><span class="shelf-badge">${b.shelfCode}</span></td><td><span class="status-badge ${b.status}">${b.status}</span></td><td>${b.borrower || '—'}</td></tr>`).join('')}</tbody></table>
+                        </div>`}
+                </div>
+            </div>`;
+    }
+
+    // ===== INIT =====
+    document.addEventListener('DOMContentLoaded', function() {
+        seedData();
+        showPage('dashboard');
+    });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

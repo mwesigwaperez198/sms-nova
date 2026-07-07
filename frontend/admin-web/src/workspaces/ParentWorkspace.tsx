@@ -1,0 +1,251 @@
+import { useState } from "react";
+import { Receipt, FileText, Bell, Calendar, Download, User } from "lucide-react";
+import type { ConnectedData } from "../api";
+
+interface ParentWorkspaceProps {
+  view: string;
+  data: ConnectedData;
+}
+
+export function ParentWorkspace({ view, data }: ParentWorkspaceProps) {
+  const [activeTab, setActiveTab] = useState<"payments" | "receipts">("payments");
+
+  const child = {
+    name: "Ariho Grace",
+    class: "P5 Blue",
+    admNo: "NDS-2024-0042",
+    feeBalance: "UGX 320,000",
+    attendance: "Present",
+    lastGrade: "B+",
+    position: "12 / 42",
+    average: "71%",
+  };
+
+  if (view === "Home") {
+    return (
+      <div className="content-grid">
+        {/* Hero */}
+        <div className="student-hero-grad">
+          <div className="student-avatar-lg">{child.name.charAt(0)}</div>
+          <div>
+            <strong style={{ fontSize: "1.2rem" }}>{child.name}</strong>
+            <p style={{ margin: "4px 0 0", opacity: 0.85, fontSize: "0.9rem" }}>{child.class} · {child.admNo}</p>
+          </div>
+        </div>
+
+        {/* Metrics */}
+        <div className="metric-grid">
+          <div className="metric amber">
+            <div className="metric-icon"><Receipt size={22} /></div>
+            <div className="metric-body"><strong>{child.feeBalance}</strong><span>Fee Balance</span></div>
+          </div>
+          <div className="metric green">
+            <div className="metric-icon"><Calendar size={22} /></div>
+            <div className="metric-body"><strong>{child.attendance}</strong><span>Today</span></div>
+          </div>
+          <div className="metric blue">
+            <div className="metric-icon"><FileText size={22} /></div>
+            <div className="metric-body"><strong>{child.lastGrade}</strong><span>Last Grade</span></div>
+          </div>
+          <div className="metric teal">
+            <div className="metric-icon"><Bell size={22} /></div>
+            <div className="metric-body"><strong>{data.parentMessages.filter(m => !m.read).length}</strong><span>Unread</span></div>
+          </div>
+        </div>
+
+        {/* Quick details */}
+        <div className="profile-grid-detail">
+          {[
+            ["Class", child.class],
+            ["Admission No", child.admNo],
+            ["Term Position", child.position],
+            ["Term Average", child.average],
+          ].map(([label, val]) => (
+            <div key={label} className="detail-cell">
+              <span>{label}</span>
+              <strong>{val}</strong>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (view === "Fees" || view === "Receipts") {
+    return (
+      <div className="content-grid">
+        <div className="metric-grid">
+          <div className="metric amber"><div className="metric-icon"><Receipt size={22} /></div><div className="metric-body"><strong>{child.feeBalance}</strong><span>Balance Due</span></div></div>
+          <div className="metric green"><div className="metric-icon"><Receipt size={22} /></div><div className="metric-body"><strong>{data.receipts.length}</strong><span>Receipts</span></div></div>
+          <div className="metric blue"><div className="metric-icon"><FileText size={22} /></div><div className="metric-body"><strong>{data.payments.length}</strong><span>Payments</span></div></div>
+          <div className="metric teal"><div className="metric-icon"><Download size={22} /></div><div className="metric-body"><strong>PDF</strong><span>Download</span></div></div>
+        </div>
+
+        <div className="tab-bar">
+          <button className={`tab-btn ${activeTab === "payments" ? "active" : ""}`} onClick={() => setActiveTab("payments")}><Receipt size={15} />Payments</button>
+          <button className={`tab-btn ${activeTab === "receipts" ? "active" : ""}`} onClick={() => setActiveTab("receipts")}><FileText size={15} />Receipts</button>
+        </div>
+
+        {activeTab === "payments" && (
+          <div className="table-panel">
+            <div className="table-wrap">
+              <table>
+                <thead><tr><th>Reference</th><th>Amount</th><th>Method</th><th>Date</th><th>Status</th></tr></thead>
+                <tbody>
+                  {data.payments.map(p => (
+                    <tr key={p.reference}>
+                      <td><code>{p.reference}</code></td>
+                      <td><strong>{p.amount}</strong></td>
+                      <td>{p.method}</td>
+                      <td>{p.date}</td>
+                      <td><span className={`badge ${p.status === "Confirmed" ? "success" : "warning"}`}>{p.status}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "receipts" && (
+          <div className="table-panel">
+            <div className="table-wrap">
+              <table>
+                <thead><tr><th>Receipt No</th><th>Amount</th><th>Method</th><th>Date</th><th></th></tr></thead>
+                <tbody>
+                  {data.receipts.map(r => (
+                    <tr key={r.receiptNo}>
+                      <td><code>{r.receiptNo}</code></td>
+                      <td><strong>{r.amount}</strong></td>
+                      <td>{r.method}</td>
+                      <td>{r.date}</td>
+                      <td><button className="tool-button" style={{ minHeight: 30, fontSize: "0.78rem" }}><Download size={13} />PDF</button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (view === "Attendance") {
+    const history = [
+      { date: "Today", status: "Present", time: "8:03 AM" },
+      { date: "Yesterday", status: "Present", time: "7:58 AM" },
+      { date: "Mon", status: "Late", time: "8:47 AM" },
+      { date: "Fri", status: "Present", time: "7:55 AM" },
+      { date: "Thu", status: "Absent", time: "—" },
+    ];
+    return (
+      <div className="content-grid">
+        <div className="metric-grid">
+          <div className="metric green"><div className="metric-icon"><Calendar size={22} /></div><div className="metric-body"><strong>Present</strong><span>Today</span></div></div>
+          <div className="metric teal"><div className="metric-icon"><Calendar size={22} /></div><div className="metric-body"><strong>92%</strong><span>This Term</span></div></div>
+          <div className="metric amber"><div className="metric-icon"><Calendar size={22} /></div><div className="metric-body"><strong>2</strong><span>Late Days</span></div></div>
+          <div className="metric red"><div className="metric-icon"><Calendar size={22} /></div><div className="metric-body"><strong>1</strong><span>Absent Days</span></div></div>
+        </div>
+        <div className="stack-list list-panel">
+          {history.map((h, i) => (
+            <div key={i} className="list-row">
+              <div className="dot" style={{ background: h.status === "Present" ? "#10b981" : h.status === "Late" ? "#f59e0b" : "#ef4444" }} />
+              <div>
+                <strong style={{ fontSize: "0.9rem" }}>{h.date}</strong>
+                <br /><span style={{ fontSize: "0.78rem", color: "var(--muted)" }}>{h.time}</span>
+              </div>
+              <span className={`badge ${h.status === "Present" ? "success" : h.status === "Late" ? "warning" : "error"}`}>{h.status}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (view === "Report Card") {
+    const subjects = [
+      { name: "Mathematics", bot: 72, mot: 68, eot: 75, grade: "C4" },
+      { name: "English", bot: 80, mot: 78, eot: 82, grade: "D2" },
+      { name: "Science", bot: 65, mot: 70, eot: 68, grade: "C5" },
+      { name: "Social Studies", bot: 74, mot: 76, eot: 79, grade: "C4" },
+      { name: "Religious Education", bot: 85, mot: 88, eot: 90, grade: "D1" },
+    ];
+    return (
+      <div className="content-grid">
+        <div className="student-hero-grad">
+          <div className="student-avatar-lg">{child.name.charAt(0)}</div>
+          <div>
+            <strong style={{ fontSize: "1.1rem" }}>{child.name}</strong>
+            <p style={{ margin: "4px 0 0", opacity: 0.85, fontSize: "0.88rem" }}>{child.class} · Term 1, 2026</p>
+            <p style={{ margin: "4px 0 0", opacity: 0.85, fontSize: "0.88rem" }}>Position: {child.position} · Average: {child.average}</p>
+          </div>
+          <button className="tool-button" style={{ marginLeft: "auto", background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)", color: "#fff" }} onClick={() => window.print()}>
+            <Download size={15} />Download
+          </button>
+        </div>
+        <div className="table-panel">
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th>Subject</th><th>BOT</th><th>MOT</th><th>EOT</th><th>Average</th><th>Grade</th></tr></thead>
+              <tbody>
+                {subjects.map(s => {
+                  const average = ((s.bot + s.mot + s.eot) / 3).toFixed(1);
+                  return (
+                    <tr key={s.name}>
+                      <td><strong>{s.name}</strong></td>
+                      <td>{s.bot}</td><td>{s.mot}</td><td>{s.eot}</td>
+                      <td><strong>{average}</strong></td>
+                      <td><span className="badge info">{s.grade}</span></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === "Messages") {
+    return (
+      <div className="content-grid">
+        <div className="stack-list list-panel">
+          {data.parentMessages.map(msg => (
+            <div key={msg.id} className="list-row">
+              <div className="dot" style={{ background: msg.read ? "var(--muted)" : "#4fc3f7" }} />
+              <div>
+                <strong style={{ fontSize: "0.9rem" }}>{msg.subject}</strong>
+                <br /><span style={{ fontSize: "0.78rem", color: "var(--muted)" }}>{msg.from} · {msg.date}</span>
+                <p style={{ margin: "4px 0 0", fontSize: "0.85rem", color: "#e2e8f0" }}>{msg.body}</p>
+              </div>
+              <span className={`badge ${msg.read ? "muted" : "info"}`}>{msg.read ? "Read" : "New"}</span>
+            </div>
+          ))}
+          {data.parentMessages.length === 0 && <p className="empty-state">No messages from school</p>}
+        </div>
+      </div>
+    );
+  }
+
+  // Default home
+  return (
+    <div className="content-grid">
+      <div className="student-hero-grad">
+        <div className="student-avatar-lg">{child.name.charAt(0)}</div>
+        <div>
+          <strong style={{ fontSize: "1.2rem" }}>{child.name}</strong>
+          <p style={{ margin: "4px 0 0", opacity: 0.85, fontSize: "0.9rem" }}>{child.class} · {child.admNo}</p>
+        </div>
+      </div>
+      <div className="metric-grid">
+        <div className="metric amber"><div className="metric-icon"><Receipt size={22} /></div><div className="metric-body"><strong>{child.feeBalance}</strong><span>Fee Balance</span></div></div>
+        <div className="metric green"><div className="metric-icon"><Calendar size={22} /></div><div className="metric-body"><strong>{child.attendance}</strong><span>Today</span></div></div>
+        <div className="metric blue"><div className="metric-icon"><FileText size={22} /></div><div className="metric-body"><strong>{child.lastGrade}</strong><span>Last Grade</span></div></div>
+        <div className="metric teal"><div className="metric-icon"><Bell size={22} /></div><div className="metric-body"><strong>{data.parentMessages.filter(m => !m.read).length}</strong><span>Unread</span></div></div>
+      </div>
+      <div className="notice-strip">Select a view — Home, Fees, Receipts, Attendance, Report Card, or Messages.</div>
+    </div>
+  );
+}

@@ -1,0 +1,7 @@
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+.env
+smart_school.db
+test_smart_school.db

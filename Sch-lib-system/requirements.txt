@@ -1,0 +1,5 @@
+APScheduler>=3.10,<4
+PyInstaller>=6.0,<7
+PyQt5>=5.15,<6
+pytest>=8.0,<9
+

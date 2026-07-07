@@ -1,0 +1,10 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "nvidia": {
+      "options": {
+        "apiKey": "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"
+      }
+    }
+  }
+}

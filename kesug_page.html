@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="NECTA O-Level (CSEE) Results Management System for Tanzanian Secondary Schools. Manage student results, generate report cards, SMS notifications, and track academic performance.">
+    <meta name="keywords" content="school results, NECTA results, CSEE results, Tanzania school system, student results management, matokeo ya shule, matokeo NECTA, mfumo wa matokeo, form four results, secondary school results">
+    <meta name="author" content="KESUG School System">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="English, Swahili">
+    <meta name="geo.region" content="TZ">
+    <meta name="geo.placename" content="Tanzania">
+    <meta name="google-site-verification" content="google30033ee44fcedac9">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="KESUG School Results System">
+    <meta property="og:description" content="NECTA O-Level (CSEE) Results Management System for Tanzanian Secondary Schools. Manage student results, generate report cards, SMS notifications, and track academic performance.">
+    <meta property="og:url" content="https://schoolresults.kesug.com/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="KESUG School Results System">
+    <meta property="og:locale" content="en_TZ">
+        <meta property="og:image" content="https://schoolresults.kesug.com/assets/img/logo.png">
+        
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="KESUG School Results System">
+    <meta name="twitter:description" content="NECTA O-Level (CSEE) Results Management System for Tanzanian Secondary Schools. Manage student results, generate report cards, SMS notifications, and track academic performance.">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://schoolresults.kesug.com/">
+    
+    <title>KESUG School Results System - NECTA O-Level Results Management</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "EducationalOrganization",
+        "name": "KESUG School Results System",
+        "description": "NECTA O-Level (CSEE) Results Management System for Tanzanian Secondary Schools. Manage student results, generate report cards, SMS notifications, and track academic performance.",
+        "url": "https://schoolresults.kesug.com/",
+        "offers": {
+            "@type": "Offer",
+            "category": "Educational Software"
+        }
+    }
+    </script>
+    
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a6fd6;
+            --secondary: #764ba2;
+            --accent: #4fc3f7;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #0f172a;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1a1a2e 30%, #16213e 60%, #0f172a 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Outfit', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #fff;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+        
+        /* Animated Particles */
+        .particles {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 0;
+        }
+        .particle {
+            position: absolute; border-radius: 50%;
+            background: rgba(255,255,255,0.03);
+            animation: floatParticle linear infinite;
+        }
+        .particle:nth-child(1) { width: 4px; height: 4px; top: 10%; left: 20%; animation-duration: 25s; animation-delay: 0s; }
+        .particle:nth-child(2) { width: 6px; height: 6px; top: 30%; left: 70%; animation-duration: 30s; animation-delay: 2s; }
+        .particle:nth-child(3) { width: 3px; height: 3px; top: 50%; left: 40%; animation-duration: 20s; animation-delay: 4s; }
+        .particle:nth-child(4) { width: 5px; height: 5px; top: 70%; left: 10%; animation-duration: 28s; animation-delay: 1s; }
+        .particle:nth-child(5) { width: 4px; height: 4px; top: 20%; left: 55%; animation-duration: 22s; animation-delay: 3s; }
+        .particle:nth-child(6) { width: 7px; height: 7px; top: 60%; left: 80%; animation-duration: 35s; animation-delay: 5s; }
+        .particle:nth-child(7) { width: 3px; height: 3px; top: 80%; left: 30%; animation-duration: 18s; animation-delay: 6s; }
+        .particle:nth-child(8) { width: 5px; height: 5px; top: 40%; left: 90%; animation-duration: 32s; animation-delay: 7s; }
+        
+        @keyframes floatParticle {
+            0% { transform: translateY(0) translateX(0) scale(1); opacity: 0.3; }
+            25% { transform: translateY(-100px) translateX(50px) scale(1.5); opacity: 0.6; }
+            50% { transform: translateY(-50px) translateX(-30px) scale(0.8); opacity: 0.2; }
+            75% { transform: translateY(-150px) translateX(-60px) scale(1.3); opacity: 0.5; }
+            100% { transform: translateY(0) translateX(0) scale(1); opacity: 0.3; }
+        }
+        
+        /* Glow Orbs */
+        .glow-orb {
+            position: fixed; border-radius: 50%; filter: blur(80px); opacity: 0.15; pointer-events: none; z-index: 0;
+        }
+        .glow-orb-1 { width: 400px; height: 400px; background: #667eea; top: -100px; left: -100px; }
+        .glow-orb-2 { width: 300px; height: 300px; background: #764ba2; bottom: -50px; right: -50px; }
+        .glow-orb-3 { width: 250px; height: 250px; background: #4fc3f7; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        
+        .main-content { flex: 1 0 auto; position: relative; z-index: 1; }
+        
+        /* Navigation */
+        .navbar-landing {
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding: 15px 0;
+            position: sticky; top: 0; z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        .navbar-landing.scrolled {
+            background: rgba(15, 23, 42, 0.95);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            padding: 10px 0;
+        }
+        .navbar-brand-landing {
+            font-size: 1.3rem; font-weight: 700; color: #fff !important;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .navbar-brand-landing img { width: 36px; height: 36px; border-radius: 8px; }
+        .nav-link-landing {
+            color: rgba(255,255,255,0.75) !important; font-weight: 500;
+            padding: 8px 16px !important; border-radius: 8px; transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+        .nav-link-landing:hover { color: #fff !important; background: rgba(255,255,255,0.08); }
+        .nav-link-landing.btn-nav {
+            background: linear-gradient(135deg, #667eea, #764ba2); color: #fff !important;
+            padding: 10px 22px !important; border-radius: 50px; font-weight: 600;
+            box-shadow: 0 4px 15px rgba(102,126,234,0.3);
+        }
+        .nav-link-landing.btn-nav:hover {
+            transform: translateY(-2px); box-shadow: 0 8px 25px rgba(102,126,234,0.4);
+        }
+        
+        /* Hero Section */
+        .hero-section {
+            padding: 80px 0 60px; text-align: center; position: relative;
+        }
+        .hero-badge {
+            display: inline-block; background: rgba(102,126,234,0.15);
+            border: 1px solid rgba(102,126,234,0.3); color: #4fc3f7;
+            padding: 6px 16px; border-radius: 50px; font-size: 0.85rem;
+            font-weight: 500; margin-bottom: 20px; letter-spacing: 0.5px;
+            animation: fadeInDown 1s ease;
+        }
+        .hero-badge i { margin: 0 5px; }
+        .hero-title {
+            font-size: 3.5rem; font-weight: 900; line-height: 1.2;
+            background: linear-gradient(135deg, #fff 0%, #4fc3f7 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; margin-bottom: 15px;
+            animation: fadeInUp 1s ease 0.2s both;
+        }
+        
+        .system-logo {
+            width: 180px; height: 180px; margin: 30px auto 35px;
+            display: flex; align-items: center; justify-content: center;
+            filter: drop-shadow(0 20px 40px rgba(102,126,234,0.3));
+            animation: logoFloat 4s ease-in-out infinite, fadeInUp 1s ease 0.4s both;
+        }
+        .system-logo img { width: 100%; height: 100%; object-fit: contain; }
+        .system-logo .logo-placeholder {
+            font-size: 100px; color: rgba(255,255,255,0.7);
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+        }
+        
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .hero-subtitle {
+            font-size: 1.15rem; color: rgba(255,255,255,0.7); margin-bottom: 35px;
+            max-width: 600px; margin-left: auto; margin-right: auto; line-height: 1.7;
+            animation: fadeInUp 1s ease 0.6s both;
+        }
+        
+        .hero-actions {
+            animation: fadeInUp 1s ease 0.8s both;
+        }
+
+        .btn-hero {
+            display: inline-flex; align-items: center; gap: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2); color: #fff;
+            padding: 16px 40px; border-radius: 50px; font-weight: 700; font-size: 1.1rem;
+            text-decoration: none; transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(102,126,234,0.3); border: none;
+            position: relative; overflow: hidden;
+        }
+        .btn-hero::after {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: rgba(255,255,255,0.1); transform: rotate(45deg); transition: all 0.3s ease;
+            opacity: 0;
+        }
+        .btn-hero:hover::after { opacity: 1; transform: rotate(45deg) translate(50%, 50%); }
+        .btn-hero:hover {
+            transform: translateY(-3px) scale(1.03); color: #fff;
+            box-shadow: 0 20px 50px rgba(102,126,234,0.4);
+        }
+        
+        .btn-hero-outline {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: transparent; color: #fff; border: 2px solid rgba(255,255,255,0.3);
+            padding: 14px 35px; border-radius: 50px; font-weight: 600; font-size: 1rem;
+            text-decoration: none; transition: all 0.3s ease; margin-left: 15px;
+        }
+        .btn-hero-outline:hover {
+            background: rgba(255,255,255,0.1); color: #fff; border-color: #fff;
+            transform: translateY(-3px);
+        }
+        
+        /* Stats Counter */
+        .stats-counter {
+            display: flex; justify-content: center; gap: 50px; flex-wrap: wrap;
+            margin-top: 60px; padding: 35px 0;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.02);
+            border-radius: 20px;
+            animation: fadeInUp 1s ease 1s both;
+        }
+        .stat-counter-item { text-align: center; min-width: 120px; }
+        .stat-counter-item .count {
+            font-size: 2.5rem; font-weight: 800;
+            background: linear-gradient(135deg, #4fc3f7, #667eea);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .stat-counter-item .label {
+            font-size: 0.85rem; color: rgba(255,255,255,0.6); text-transform: uppercase;
+            letter-spacing: 1.5px; margin-top: 5px; font-weight: 600;
+        }
+        
+        /* Scroll Reveal Utility */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 0.8s ease-out;
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Features Section */
+        .features-section { padding: 80px 0; position: relative; z-index: 1; }
+        .section-title {
+            text-align: center; font-size: 2.2rem; font-weight: 800; margin-bottom: 15px;
+            color: #fff;
+        }
+        .section-subtitle {
+            text-align: center; color: rgba(255,255,255,0.6); margin-bottom: 60px;
+            font-size: 1.1rem; max-width: 500px; margin-left: auto; margin-right: auto;
+        }
+        
+        .feature-card {
+            background: rgba(255,255,255,0.03); backdrop-filter: blur(10px);
+            border-radius: 20px; padding: 40px 30px; text-align: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); height: 100%;
+            border: 1px solid rgba(255,255,255,0.06);
+            position: relative; overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .feature-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, transparent, #667eea, transparent);
+            opacity: 0; transition: opacity 0.4s;
+        }
+        .feature-card:hover::before { opacity: 1; }
+        .feature-card:hover {
+            transform: translateY(-12px);
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(255,255,255,0.15);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+        }
+        
+        .feature-icon {
+            width: 80px; height: 80px; border-radius: 22px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 25px; font-size: 36px;
+            background: rgba(102,126,234,0.1); color: #667eea;
+            transition: all 0.4s;
+        }
+        .feature-card:nth-child(2) .feature-icon { background: rgba(16,185,129,0.1); color: #10b981; }
+        .feature-card:nth-child(3) .feature-icon { background: rgba(245,158,11,0.1); color: #f59e0b; }
+        .feature-card:nth-child(4) .feature-icon { background: rgba(239,68,68,0.1); color: #ef4444; }
+        .feature-card:nth-child(5) .feature-icon { background: rgba(79,195,247,0.1); color: #4fc3f7; }
+        .feature-card:nth-child(6) .feature-icon { background: rgba(139,92,246,0.1); color: #8b5cf6; }
+        
+        .feature-card:hover .feature-icon { transform: scale(1.15) rotate(-5deg); }
+        .feature-card h3 { font-size: 1.3rem; font-weight: 700; color: #fff; margin-bottom: 12px; }
+        .feature-card p { color: rgba(255,255,255,0.6); font-size: 0.95rem; line-height: 1.6; margin-bottom: 0; }
+        
+        /* Trusted By Section */
+        .trusted-section { padding: 40px 0 80px; text-align: center; }
+        .trusted-title { font-size: 0.9rem; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 3px; margin-bottom: 35px; font-weight: 600; }
+        .trusted-logos { display: flex; justify-content: center; align-items: center; gap: 50px; flex-wrap: wrap; }
+        .trusted-logos i { font-size: 2.8rem; color: rgba(255,255,255,0.15); transition: all 0.3s; }
+        .trusted-logos i:hover { color: rgba(255,255,255,0.6); transform: translateY(-5px); }
+        
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, rgba(102,126,234,0.15), rgba(118,75,162,0.15));
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 30px;
+            padding: 60px 40px; text-align: center; margin: 0 auto 80px;
+            max-width: 900px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            position: relative; overflow: hidden;
+        }
+        .cta-section::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, rgba(79,195,247,0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .cta-section h3 { font-size: 2.2rem; font-weight: 800; margin-bottom: 15px; position: relative; z-index: 1;}
+        .cta-section p { color: rgba(255,255,255,0.7); margin-bottom: 30px; font-size: 1.1rem; max-width: 600px; margin-left: auto; margin-right: auto; position: relative; z-index: 1;}
+        
+        /* Footer */
+        .footer {
+            background: rgba(0,0,0,0.4); backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255,255,255,0.05); padding: 60px 0 30px;
+            position: relative; z-index: 1; flex-shrink: 0;
+        }
+        .footer h5 { color: #fff; font-weight: 700; margin-bottom: 20px; font-size: 1.1rem; }
+        .footer p, .footer li { color: rgba(255,255,255,0.55); font-size: 0.9rem; line-height: 1.8; }
+        .footer-links { list-style: none; padding: 0; }
+        .footer-links li { margin-bottom: 10px; }
+        .footer-links a {
+            color: rgba(255,255,255,0.55); text-decoration: none; transition: all 0.3s;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .footer-links a:hover { color: #4fc3f7; padding-left: 6px; }
+        .footer-links a i { font-size: 12px; width: 16px; }
+        
+        .social-links { display: flex; gap: 12px; margin-top: 20px; }
+        .social-links a {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 42px; height: 42px; border-radius: 50%;
+            background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.7);
+            font-size: 18px; transition: all 0.3s; text-decoration: none;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .social-links a:hover { background: #667eea; color: #fff; transform: translateY(-5px); border-color: #667eea; box-shadow: 0 5px 15px rgba(102,126,234,0.4);}
+        
+        .footer-bottom {
+            border-top: 1px solid rgba(255,255,255,0.05); margin-top: 40px;
+            padding-top: 25px; text-align: center; color: rgba(255,255,255,0.4);
+            font-size: 0.85rem;
+        }
+        .footer-bottom a { color: rgba(255,255,255,0.6); text-decoration: none; margin: 0 10px; transition: color 0.3s; }
+        .footer-bottom a:hover { color: #fff; }
+        
+        .trust-badge {
+            display: inline-flex; align-items: center; gap: 15px; flex-wrap: wrap;
+            background: rgba(255,255,255,0.03); border-radius: 12px;
+            padding: 15px 20px; margin-top: 20px; font-size: 0.8rem;
+            color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.05);
+        }
+        .trust-badge span { display: flex; align-items: center; gap: 5px; }
+        .trust-badge i { color: #10b981; font-size: 1rem; }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .hero-title { font-size: 2.2rem; }
+            .hero-subtitle { font-size: 1rem; padding: 0 15px; }
+            .system-logo { width: 140px; height: 140px; margin: 20px auto; }
+            .stats-counter { gap: 20px; padding: 25px 10px; margin-top: 40px; }
+            .stat-counter-item { min-width: 45%; margin-bottom: 15px; }
+            .stat-counter-item .count { font-size: 1.8rem; }
+            .feature-card { margin-bottom: 20px; padding: 30px 20px; }
+            .btn-hero { width: 100%; justify-content: center; margin-bottom: 15px; }
+            .btn-hero-outline { width: 100%; justify-content: center; margin-left: 0; }
+            .cta-section { padding: 40px 20px; margin: 0 15px 60px; border-radius: 20px;}
+            .trusted-logos { gap: 30px; }
+            .footer { text-align: center; }
+            .social-links { justify-content: center; }
+            .trust-badge { justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Particles & Glow Effects -->
+    <div class="particles">
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+        <div class="particle"></div><div class="particle"></div>
+    </div>
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="glow-orb glow-orb-2"></div>
+    <div class="glow-orb glow-orb-3"></div>
+    
+    <!-- Navigation -->
+    <nav class="navbar-landing" id="navbar">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <a href="/" class="navbar-brand-landing text-decoration-none" aria-label="Home">
+                                            <img src="assets/img/logo.png" alt="KESUG Logo">
+                                        KESUG
+                </a>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="login" class="nav-link-landing btn-nav">
+                        <i class="fas fa-sign-in-alt me-1"></i> Login
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="main-content">
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div class="container">
+                <div class="hero-badge">
+                    <i class="fas fa-star"></i> NECTA-LIKE SYSTEM <i class="fas fa-star"></i>
+                </div>
+                <h1 class="hero-title">School Results<br>Management System</h1>
+                
+                <div class="system-logo">
+                                            <img src="assets/img/logo.png" alt="KESUG System Logo">
+                                    </div>
+                
+                <p class="hero-subtitle">
+                    Kesug Results Management System for Tanzanian Secondary Schools.
+                    Upload, analyze, publish, and share student results with powerful reporting tools.
+                </p>
+                
+                <div class="hero-actions d-flex justify-content-center flex-wrap">
+                    <a href="login" class="btn-hero">
+                        <i class="fas fa-sign-in-alt"></i> Login to System
+                    </a>
+                    <a href="register" class="btn-hero-outline">
+                        <i class="fas fa-school"></i> Register Your School
+                    </a>
+                </div>
+                
+                <!-- Stats Counter -->
+                                <div class="stats-counter">
+                    <div class="stat-counter-item">
+                        <div class="count" data-target="5">0</div>
+                        <div class="label">Active Schools</div>
+                    </div>
+                    <div class="stat-counter-item">
+                        <div class="count" data-target="441">0</div>
+                        <div class="label">Students</div>
+                    </div>
+                    <div class="stat-counter-item">
+                        <div class="count" data-target="18">0</div>
+                        <div class="label">Teachers</div>
+                    </div>
+                    <div class="stat-counter-item">
+                        <div class="count" data-target="2518">0</div>
+                        <div class="label">Results Published</div>
+                    </div>
+                </div>
+                            </div>
+        </section>
+        
+        <!-- Trusted By -->
+        <section class="trusted-section reveal">
+            <div class="container">
+                <div class="trusted-title">Trusted by Schools Across Tanzania</div>
+                <div class="trusted-logos">
+                    <i class="fas fa-school" title="Secondary Schools"></i>
+                    <i class="fas fa-building" title="Institutions"></i>
+                    <i class="fas fa-university" title="Universities"></i>
+                    <i class="fas fa-chalkboard-teacher" title="Teachers"></i>
+                    <i class="fas fa-user-graduate" title="Students"></i>
+                    <i class="fas fa-award" title="Excellence"></i>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Features Section -->
+        <section class="features-section">
+            <div class="container">
+                <h2 class="section-title reveal">Everything You Need</h2>
+                <p class="section-subtitle reveal">Powerful tools designed specifically for managing school results from start to finish.</p>
+                
+                <div class="row g-4">
+                    <div class="col-lg-4 col-md-6 reveal">
+                        <div class="feature-card">
+                            <div class="feature-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+                            <h3>Teacher Portal</h3>
+                            <p>Upload exam results by subject with automatic NECTA grading. Manage your classes and track student performance effortlessly.</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6 reveal" style="transition-delay: 0.1s;">
+                        <div class="feature-card">
+                            <div class="feature-icon"><i class="fas fa-user-graduate"></i></div>
+                            <h3>Student Access</h3>
+                            <p>Students view results online, generate printable NECTA-standard report cards with division, points, and class position.</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6 reveal" style="transition-delay: 0.2s;">
+                        <div class="feature-card">
+                            <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+                            <h3>Admin Dashboard</h3>
+                            <p>Complete control over students, teachers, subjects, classes, SMS notifications, and result publishing workflows.</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6 reveal" style="transition-delay: 0.3s;">
+                        <div class="feature-card">
+                            <div class="feature-icon"><i class="fas fa-sms"></i></div>
+                            <h3>SMS Notifications</h3>
+                            <p>Send results directly to parents via SMS. Keep families informed about academic progress in real-time securely.</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6 reveal" style="transition-delay: 0.4s;">
+                        <div class="feature-card">
+                            <div class="feature-icon"><i class="fas fa-robot"></i></div>
+                            <h3>Smart Analytics</h3>
+                            <p>Advanced analytics track teacher performance, identify class trends, and provide actionable insights for improvement.</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6 reveal" style="transition-delay: 0.5s;">
+                        <div class="feature-card">
+                            <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+                            <h3>Secure & Reliable</h3>
+                            <p>Enterprise-grade security with role-based access, data encryption, and automated backups. Your school data is safe.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- CTA Section -->
+        <section class="cta-section reveal">
+            <div class="container">
+                <h3>Ready to Get Started?</h3>
+                <p>Join other Tanzanian secondary schools which are already using KESUG to streamline their academic results management.</p>
+                <a href="register" class="btn-hero" style="margin-top: 10px;">
+                    <i class="fas fa-school me-2"></i> Register Your School
+                </a>
+            </div>
+        </section>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <h5><i class="fas fa-graduation-cap me-2 text-accent"></i>KESUG School System</h5>
+                    <p>Official Kesug Results Management System (SRMS) for Tanzanian Secondary Schools. Streamlining academic record management for better educational outcomes.</p>
+                    <div class="social-links">
+                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h5>Quick Links</h5>
+                    <ul class="footer-links">
+                        <li><a href="login"><i class="fas fa-chevron-right"></i> System Login</a></li>
+                        <li><a href="about"><i class="fas fa-chevron-right"></i> About KESUG</a></li>
+                        <li><a href="pricing"><i class="fas fa-chevron-right"></i> Pricing</a></li>
+                        <li><a href="help/index"><i class="fas fa-chevron-right"></i> Help & Resources</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-5 col-md-12 mb-4">
+                    <h5>Legal & Security</h5>
+                    <ul class="footer-links">
+                        <li><a href="privacy"><i class="fas fa-chevron-right"></i> Privacy Policy</a></li>
+                        <li><a href="terms"><i class="fas fa-chevron-right"></i> Terms of Service</a></li>
+                        <li><a href="contact"><i class="fas fa-chevron-right"></i> Contact Support</a></li>
+                    </ul>
+                    <div class="trust-badge">
+                        <span><i class="fas fa-shield-check"></i> SSL Secured</span>
+                        <span><i class="fas fa-lock"></i> 256-bit Encryption</span>
+                        <span><i class="fas fa-check-circle"></i> Verified Platform</span>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="mb-3">
+                    <a href="privacy">Privacy Policy</a> |
+                    <a href="terms">Terms of Service</a> |
+                    <a href="contact">Contact</a>
+                </div>
+                <div>&copy; 2026 KESUG School Results Management System. All rights reserved.</div>
+                <div style="margin-top:8px; opacity:0.5; font-size: 0.75rem; letter-spacing: 1px;">DEVELOPED BY BRAYNEX TECH - TRANSFORMING EDUCATION IN TANZANIA</div>
+            </div>
+        </div>
+    </footer>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Navbar Scroll Effect
+            const navbar = document.getElementById('navbar');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    navbar.classList.add('scrolled');
+                } else {
+                    navbar.classList.remove('scrolled');
+                }
+            });
+
+            // Scroll Reveal Animation
+            const revealElements = document.querySelectorAll('.reveal');
+            
+            const revealOptions = {
+                threshold: 0.15,
+                rootMargin: "0px 0px -50px 0px"
+            };
+
+            const revealOnScroll = new IntersectionObserver(function(entries, observer) {
+                entries.forEach(entry => {
+                    if (!entry.isIntersecting) {
+                        return;
+                    } else {
+                        entry.target.classList.add('active');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, revealOptions);
+
+            revealElements.forEach(el => {
+                revealOnScroll.observe(el);
+            });
+
+            // Number Counter Animation
+            const counters = document.querySelectorAll('.count');
+            const speed = 200; // The lower the slower
+            
+            const counterObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const counter = entry.target;
+                        const updateCount = () => {
+                            const target = +counter.getAttribute('data-target');
+                            const count = +counter.innerText.replace(/,/g, '');
+                            const inc = target / speed;
+
+                            if (count < target) {
+                                counter.innerText = Math.ceil(count + inc).toLocaleString() + '+';
+                                setTimeout(updateCount, 15);
+                            } else {
+                                counter.innerText = target.toLocaleString() + '+';
+                            }
+                        };
+                        updateCount();
+                        observer.unobserve(counter);
+                    }
+                });
+            }, { threshold: 0.5 });
+
+            counters.forEach(counter => {
+                counterObserver.observe(counter);
+            });
+        });
+    </script>
+</body>
+</html>

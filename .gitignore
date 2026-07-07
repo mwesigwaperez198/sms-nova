@@ -1,0 +1,42 @@
+# Secrets & env
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.crt
+
+# Dependencies
+node_modules/
+vendor/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+*.egg
+dist/
+build/
+*.whl
+
+# IDE & editors
+.vscode/
+.amazonq/
+.continue/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Build / output
+*.log
+.pytest_cache/
+*.db
+*.db-journal
+coverage/
+htmlcov/
+.tools/
+
+# Runtime
+oracleJdk-26.jdk/

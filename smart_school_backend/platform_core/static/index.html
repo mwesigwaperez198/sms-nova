@@ -1,0 +1,1200 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nova SMS Local Preview</title>
+    <style>
+      :root {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: #111827;
+        background: #f8fafc;
+        --blue: #1e3a8a;
+        --blue-soft: #eff6ff;
+        --green: #166534;
+        --green-soft: #f0fdf4;
+        --amber: #d97706;
+        --amber-soft: #fffbeb;
+        --red: #dc2626;
+        --red-soft: #fef2f2;
+        --slate: #64748b;
+        --border: #dbe3ee;
+        --surface: #ffffff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        background: #f8fafc;
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      .login-screen {
+        display: grid;
+        min-height: 100vh;
+        place-items: center;
+        padding: 20px;
+        background: linear-gradient(135deg, #ffffff 0%, #eff6ff 54%, #f0fdf4 100%);
+      }
+
+      .login-wrap {
+        width: min(980px, 100%);
+      }
+
+      .brand-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .brand-mark {
+        display: grid;
+        width: 46px;
+        height: 46px;
+        place-items: center;
+        border-radius: 8px;
+        background: var(--blue);
+        color: #ffffff;
+        font-weight: 900;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1,
+      h2,
+      h3 {
+        letter-spacing: 0;
+      }
+
+      .muted,
+      .eyebrow {
+        color: var(--slate);
+      }
+
+      .eyebrow {
+        margin-bottom: 3px;
+        font-size: 0.78rem;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .login-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+
+      .card,
+      .panel,
+      .stat-card,
+      .notification-card,
+      .chart-box {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface);
+      }
+
+      .card {
+        display: grid;
+        gap: 12px;
+        padding: 18px;
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        color: #334155;
+        font-size: 0.9rem;
+        font-weight: 800;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: #ffffff;
+        color: #111827;
+        padding: 10px 11px;
+      }
+
+      textarea {
+        min-height: 96px;
+        resize: vertical;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        min-height: 38px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: #ffffff;
+        color: #111827;
+        padding: 8px 11px;
+        font-weight: 800;
+      }
+
+      .btn.primary {
+        border-color: var(--blue);
+        background: var(--blue);
+        color: #ffffff;
+      }
+
+      .btn.green {
+        border-color: var(--green);
+        background: var(--green);
+        color: #ffffff;
+      }
+
+      .btn.red {
+        border-color: var(--red);
+        background: var(--red);
+        color: #ffffff;
+      }
+
+      .btn.amber {
+        border-color: var(--amber);
+        background: var(--amber);
+        color: #ffffff;
+      }
+
+      .app {
+        display: grid;
+        grid-template-columns: 252px minmax(0, 1fr);
+        min-height: 100vh;
+      }
+
+      aside {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        border-right: 1px solid var(--border);
+        background: #ffffff;
+        padding: 18px 14px;
+      }
+
+      .side-nav {
+        display: grid;
+        gap: 6px;
+      }
+
+      .nav-btn {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 38px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        background: #ffffff;
+        color: #334155;
+        padding: 8px 10px;
+        text-align: left;
+        font-weight: 800;
+      }
+
+      .nav-btn.active {
+        border-color: #bfdbfe;
+        background: var(--blue-soft);
+        color: var(--blue);
+      }
+
+      .role-pill {
+        border: 1px solid #bbf7d0;
+        border-radius: 8px;
+        background: var(--green-soft);
+        color: #14532d;
+        padding: 10px;
+        font-size: 0.84rem;
+        font-weight: 800;
+      }
+
+      main {
+        min-width: 0;
+        padding: 18px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 14px;
+      }
+
+      .topbar h1 {
+        margin-bottom: 0;
+        font-size: clamp(1.35rem, 2.2vw, 2rem);
+      }
+
+      .top-actions,
+      .row-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .notice,
+      .error {
+        border-radius: 8px;
+        margin-bottom: 12px;
+        padding: 10px 12px;
+        font-weight: 800;
+      }
+
+      .notice {
+        border: 1px solid #bbf7d0;
+        background: var(--green-soft);
+        color: #14532d;
+      }
+
+      .error {
+        border: 1px solid #fecaca;
+        background: var(--red-soft);
+        color: #991b1b;
+      }
+
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .stats {
+        display: grid;
+        grid-column: 1 / -1;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .stat-card {
+        min-height: 104px;
+        padding: 12px;
+      }
+
+      .stat-card strong {
+        display: block;
+        margin: 5px 0 4px;
+        font-size: clamp(1.3rem, 2vw, 1.75rem);
+      }
+
+      .stat-card p {
+        margin-bottom: 0;
+        color: var(--slate);
+        font-size: 0.82rem;
+      }
+
+      .panel {
+        padding: 14px;
+      }
+
+      .panel.half {
+        grid-column: span 6;
+      }
+
+      .panel.third {
+        grid-column: span 4;
+      }
+
+      .panel.full {
+        grid-column: 1 / -1;
+      }
+
+      .panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .panel-header h2,
+      .panel-header h3 {
+        margin-bottom: 0;
+        font-size: 1rem;
+      }
+
+      .notification-strip {
+        display: grid;
+        grid-column: 1 / -1;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .notification-card {
+        display: grid;
+        gap: 5px;
+        padding: 11px;
+        border-left: 4px solid var(--amber);
+      }
+
+      .notification-card.high {
+        border-left-color: var(--red);
+      }
+
+      .notification-card p {
+        margin-bottom: 0;
+        color: var(--slate);
+        font-size: 0.84rem;
+      }
+
+      .chart-bars {
+        display: grid;
+        gap: 9px;
+      }
+
+      .bar-row {
+        display: grid;
+        grid-template-columns: 78px minmax(0, 1fr) 44px;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.84rem;
+      }
+
+      .bar-track {
+        height: 13px;
+        border-radius: 999px;
+        background: #e2e8f0;
+        overflow: hidden;
+      }
+
+      .bar-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: var(--blue);
+      }
+
+      .bar-fill.green {
+        background: var(--green);
+      }
+
+      .bar-fill.amber {
+        background: var(--amber);
+      }
+
+      .stacked {
+        display: flex;
+        height: 14px;
+        border-radius: 999px;
+        background: #e2e8f0;
+        overflow: hidden;
+      }
+
+      .stack-male {
+        background: var(--blue);
+      }
+
+      .stack-female {
+        background: var(--green);
+      }
+
+      .table-wrap {
+        width: 100%;
+        overflow-x: auto;
+      }
+
+      table {
+        width: 100%;
+        min-width: 660px;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        border-bottom: 1px solid var(--border);
+        padding: 9px 8px;
+        text-align: left;
+        vertical-align: top;
+        font-size: 0.86rem;
+      }
+
+      th {
+        background: #f8fafc;
+        color: #334155;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        max-width: 100%;
+        border-radius: 999px;
+        padding: 4px 8px;
+        font-size: 0.72rem;
+        font-weight: 900;
+        white-space: nowrap;
+      }
+
+      .success {
+        background: #dcfce7;
+        color: #14532d;
+      }
+
+      .warning {
+        background: #fef3c7;
+        color: #713f12;
+      }
+
+      .danger {
+        background: #fee2e2;
+        color: #7f1d1d;
+      }
+
+      .info {
+        background: #dbeafe;
+        color: #1e3a8a;
+      }
+
+      .two-col {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .sms-groups {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .sms-group {
+        display: grid;
+        grid-template-columns: 18px minmax(0, 1fr);
+        align-items: start;
+        gap: 8px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px;
+      }
+
+      .sms-group p {
+        margin-bottom: 0;
+        color: var(--slate);
+        font-size: 0.8rem;
+      }
+
+      .profile-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .profile-item {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px;
+      }
+
+      .profile-item strong {
+        display: block;
+        margin-top: 4px;
+      }
+
+      @media (max-width: 1100px) {
+        .app {
+          grid-template-columns: 1fr;
+        }
+
+        aside {
+          border-right: 0;
+          border-bottom: 1px solid var(--border);
+        }
+
+        .side-nav {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .panel.half,
+        .panel.third {
+          grid-column: 1 / -1;
+        }
+      }
+
+      @media (max-width: 760px) {
+        main,
+        aside {
+          padding: 12px;
+        }
+
+        .login-grid,
+        .stats,
+        .notification-strip,
+        .two-col,
+        .sms-groups,
+        .profile-grid,
+        .side-nav {
+          grid-template-columns: 1fr;
+        }
+
+        .topbar,
+        .panel-header {
+          align-items: stretch;
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script>
+      const roles = [
+        { key: "super-admin", label: "Super Admin", title: "Platform Maintenance" },
+        { key: "admin", label: "Admin", title: "School Control Center" },
+        { key: "secretary", label: "Secretary", title: "Front Desk and Admissions" },
+        { key: "bursar", label: "Bursar", title: "Finance Operations" },
+        { key: "librarian", label: "Librarian", title: "Library and Book Stock" },
+        { key: "teacher", label: "Teacher", title: "Teaching Workspace" },
+        { key: "parent", label: "Parent", title: "Child Status" },
+        { key: "student", label: "Student", title: "Student View" }
+      ];
+
+      const state = {
+        session: null,
+        role: "admin",
+        view: "Home",
+        data: null,
+        notice: "",
+        error: "",
+        selectedSmsGroup: "all-parents"
+      };
+
+      const api = async (path, options = {}) => {
+        const response = await fetch(path, {
+          ...options,
+          headers: { "Content-Type": "application/json", ...(options.headers || {}) }
+        });
+        if (!response.ok) {
+          const body = await response.json().catch(() => ({ detail: "Request failed" }));
+          throw new Error(body.detail || "Request failed");
+        }
+        return response.json();
+      };
+
+      const statusTone = (value) => {
+        const text = String(value).toLowerCase();
+        if (text.includes("approved") || text.includes("confirmed") || text.includes("available") || text.includes("active") || text.includes("delivered") || text.includes("sent")) return "success";
+        if (text.includes("pending") || text.includes("draft") || text.includes("review") || text.includes("matched") || text.includes("queued") || text.includes("medium") || text.includes("low")) return "warning";
+        if (text.includes("unmatched") || text.includes("unavailable") || text.includes("high") || text.includes("failed") || text.includes("rejected")) return "danger";
+        return "info";
+      };
+
+      const badge = (value, tone) => `<span class="badge ${tone || statusTone(value)}">${value}</span>`;
+
+      const table = (columns, rows, actionRenderer) => `
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                ${columns.map((column) => `<th>${column.label}</th>`).join("")}
+                ${actionRenderer ? "<th>Actions</th>" : ""}
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map((row) => `<tr>
+                ${columns.map((column) => {
+                  const value = row[column.key] ?? "";
+                  return `<td>${column.key.toLowerCase().includes("status") || column.key.toLowerCase().includes("severity") ? badge(value) : value}</td>`;
+                }).join("")}
+                ${actionRenderer ? `<td>${actionRenderer(row)}</td>` : ""}
+              </tr>`).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      const loadData = async () => {
+        const [dashboard, students, imports, docs, payments, books, requests, staff, messages, smsGroups] = await Promise.all([
+          api(`/dashboard/${state.role}`),
+          api("/students"),
+          api("/imports"),
+          api("/finance/documents"),
+          api("/payments"),
+          api("/library/books"),
+          api("/library/requested-books"),
+          api("/staff"),
+          api("/communications/batches"),
+          api("/communications/sms-recipient-groups")
+        ]);
+        state.data = { dashboard, students, imports, docs, payments, books, requests, staff, messages, smsGroups };
+      };
+
+      const renderLogin = () => {
+        document.getElementById("root").innerHTML = `
+          <main class="login-screen">
+            <section class="login-wrap">
+              <div class="brand-row">
+                <div class="brand-mark">NDS</div>
+                <div>
+                  <p class="eyebrow">Nova Demonstration School</p>
+                  <h1>School Management System</h1>
+                  <p class="muted">Role-based local preview connected to FastAPI mock endpoints.</p>
+                </div>
+              </div>
+              <div class="login-grid">
+                <form class="card" onsubmit="login(event)">
+                  <div>
+                    <p class="eyebrow">Secure login</p>
+                    <h2>Admin access</h2>
+                  </div>
+                  ${state.error ? `<div class="error">${state.error}</div>` : ""}
+                  <label>Email <input id="email" value="admin@novasms.local" /></label>
+                  <label>Password <input id="password" type="password" placeholder="Local password" /></label>
+                  <button class="btn primary" type="submit">Sign In</button>
+                </form>
+                <section class="card">
+                  <div>
+                    <p class="eyebrow">Local role preview</p>
+                    <h2>Open any workspace</h2>
+                    <p class="muted">This helps review UI/UX before database integration.</p>
+                  </div>
+                  <label>Role
+                    <select id="demoRole">
+                      ${roles.map((role) => `<option>${role.label}</option>`).join("")}
+                    </select>
+                  </label>
+                  <button class="btn green" onclick="demoLogin()">Open Demo Workspace</button>
+                </section>
+              </div>
+            </section>
+          </main>
+        `;
+      };
+
+      const renderApp = () => {
+        const active = roles.find((role) => role.key === state.role) || roles[1];
+        const nav = state.data.dashboard.nav || ["Home"];
+        if (!nav.includes(state.view)) state.view = nav[0] || "Home";
+        const unread = state.data.dashboard.notifications.filter((item) => item.status === "Unread").length;
+
+        document.getElementById("root").innerHTML = `
+          <div class="app">
+            <aside>
+              <div class="brand-row">
+                <div class="brand-mark">NDS</div>
+                <div>
+                  <strong>${state.data.dashboard.school.name}</strong><br />
+                  <span class="muted">${state.data.dashboard.school.term} - ${state.data.dashboard.school.academic_year}</span>
+                </div>
+              </div>
+              <div class="role-pill">${active.label}: ${active.title}</div>
+              <nav class="side-nav" aria-label="Workspace navigation">
+                ${nav.map((item) => `<button class="nav-btn ${state.view === item ? "active" : ""}" onclick="changeView('${item}')"><span>${item}</span>${item === "Notifications" && unread ? badge(unread, "danger") : ""}</button>`).join("")}
+              </nav>
+              <p class="muted">Only the selected role navigation is shown. Super Admin tools are hidden from school admin users.</p>
+              <button class="btn" onclick="logout()">Logout</button>
+            </aside>
+
+            <main>
+              <header class="topbar">
+                <div>
+                  <p class="eyebrow">${active.label}</p>
+                  <h1>${state.view}</h1>
+                </div>
+                <div class="top-actions">
+                  <button class="btn" onclick="changeView('Notifications')">Notifications ${unread ? badge(unread, "danger") : ""}</button>
+                  ${nav.includes("Communication") ? `<button class="btn primary" onclick="changeView('Communication')">Send SMS</button>` : ""}
+                  ${nav.includes("Settings") ? `<button class="btn" onclick="changeView('Settings')">School Profile</button>` : ""}
+                </div>
+              </header>
+
+              ${state.notice ? `<div class="notice">${state.notice}</div>` : ""}
+              ${state.error ? `<div class="error">${state.error}</div>` : ""}
+              ${renderView()}
+            </main>
+          </div>
+        `;
+      };
+
+      const renderView = () => {
+        if (state.role === "admin") return renderAdminView();
+        if (state.role === "secretary") return renderSecretaryView();
+        if (state.role === "bursar") return renderBursarView();
+        if (state.role === "librarian") return renderLibrarianView();
+        if (state.role === "teacher") return renderTeacherView();
+        if (state.role === "parent" || state.role === "student") return renderParentStudentView();
+        return renderSuperAdminView();
+      };
+
+      const statCard = (label, value, hint, tone = "info") => `
+        <article class="stat-card">
+          <span class="badge ${tone}">${label}</span>
+          <strong>${value}</strong>
+          <p>${hint}</p>
+        </article>
+      `;
+
+      const simpleBars = (rows, valueKey, colorClass = "") => `
+        <div class="chart-bars">
+          ${rows.map((row) => `
+            <div class="bar-row">
+              <span>${row.label}</span>
+              <div class="bar-track"><div class="bar-fill ${colorClass}" style="width:${Math.min(row[valueKey], 100)}%"></div></div>
+              <strong>${row[valueKey]}%</strong>
+            </div>
+          `).join("")}
+        </div>
+      `;
+
+      const renderEnrollmentBars = () => `
+        <div class="chart-bars">
+          ${state.data.dashboard.home.enrollment_by_class.map((row) => {
+            const maleWidth = Math.round((row.male / row.total) * 100);
+            const femaleWidth = 100 - maleWidth;
+            return `
+              <div class="bar-row">
+                <span>${row.label}</span>
+                <div class="stacked">
+                  <div class="stack-male" style="width:${maleWidth}%"></div>
+                  <div class="stack-female" style="width:${femaleWidth}%"></div>
+                </div>
+                <strong>${row.total}</strong>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+
+      const renderAdminView = () => {
+        if (state.view === "Approvals") return renderApprovals();
+        if (state.view === "Notifications") return renderNotifications();
+        if (state.view === "Students") return renderStudents();
+        if (state.view === "Staff") return renderStaff();
+        if (state.view === "Finance") return renderFinance();
+        if (state.view === "Communication") return renderCommunication();
+        if (state.view === "Reports") return renderReports();
+        if (state.view === "Settings") return renderSettings();
+        return renderAdminHome();
+      };
+
+      const renderAdminHome = () => {
+        const home = state.data.dashboard.home;
+        const notes = state.data.dashboard.notifications.slice(0, 3);
+        return `
+          <section class="dashboard-grid">
+            <div class="stats">
+              ${statCard("Total Students", home.student_summary.total, "Detected from latest import and active records", "info")}
+              ${statCard("Male", home.student_summary.male, "Auto-counted from student gender fields", "info")}
+              ${statCard("Female", home.student_summary.female, "Auto-counted from student gender fields", "success")}
+              ${statCard("Pending Admissions", home.student_summary.pending_admissions, "Waiting for admin approval", "warning")}
+            </div>
+
+            <div class="notification-strip">
+              ${notes.map((note) => `
+                <button class="notification-card ${note.severity === "High" ? "high" : ""}" onclick="changeView('Notifications')">
+                  <strong>${note.title}</strong>
+                  <p>${note.message}</p>
+                </button>
+              `).join("")}
+            </div>
+
+            <section class="panel third">
+              <div class="panel-header"><div><p class="eyebrow">Finance</p><h2>Fees Collection</h2></div>${badge(home.finance_summary.collection_rate + "%", "success")}</div>
+              ${statCard("Collected", home.finance_summary.collected, "Expected: " + home.finance_summary.expected, "success")}
+              ${statCard("Outstanding", home.finance_summary.outstanding, "Debtors and reminders need follow-up", "warning")}
+            </section>
+
+            <section class="panel third">
+              <div class="panel-header"><div><p class="eyebrow">Enrollment</p><h2>Male/Female by Class</h2></div></div>
+              ${renderEnrollmentBars()}
+            </section>
+
+            <section class="panel third">
+              <div class="panel-header"><div><p class="eyebrow">Attendance</p><h2>Present Rate</h2></div></div>
+              ${simpleBars(home.attendance_by_class, "present", "green")}
+            </section>
+
+            <section class="panel half">
+              <div class="panel-header"><div><p class="eyebrow">Performance</p><h2>Class Average</h2></div></div>
+              ${simpleBars(home.performance_by_class, "average")}
+            </section>
+
+            <section class="panel half">
+              <div class="panel-header"><div><p class="eyebrow">Finance Trend</p><h2>Collection Progress</h2></div></div>
+              ${simpleBars(home.finance_trend, "collected", "green")}
+            </section>
+          </section>
+        `;
+      };
+
+      const renderApprovals = () => `
+        <section class="panel">
+          <div class="panel-header">
+            <div><p class="eyebrow">Admin approval inbox</p><h2>Approve, reject, or request changes</h2></div>
+          </div>
+          ${table([
+            { key: "id", label: "ID" },
+            { key: "type", label: "Type" },
+            { key: "title", label: "Title" },
+            { key: "submitted_by", label: "Submitted By" },
+            { key: "priority", label: "Priority" },
+            { key: "status", label: "Status" }
+          ], state.data.dashboard.approvals, (row) => `
+            <div class="row-actions">
+              <button class="btn green" onclick="approvalDecision('${row.id}', 'approve')">Approve</button>
+              <button class="btn amber" onclick="approvalDecision('${row.id}', 'changes requested')">Changes</button>
+              <button class="btn red" onclick="approvalDecision('${row.id}', 'reject')">Reject</button>
+            </div>
+          `)}
+        </section>
+      `;
+
+      const renderNotifications = () => `
+        <section class="panel">
+          <div class="panel-header">
+            <div><p class="eyebrow">Notifications center</p><h2>Approvals, red flags, attendance and finance alerts</h2></div>
+          </div>
+          ${table([
+            { key: "id", label: "ID" },
+            { key: "type", label: "Type" },
+            { key: "title", label: "Title" },
+            { key: "message", label: "Message" },
+            { key: "severity", label: "Severity" },
+            { key: "status", label: "Status" }
+          ], state.data.dashboard.notifications)}
+        </section>
+      `;
+
+      const renderStudents = () => `
+        <section class="two-col">
+          <div class="panel">
+            <div class="panel-header"><div><p class="eyebrow">Student records</p><h2>Admissions and profiles</h2></div></div>
+            ${table([
+              { key: "admission_number", label: "Admission No" },
+              { key: "name", label: "Student" },
+              { key: "gender", label: "Gender" },
+              { key: "class", label: "Class" },
+              { key: "guardian", label: "Guardian" },
+              { key: "status", label: "Status" }
+            ], state.data.students.items)}
+          </div>
+          <div class="panel">
+            <div class="panel-header"><div><p class="eyebrow">Excel import</p><h2>Detected totals and validation</h2></div></div>
+            ${table([
+              { key: "batch", label: "Batch" },
+              { key: "type", label: "Type" },
+              { key: "total", label: "Total" },
+              { key: "male", label: "Male" },
+              { key: "female", label: "Female" },
+              { key: "invalid", label: "Invalid" },
+              { key: "status", label: "Status" }
+            ], state.data.imports.items)}
+          </div>
+        </section>
+      `;
+
+      const renderStaff = () => `
+        <section class="panel">
+          <div class="panel-header"><div><p class="eyebrow">Staff management</p><h2>Teaching and non-teaching staff</h2></div><button class="btn primary">Add Staff</button></div>
+          ${table([
+            { key: "staff_no", label: "Staff No" },
+            { key: "name", label: "Name" },
+            { key: "role", label: "Role" },
+            { key: "department", label: "Department" },
+            { key: "status", label: "Status" }
+          ], state.data.staff.items)}
+        </section>
+      `;
+
+      const renderFinance = () => `
+        <section class="two-col">
+          <div class="panel">
+            <div class="panel-header"><div><p class="eyebrow">Cashless payments</p><h2>Payment reconciliation</h2></div><button class="btn primary" onclick="shareFinance()">Share to Admin</button></div>
+            ${table([
+              { key: "reference", label: "Reference" },
+              { key: "student", label: "Student" },
+              { key: "method", label: "Method" },
+              { key: "amount", label: "Amount" },
+              { key: "status", label: "Status" }
+            ], state.data.payments.items)}
+          </div>
+          <div class="panel">
+            <div class="panel-header"><div><p class="eyebrow">Finance documents</p><h2>Printable and shareable docs</h2></div><button class="btn" onclick="window.print()">Print</button></div>
+            ${table([
+              { key: "document_number", label: "No" },
+              { key: "document_type", label: "Type" },
+              { key: "title", label: "Title" },
+              { key: "amount", label: "Amount" },
+              { key: "status", label: "Status" }
+            ], state.data.docs.items)}
+          </div>
+          <div class="panel full">
+            <div class="panel-header"><div><p class="eyebrow">Red flags</p><h2>Finance and control alerts</h2></div></div>
+            ${table([
+              { key: "label", label: "Flag" },
+              { key: "value", label: "Value" },
+              { key: "severity", label: "Severity" },
+              { key: "status", label: "Status" }
+            ], state.data.dashboard.red_flags)}
+          </div>
+        </section>
+      `;
+
+      const renderCommunication = () => `
+        <section class="two-col">
+          <div class="panel">
+            <div class="panel-header"><div><p class="eyebrow">SMS composer</p><h2>Select parents and send information</h2></div></div>
+            <div class="sms-groups">
+              ${state.data.smsGroups.items.map((group) => `
+                <label class="sms-group">
+                  <input type="radio" name="smsGroup" value="${group.id}" ${state.selectedSmsGroup === group.id ? "checked" : ""} onchange="state.selectedSmsGroup='${group.id}'" />
+                  <span><strong>${group.label} (${group.count})</strong><p>${group.description}</p></span>
+                </label>
+              `).join("")}
+            </div>
+            <br />
+            <label>Message to registered phone numbers
+              <textarea id="smsMessage">Dear parent, please check the latest update about your student from Nova Demonstration School.</textarea>
+            </label>
+            <br />
+            <label>Admin comment
+              <input id="smsComment" placeholder="Optional internal note before sending" />
+            </label>
+            <br />
+            <button class="btn primary" onclick="sendSmsBatch()">Preview and Queue SMS</button>
+          </div>
+          <div class="panel">
+            <div class="panel-header"><div><p class="eyebrow">Communication history</p><h2>SMS, push, email and in-app batches</h2></div></div>
+            ${table([
+              { key: "batch", label: "Batch" },
+              { key: "channel", label: "Channel" },
+              { key: "recipients", label: "Recipients" },
+              { key: "message", label: "Message" },
+              { key: "status", label: "Status" }
+            ], state.data.messages.items)}
+          </div>
+        </section>
+      `;
+
+      const renderReports = () => `
+        <section class="dashboard-grid">
+          <div class="panel half">
+            <div class="panel-header"><div><p class="eyebrow">Reports</p><h2>Printable school reports</h2></div><button class="btn" onclick="window.print()">Print Current View</button></div>
+            ${table([
+              { key: "document_number", label: "No" },
+              { key: "document_type", label: "Report Type" },
+              { key: "title", label: "Title" },
+              { key: "status", label: "Status" }
+            ], state.data.docs.items)}
+          </div>
+          <div class="panel half">
+            <div class="panel-header"><div><p class="eyebrow">Performance graph</p><h2>Class averages</h2></div></div>
+            ${simpleBars(state.data.dashboard.home.performance_by_class, "average")}
+          </div>
+        </section>
+      `;
+
+      const renderSettings = () => {
+        const school = state.data.dashboard.school;
+        return `
+          <section class="panel">
+            <div class="panel-header"><div><p class="eyebrow">Settings</p><h2>School profile and branding</h2></div><button class="btn primary">Save Settings</button></div>
+            <div class="profile-grid">
+              ${[
+                ["School Name", school.name],
+                ["Short Name", school.short_name],
+                ["Phone", school.phone],
+                ["Email", school.email],
+                ["Address", school.address],
+                ["Admission Format", school.admission_number_format],
+                ["Primary Color", school.primary_color],
+                ["Secondary Color", school.secondary_color],
+                ["Cashless Payments", school.cashless_enabled ? "Enabled" : "Disabled"]
+              ].map(([label, value]) => `<div class="profile-item"><span class="muted">${label}</span><strong>${value}</strong></div>`).join("")}
+            </div>
+          </section>
+        `;
+      };
+
+      const renderSecretaryView = () => state.view === "Import Students" ? renderStudents() : `
+        <section class="panel">
+          <div class="panel-header"><div><p class="eyebrow">Front desk</p><h2>Secretary student registration workspace</h2></div><button class="btn primary">New Student</button></div>
+          ${renderStudents()}
+        </section>
+      `;
+
+      const renderBursarView = () => renderFinance();
+
+      const renderLibrarianView = () => `
+        <section class="two-col">
+          <div class="panel">
+            <div class="panel-header"><div><p class="eyebrow">Library</p><h2>Book stock by shelves</h2></div><button class="btn primary">Add Book</button></div>
+            ${table([
+              { key: "code", label: "Code" },
+              { key: "title", label: "Book" },
+              { key: "shelf", label: "Shelf" },
+              { key: "available", label: "Available" },
+              { key: "borrowed", label: "Borrowed" },
+              { key: "status", label: "Status" }
+            ], state.data.books.items)}
+          </div>
+          <div class="panel">
+            <div class="panel-header"><div><p class="eyebrow">Requested books</p><h2>Unavailable books students need</h2></div><button class="btn primary" onclick="shareRequestedBooks()">Share to Admin</button></div>
+            ${table([
+              { key: "title", label: "Requested Book" },
+              { key: "subject", label: "Subject" },
+              { key: "requests", label: "Requests" },
+              { key: "priority", label: "Priority" },
+              { key: "status", label: "Status" }
+            ], state.data.requests.items)}
+          </div>
+        </section>
+      `;
+
+      const renderTeacherView = () => `
+        <section class="dashboard-grid">
+          ${["P5 Blue", "P6 Green", "S1 East"].map((item, index) => `
+            <div class="panel third">
+              <div class="panel-header"><div><p class="eyebrow">Today</p><h2>${item}</h2></div>${badge(index === 0 ? "Pending Sync" : "Saved", index === 0 ? "warning" : "success")}</div>
+              <div class="row-actions"><button class="btn green">Present</button><button class="btn red">Absent</button><button class="btn amber">Late</button></div>
+            </div>
+          `).join("")}
+        </section>
+      `;
+
+      const renderParentStudentView = () => `
+        <section class="dashboard-grid">
+          <div class="stats">
+            ${statCard("Selected Student", "Ariho Grace", "P5 Blue", "info")}
+            ${statCard("Balance", "UGX 320,000", "Due before week 6", "warning")}
+            ${statCard("Attendance", "Present", "Today at 8:03 AM", "success")}
+            ${statCard("Report Card", "Published", "Term 1 ready", "info")}
+          </div>
+          <div class="panel full">
+            <div class="panel-header"><div><p class="eyebrow">Messages</p><h2>Parent, teacher and school updates</h2></div></div>
+            ${table([
+              { key: "batch", label: "Batch" },
+              { key: "channel", label: "Channel" },
+              { key: "message", label: "Message" },
+              { key: "status", label: "Status" }
+            ], state.data.messages.items)}
+          </div>
+        </section>
+      `;
+
+      const renderSuperAdminView = () => `
+        <section class="dashboard-grid">
+          <div class="stats">
+            ${statCard("Active Schools", "12", "2 pending onboarding", "info")}
+            ${statCard("Modules", "9", "Finance, library, SMS active", "success")}
+            ${statCard("Provider Alerts", "3", "SMS provider warnings", "warning")}
+            ${statCard("Global Audit", "142", "Actions logged this week", "info")}
+          </div>
+          <div class="panel full">
+            <div class="panel-header"><div><p class="eyebrow">Platform</p><h2>Super admin controls</h2></div></div>
+            <div class="row-actions"><button class="btn">Schools</button><button class="btn">Modules</button><button class="btn">Integrations</button><button class="btn">Global Audit</button></div>
+          </div>
+        </section>
+      `;
+
+      window.login = async (event) => {
+        event.preventDefault();
+        state.error = "";
+        try {
+          const email = document.getElementById("email").value;
+          const password = document.getElementById("password").value;
+          const session = await api("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
+          state.session = session;
+          state.role = session.user.role_key;
+          state.view = "Home";
+          state.notice = `Logged in as ${session.user.full_name}`;
+          await loadData();
+          renderApp();
+        } catch (error) {
+          state.error = error.message;
+          renderLogin();
+        }
+      };
+
+      window.demoLogin = async () => {
+        state.error = "";
+        try {
+          const role = document.getElementById("demoRole").value;
+          const session = await api("/auth/demo-login", { method: "POST", body: JSON.stringify({ role }) });
+          state.session = session;
+          state.role = session.user.role_key;
+          state.view = "Home";
+          state.notice = `Demo workspace opened for ${session.user.role}`;
+          await loadData();
+          renderApp();
+        } catch (error) {
+          state.error = error.message;
+          renderLogin();
+        }
+      };
+
+      window.changeView = (view) => {
+        state.view = view;
+        state.notice = "";
+        renderApp();
+      };
+
+      window.approvalDecision = async (approvalId, decision) => {
+        const result = await api(`/admin/approvals/${approvalId}/decision`, {
+          method: "POST",
+          body: JSON.stringify({ decision, comment: "Local admin review action." })
+        });
+        state.notice = result.message;
+        renderApp();
+      };
+
+      window.shareFinance = async () => {
+        const first = state.data.docs.items[0];
+        const result = await api(`/finance/documents/${first.document_number}/share-to-admin`, { method: "POST" });
+        state.notice = result.message;
+        renderApp();
+      };
+
+      window.shareRequestedBooks = async () => {
+        const result = await api("/library/requested-books/share-to-admin", { method: "POST" });
+        state.notice = result.message;
+        renderApp();
+      };
+
+      window.sendSmsBatch = async () => {
+        const message = document.getElementById("smsMessage").value;
+        const comment = document.getElementById("smsComment").value;
+        const result = await api("/communications/sms-batches", {
+          method: "POST",
+          body: JSON.stringify({ recipient_group_id: state.selectedSmsGroup, message, comment })
+        });
+        state.notice = result.message;
+        renderApp();
+      };
+
+      window.logout = () => {
+        state.session = null;
+        state.data = null;
+        state.view = "Home";
+        state.notice = "";
+        state.error = "";
+        renderLogin();
+      };
+
+      renderLogin();
+    </script>
+  </body>
+</html>
