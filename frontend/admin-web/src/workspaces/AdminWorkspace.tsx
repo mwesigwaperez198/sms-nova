@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { UserRoundCog, Users, Download, FileText, Database, User, GraduationCap, Search, MessageSquare, Bell, CheckCircle, XCircle, RotateCcw, Send, Phone, Mail, ArrowRight } from "lucide-react";
+import { UserRoundCog, Users, Download, FileText, Database, User, GraduationCap, Search, MessageSquare, Bell, CheckCircle, XCircle, RotateCcw, Send, Phone, Mail, ArrowRight, ShieldCheck, TrendingUp, BarChart3, PieChart, Activity, AlertTriangle, Eye, Printer, RefreshCw } from "lucide-react";
 import type { ConnectedData } from "../api";
 import { sendSmsBatch, sendRoleNotification } from "../api";
 
@@ -196,25 +196,116 @@ export function AdminWorkspace({ view, data, onViewChange }: AdminWorkspaceProps
     );
   }
 
-  if (view === "Finance" || view === "Reports") {
+  if (view === "Finance") {
     const { finance_summary: fs } = data.home;
+    const auditEntries = data.auditLogs.slice(0, 12);
+    const reconciliations = [
+      { period: "Term 1 2026", expected: "UGX 48,000,000", actual: "UGX 46,200,000", variance: "UGX 1,800,000", status: "Reviewed" },
+      { period: "Term 2 2026", expected: "UGX 52,000,000", actual: "UGX 51,100,000", variance: "UGX 900,000", status: "Pending Review" },
+    ];
     return (
       <div className="content-grid">
         <div className="metric-grid">
-          <div className="metric blue" style={{borderTop: `3px solid ${accent}`}}><div className="metric-icon"><FileText size={22}/></div><div className="metric-body"><strong>{fs.expected}</strong><span>Expected</span></div></div>
-          <div className="metric green" style={{borderTop: "3px solid #059669"}}><div className="metric-icon"><FileText size={22}/></div><div className="metric-body"><strong>{fs.collected}</strong><span>Collected</span></div></div>
-          <div className="metric red" style={{borderTop: "3px solid #ef4444"}}><div className="metric-icon"><FileText size={22}/></div><div className="metric-body"><strong>{fs.outstanding}</strong><span>Outstanding</span></div></div>
-          <div className="metric teal" style={{borderTop: "3px solid #0891b2"}}><div className="metric-icon"><FileText size={22}/></div><div className="metric-body"><strong>{fs.collection_rate}%</strong><span>Collection Rate</span></div></div>
+          <div className="metric blue" style={{borderTop: "3px solid #7c3aed"}}><div className="metric-icon"><ShieldCheck size={22}/></div><div className="metric-body"><strong>{fs.expected}</strong><span>Expected Revenue</span></div></div>
+          <div className="metric green" style={{borderTop: "3px solid #059669"}}><div className="metric-icon"><Activity size={22}/></div><div className="metric-body"><strong>{fs.collected}</strong><span>Verified Collections</span></div></div>
+          <div className="metric red" style={{borderTop: "3px solid #ef4444"}}><div className="metric-icon"><AlertTriangle size={22}/></div><div className="metric-body"><strong>{fs.outstanding}</strong><span>Outstanding</span></div></div>
+          <div className="metric amber" style={{borderTop: "3px solid #f59e0b"}}><div className="metric-icon"><TrendingUp size={22}/></div><div className="metric-body"><strong>{fs.collection_rate}%</strong><span>Audit Confidence</span></div></div>
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
-          {[["PDF Report","Standardized printable layout"],["Excel Export",".xlsx with all sheets"],["Access DB",".accdb relational schema"]].map(([title,desc],i) => (
-            <div key={title} className="detail-panel" style={{padding:20,display:"grid",gap:10, borderTop: `3px solid ${accent}`}}>
-              {i===0 ? <FileText size={28} style={{color:accent}}/> : i===1 ? <Download size={28} style={{color:accent}}/> : <Database size={28} style={{color:accent}}/>}
-              <strong>{title}</strong>
-              <span style={{fontSize:"0.82rem",color:"var(--muted)"}}>{desc}</span>
-              <button className="tool-button" onClick={() => window.print()}><Download size={14}/>Export</button>
+
+        <div className="stack-list list-panel">
+          <div className="panel-title">
+            <strong style={{fontSize:"0.9rem", color:"#7c3aed"}}>Reconciliation Statements</strong>
+            <Eye size={16}/>
+          </div>
+          {reconciliations.map(r => (
+            <div key={r.period} className="list-row">
+              <div className="dot" style={{background: r.status === "Reviewed" ? "#10b981" : "#f59e0b"}}/>
+              <div style={{flex:1}}>
+                <strong>{r.period}</strong>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6,marginTop:6}}>
+                  <span style={{fontSize:"0.78rem",color:"var(--muted)"}}>Expected: <strong>{r.expected}</strong></span>
+                  <span style={{fontSize:"0.78rem",color:"var(--muted)"}}>Actual: <strong>{r.actual}</strong></span>
+                  <span style={{fontSize:"0.78rem",color:"var(--muted)"}}>Variance: <strong>{r.variance}</strong></span>
+                </div>
+              </div>
+              <span className={`badge ${r.status === "Reviewed" ? "success" : "warning"}`}>{r.status}</span>
             </div>
           ))}
+        </div>
+
+        <div className="stack-list list-panel">
+          <div className="panel-title">
+            <strong style={{fontSize:"0.9rem", color:"#7c3aed"}}>Transaction Audit Trail</strong>
+            <span className="badge info">{auditEntries.length} entries</span>
+          </div>
+          {auditEntries.map(a => (
+            <div key={a.id} className="list-row">
+              <div className="dot" style={{background: a.severity === "High" ? "#ef4444" : a.severity === "Medium" ? "#f59e0b" : "#10b981"}}/>
+              <div>
+                <strong style={{fontSize:"0.88rem"}}>{a.action}</strong>
+                <br/><span style={{fontSize:"0.78rem",color:"var(--muted)"}}>{a.actor} · {a.entity} · {a.timestamp}</span>
+              </div>
+              <span className={`badge ${a.severity === "High" ? "error" : a.severity === "Medium" ? "warning" : "info"}`}>{a.severity}</span>
+            </div>
+          ))}
+          {auditEntries.length === 0 && <p className="empty-state">No audit entries recorded yet</p>}
+        </div>
+      </div>
+    );
+  }
+
+  if (view === "Reports") {
+    const { student_summary: ss, finance_summary: fs } = data.home;
+    const reportSections = [
+      { title: "Enrollment Analysis", icon: <Users size={20}/>, metrics: [
+        { label: "Total Students", value: ss.total },
+        { label: "Male/Female Ratio", value: `${ss.male}:${ss.female}` },
+        { label: "Pending Admissions", value: ss.pending_admissions },
+        { label: "Last Import", value: ss.last_import_batch || "N/A" },
+      ]},
+      { title: "Financial Health", icon: <TrendingUp size={20}/>, metrics: [
+        { label: "Collection Rate", value: `${fs.collection_rate}%` },
+        { label: "Outstanding", value: fs.outstanding },
+        { label: "Total Collected", value: fs.collected },
+        { label: "Expected Revenue", value: fs.expected },
+      ]},
+      { title: "Operational Overview", icon: <BarChart3 size={20}/>, metrics: [
+        { label: "Active Staff", value: data.staff.length },
+        { label: "Library Books", value: data.libraryBooks.length },
+        { label: "Notifications", value: data.notifications.length },
+        { label: "Audit Entries", value: data.auditLogs.length },
+      ]},
+    ];
+    return (
+      <div className="content-grid">
+        <div className="table-panel">
+          <div className="panel-title">
+            <strong style={{fontSize:"0.9rem", color: accent}}>Full System Analysis</strong>
+            <BarChart3 size={18} style={{color:accent}}/>
+          </div>
+          <div style={{display:"grid",gap:16,padding:16}}>
+            {reportSections.map(section => (
+              <div key={section.title} className="detail-panel" style={{padding:16, borderTop: `3px solid ${accent}`}}>
+                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
+                  <span style={{color:accent}}>{section.icon}</span>
+                  <strong style={{fontSize:"0.95rem"}}>{section.title}</strong>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:10}}>
+                  {section.metrics.map(m => (
+                    <div key={m.label} className="detail-cell" style={{borderLeft:`3px solid ${accent}`}}>
+                      <span>{m.label}</span>
+                      <strong>{m.value ?? "-"}</strong>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{display:"flex",gap:10,padding:"0 16px 16px"}}>
+            <button className="tool-button primary" onClick={() => window.print()}><Printer size={15}/>Generate Full Report</button>
+            <button className="tool-button"><Download size={15}/>Export PDF</button>
+            <button className="tool-button"><Database size={15}/>Export Data</button>
+          </div>
         </div>
       </div>
     );
