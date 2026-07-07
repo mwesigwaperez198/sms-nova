@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
-from app.core.config import get_settings
 from app.core.rate_limit import limiter, HAS_LIMITER
 from app.core.security import decode_refresh_token
 from app.db.session import get_db
@@ -24,7 +23,6 @@ from app.services.auth_service import (
 )
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-settings = get_settings()
 
 
 @router.post("/login", response_model=TokenResponse)

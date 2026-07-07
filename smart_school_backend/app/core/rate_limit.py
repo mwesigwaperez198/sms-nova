@@ -13,7 +13,7 @@ try:
         default_limits=[get_settings().rate_limit_default],
     )
     HAS_LIMITER = True
-except ImportError:
+except Exception:
     limiter = None
     HAS_LIMITER = False
-    logger.warning("slowapi not available — rate limits disabled")
+    logger.warning("slowapi or its dependencies not available — rate limits disabled")
