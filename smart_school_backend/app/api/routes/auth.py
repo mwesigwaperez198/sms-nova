@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
 from app.core.config import get_settings
-from app.core.rate_limit import limiter
+from app.core.rate_limit import limiter, HAS_LIMITER
 from app.core.security import decode_refresh_token
 from app.db.session import get_db
 from app.models.user import User
@@ -28,7 +28,6 @@ settings = get_settings()
 
 
 @router.post("/login", response_model=TokenResponse)
-@limiter.limit(settings.rate_limit_auth)
 def login(
     request: Request,
     payload: LoginRequest,
@@ -50,7 +49,6 @@ def login(
 
 
 @router.post("/refresh-token", response_model=AccessTokenResponse)
-@limiter.limit(settings.rate_limit_auth)
 def refresh_token(
     request: Request,
     payload: RefreshTokenRequest,
@@ -85,7 +83,6 @@ def refresh_token(
 
 
 @router.post("/reset-password", response_model=MessageResponse)
-@limiter.limit(settings.rate_limit_auth)
 def reset_password_route(
     request: Request,
     payload: ResetPasswordRequest,
