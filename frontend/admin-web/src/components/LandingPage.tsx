@@ -229,7 +229,7 @@ export function LandingPage({ onEnterApp }: LandingPageProps) {
         </div>
         <div className="landing-footer-bottom">
           <span>© {new Date().getFullYear()} Novara Tech Africa. All rights reserved.</span>
-          <span className="powered-by-novara">Powered by Novara</span>
+          <a className="powered-by-novara" href="https://novara-tech-africa.kesug.com" target="_blank" rel="noopener noreferrer">Powered by Novara</a>
         </div>
       </footer>
     </div>
