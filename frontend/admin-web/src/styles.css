@@ -2437,6 +2437,18 @@ tbody tr:hover {
   .metric-grid { grid-template-columns:repeat(2,1fr); }
   .office-layout { grid-template-columns:1fr; }
 }
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 999;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+  display: grid; place-items: center; padding: 24px;
+}
+.modal-panel {
+  width: min(520px,100%); max-height: 80vh; overflow-y: auto;
+  border: 1px solid rgba(255,255,255,0.1); border-radius: 16px;
+  background: rgba(30,41,59,0.95); backdrop-filter: blur(20px);
+  padding: 28px; box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+}
+
 @media (max-width:640px) {
   .metric-grid { grid-template-columns:1fr; }
   .status-controls { grid-template-columns:repeat(2,1fr); }

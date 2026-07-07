@@ -110,6 +110,7 @@ function App() {
   const [notice, setNotice] = useState<string | null>(null);
   const [showLanding, setShowLanding] = useState(true);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
   const activeRole = useMemo(() => roles.find((role) => role.key === roleKey) ?? roles[1], [roleKey]);
 
@@ -200,7 +201,9 @@ function App() {
         setNotice("Signed out. You can log in again whenever you are ready.");
       }}
       onOpenNotifications={() => setView("Notifications")}
+      onOpenProfile={() => setShowProfile(true)}
     >
+      {showProfile && session && <ProfileModal session={session} data={data} roleKey={roleKey} onClose={() => setShowProfile(false)} />}
       {notice || connectionError ? <div className={connectionError ? "notice notice-error" : "notice"}>{connectionError ?? notice}</div> : null}
       {!data ? (
         <section className="panel">Loading connected dashboard...</section>
@@ -690,6 +693,65 @@ function SettingsView({
         </form>
       </section>
     </section>
+  );
+}
+
+const ROLE_COLORS: Record<string, string> = {
+  "super-admin": "#dc2626", admin: "#0891b2", teacher: "#059669",
+  bursar: "#7c3aed", secretary: "#ea580c", librarian: "#4f46e5",
+  parent: "#e11d48", student: "#ca8a04",
+};
+
+function ProfileModal({ session, data, roleKey, onClose }: { session: Session; data: ConnectedData | null; roleKey: string; onClose: () => void }) {
+  if (!data) return null;
+  const accent = ROLE_COLORS[roleKey] ?? "#0891b2";
+  const roleNav = data.nav;
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-panel" onClick={e => e.stopPropagation()} style={{borderTop:`4px solid ${accent}`}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20}}>
+          <div style={{display:"flex",alignItems:"center",gap:14}}>
+            <div className="user-avatar" style={{width:52,height:52,fontSize:"1.3rem",background:`linear-gradient(135deg,${accent},#764ba2)`}}>
+              {session.user.full_name.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <strong style={{fontSize:"1.1rem"}}>{session.user.full_name}</strong>
+              <br /><span style={{color:"var(--muted)",fontSize:"0.85rem"}}>{session.user.role} · {session.user.school}</span>
+            </div>
+          </div>
+          <button className="tool-button" style={{minHeight:32,minWidth:32,padding:0}} onClick={onClose}>✕</button>
+        </div>
+
+        <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:12,marginBottom:20}}>
+          <div className="detail-cell" style={{borderLeft:`3px solid ${accent}`}}>
+            <span>Email</span>
+            <strong>{session.user.email}</strong>
+          </div>
+          <div className="detail-cell" style={{borderLeft:`3px solid ${accent}`}}>
+            <span>Role</span>
+            <strong>{session.user.role}</strong>
+          </div>
+          <div className="detail-cell" style={{borderLeft:`3px solid ${accent}`}}>
+            <span>School</span>
+            <strong>{session.user.school}</strong>
+          </div>
+          <div className="detail-cell" style={{borderLeft:`3px solid ${accent}`}}>
+            <span>Dashboard Views</span>
+            <strong>{roleNav.length}</strong>
+          </div>
+        </div>
+
+        <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+          {roleNav.map(n => (
+            <span key={n} className="badge" style={{borderColor:`${accent}40`,color:accent,background:`${accent}15`}}>{n}</span>
+          ))}
+        </div>
+
+        <p style={{color:"var(--muted)",fontSize:"0.82rem",marginTop:20,marginBottom:0}}>
+          Logged in since this session · Role-based dashboard active
+        </p>
+      </div>
+    </div>
   );
 }
 

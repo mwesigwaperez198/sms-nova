@@ -14,6 +14,7 @@ interface AppShellProps {
   showRoleSwitcher?: boolean;
   onLogout?: () => void;
   onOpenNotifications?: () => void;
+  onOpenProfile?: () => void;
   session?: Session;
   searchQuery?: string;
   onSearchChange?: (q: string) => void;
@@ -137,7 +138,7 @@ export function AppShell({
             <button type="button" className="action-btn" aria-label="Notifications" onClick={onOpenNotifications}>
               <Bell size={18} />
             </button>
-            <button type="button" className="action-btn" aria-label="Profile">
+            <button type="button" className="action-btn" aria-label="Profile" onClick={onOpenProfile}>
               <User size={18} />
             </button>
             <button type="button" className="action-btn logout-btn" aria-label="Logout" onClick={onLogout}>
@@ -156,7 +157,7 @@ export function AppShell({
             <span className="footer-divider">·</span>
             <span>{schoolProfile.term} {schoolProfile.academicYear}</span>
           </div>
-          <div className="footer-powered">Powered by Novara</div>
+          <a className="footer-powered" href="https://novara-tech-africa.kesug.com" target="_blank" rel="noopener noreferrer">Powered by Novara</a>
         </footer>
       </div>
     </div>
