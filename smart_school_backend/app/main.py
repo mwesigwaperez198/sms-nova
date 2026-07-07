@@ -1,28 +1,44 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
-from slowapi.errors import RateLimitExceeded
-from slowapi.middleware import SlowAPIMiddleware
 
 from app.api.router import api_router
 from app.core.config import get_settings
-from app.core.rate_limit import limiter
-from app.db.base import Base
-from app.db.seed import seed_foundation
-from app.db.session import SessionLocal, engine
+
+logger = logging.getLogger(__name__)
+
+try:
+    from slowapi.errors import RateLimitExceeded
+    from slowapi.middleware import SlowAPIMiddleware
+    from app.core.rate_limit import limiter
+    HAS_SLOWAPI = True
+except ImportError:
+    HAS_SLOWAPI = False
+    logger.warning("slowapi not available — rate limiting disabled")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    import app.models  # noqa: F401 - register all models with Base
-    Base.metadata.create_all(bind=engine)
-    db = SessionLocal()
+    from app.db.base import Base
+    from app.db.seed import seed_foundation
+    from app.db.session import SessionLocal, engine
+
     try:
-        seed_foundation(db)
-    finally:
-        db.close()
+        import app.models  # noqa: F401
+        Base.metadata.create_all(bind=engine)
+        db = SessionLocal()
+        try:
+            seed_foundation(db)
+        except Exception as e:
+            logger.error("Seed failed (non-fatal): %s", e)
+        finally:
+            db.close()
+        logger.info("Database ready")
+    except Exception as e:
+        logger.warning("Database unavailable at startup (running in stateless mode): %s", e)
     yield
 
 
@@ -38,11 +54,12 @@ def create_app() -> FastAPI:
         openapi_url=None if is_prod else "/openapi.json",
     )
 
-    app.state.limiter = limiter
-    async def rate_limit_handler(_request, _exc):
-        return JSONResponse(status_code=429, content={"detail": "Rate limit exceeded"})
-    app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
-    app.add_middleware(SlowAPIMiddleware)
+    if HAS_SLOWAPI:
+        app.state.limiter = limiter
+        async def rate_limit_handler(_request, _exc):
+            return JSONResponse(status_code=429, content={"detail": "Rate limit exceeded"})
+        app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
+        app.add_middleware(SlowAPIMiddleware)
 
     origins = [str(o) for o in settings.backend_cors_origins] if settings.backend_cors_origins else ["*"]
     app.add_middleware(
@@ -68,7 +85,7 @@ def create_app() -> FastAPI:
 
     @app.get("/api/health", tags=["health"])
     def health_check() -> dict[str, str]:
-        return {"status": "ok"}
+        return {"status": "ok", "environment": settings.environment}
 
     return app
 

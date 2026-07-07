@@ -9,7 +9,11 @@ class Settings(BaseSettings):
     environment: str = "development"
     api_v1_prefix: str = "/api/v1"
 
-    database_url: str = "sqlite:///./smart_school.db"
+    database_url: str = Field(
+        default_factory=lambda: "sqlite:////tmp/smart_school.db"
+        if __import__("os").environ.get("ENVIRONMENT") == "production"
+        else "sqlite:///./smart_school.db"
+    )
 
     secret_key: str = "change-this-secret-before-production"
     jwt_algorithm: str = "HS256"
