@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: smart-school-api
+    runtime: python
+    repo: https://github.com/mwesigwaperez198/SMS
+    rootDir: smart_school_backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: APP_NAME
+        value: Smart School Backend
+      - key: ENVIRONMENT
+        value: production
+      - key: API_V1_PREFIX
+        value: /api/v1
+      - key: DATABASE_URL
+        fromDatabase:
+          name: smart-school-db
+          property: connectionString
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 60
+      - key: DEFAULT_COUNTRY
+        value: Uganda
+      - key: DEFAULT_CURRENCY_CODE
+        value: UGX
+      - key: DEFAULT_TIMEZONE
+        value: Africa/Kampala
+      - key: BACKEND_CORS_ORIGINS
+        value: '["https://sms-novara.vercel.app"]'
+      - key: SECRET_KEY
+        generateValue: true
+      - key: SMS_GATEWAY
+        value: console
+
+databases:
+  - name: smart-school-db
+    plan: free
+    databaseType: postgresql
+    ipAllowList: []
