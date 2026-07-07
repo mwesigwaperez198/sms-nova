@@ -24,12 +24,14 @@ except ImportError:
 async def lifespan(app: FastAPI):
     from app.db.base import Base
     from app.db.seed import seed_foundation
-    from app.db.session import SessionLocal, engine
+    from app.db.session import get_engine, get_session_maker
 
     try:
         import app.models  # noqa: F401
+        engine = get_engine()
         Base.metadata.create_all(bind=engine)
-        db = SessionLocal()
+        session_maker = get_session_maker()
+        db = session_maker()
         try:
             seed_foundation(db)
         except Exception as e:
