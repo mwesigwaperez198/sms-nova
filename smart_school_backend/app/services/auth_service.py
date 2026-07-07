@@ -1,5 +1,9 @@
+import logging
+import random
 import re
 from datetime import datetime, timedelta, timezone
+
+logger = logging.getLogger(__name__)
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
@@ -103,6 +107,39 @@ def build_refresh_token(user: User) -> str:
         subject=str(user.id),
         claims=_token_claims(user),
     )
+
+
+def request_password_reset(db: Session, email: str) -> str:
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        return "If the account exists, a reset code has been sent."
+    code = str(random.randint(100000, 999999))
+    user.reset_code = code
+    user.reset_code_expires = datetime.now(timezone.utc) + timedelta(minutes=30)
+    db.add(user)
+    db.commit()
+    logger.info("Password reset code for %s: %s", email, code)
+    return "Reset code sent to your registered email/phone."
+
+
+def verify_reset_code(db: Session, email: str, code: str, new_password: str) -> str:
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid request")
+    if user.reset_code != code or not user.reset_code_expires:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired code")
+    if user.reset_code_expires < datetime.now(timezone.utc):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Reset code expired. Request a new one.")
+    validate_password_strength(new_password)
+    user.password_hash = hash_password(new_password)
+    user.reset_code = None
+    user.reset_code_expires = None
+    user.failed_login_attempts = 0
+    user.locked_until = None
+    db.add(user)
+    db.commit()
+    logger.info("Password reset completed for %s", email)
+    return "Password reset successful."
 
 
 def reset_password(

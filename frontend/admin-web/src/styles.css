@@ -261,6 +261,34 @@ button:disabled {
   flex-shrink: 0;
 }
 
+.forgot-password-link {
+  background: none;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 4px 0;
+  text-align: left;
+  transition: opacity 0.15s;
+}
+.forgot-password-link:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+.login-success {
+  margin: 0;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 10px;
+  background: rgba(16, 185, 129, 0.1);
+  color: #6ee7b7;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.92rem;
+}
+
 /* Spinner */
 .spinner {
   display: inline-block;
@@ -2243,6 +2271,7 @@ tbody tr:hover {
 .office-form label { display:grid; gap:6px; color:#e2e8f0; font-size:13px; font-weight:700; }
 .office-form input,.office-form select,.office-form textarea { min-height:38px; border:1px solid rgba(255,255,255,0.1); border-radius:6px; background:rgba(255,255,255,0.05); color:#f1f5f9; padding:0 10px; font:inherit; transition:border-color 0.15s; }
 .office-form input:focus,.office-form select:focus,.office-form textarea:focus { outline:none; border-color:var(--primary); background:rgba(255,255,255,0.08); }
+.office-form select option { color:#1e293b; background:#f1f5f9; }
 .office-form textarea { min-height:86px; resize:vertical; padding:10px; }
 
 .office-filters { display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:12px 16px; border-bottom:1px solid rgba(255,255,255,0.06); }

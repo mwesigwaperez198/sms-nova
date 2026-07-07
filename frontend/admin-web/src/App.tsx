@@ -15,6 +15,7 @@ import { AppShell } from "./components/AppShell";
 import { DataTable } from "./components/DataTable";
 import { LandingPage } from "./components/LandingPage";
 import { LoginScreen } from "./components/LoginScreen";
+import { ForgotPasswordScreen } from "./components/ForgotPasswordScreen";
 import { StatusBadge } from "./components/StatusBadge";
 import { roles } from "./data/mockData";
 import type { RoleKey } from "./types";
@@ -104,6 +105,7 @@ function App() {
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [showLanding, setShowLanding] = useState(true);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const activeRole = useMemo(() => roles.find((role) => role.key === roleKey) ?? roles[1], [roleKey]);
 
@@ -172,7 +174,10 @@ function App() {
     if (showLanding) {
       return <LandingPage onEnterApp={() => setShowLanding(false)} />;
     }
-    return <LoginScreen loading={loading} error={connectionError} onLogin={handleLogin} onSession={handleSession} />;
+    if (showForgotPassword) {
+      return <ForgotPasswordScreen onBack={() => setShowForgotPassword(false)} />;
+    }
+    return <LoginScreen loading={loading} error={connectionError} onLogin={handleLogin} onSession={handleSession} onForgotPassword={() => setShowForgotPassword(true)} />;
   }
 
   return (

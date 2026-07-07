@@ -8,6 +8,7 @@ interface LoginScreenProps {
   error: string | null;
   onLogin: (email: string, password: string) => Promise<void>;
   onSession: (session: Session) => void;
+  onForgotPassword?: () => void;
 }
 
 export function LoginScreen({ loading, error, onLogin, onSession }: LoginScreenProps) {
@@ -83,6 +84,9 @@ export function LoginScreen({ loading, error, onLogin, onSession }: LoginScreenP
                 className="field-input"
               />
             </label>
+            <button type="button" className="forgot-password-link" onClick={onForgotPassword}>
+              Forgot Password?
+            </button>
           </div>
 
           {error && <div className="login-error"><span className="error-icon">⚠</span>{error}</div>}

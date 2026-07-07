@@ -8,18 +8,22 @@ from app.db.session import get_db
 from app.models.user import User
 from app.schemas.auth import (
     AccessTokenResponse,
+    ForgotPasswordRequest,
     LoginRequest,
     MessageResponse,
     ProfileResponse,
     RefreshTokenRequest,
     ResetPasswordRequest,
+    ResetWithCodeRequest,
     TokenResponse,
 )
 from app.services.auth_service import (
     authenticate_user,
     build_refresh_token,
     build_user_token,
+    request_password_reset,
     reset_password,
+    verify_reset_code,
 )
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -89,6 +93,24 @@ def reset_password_route(
 ) -> MessageResponse:
     reset_password(db, current_user, payload.current_password, payload.new_password)
     return MessageResponse(detail="Password updated")
+
+
+@router.post("/forgot-password", response_model=MessageResponse)
+def forgot_password(
+    payload: ForgotPasswordRequest,
+    db: Session = Depends(get_db),
+) -> MessageResponse:
+    msg = request_password_reset(db, payload.email)
+    return MessageResponse(detail=msg)
+
+
+@router.post("/reset-password-with-code", response_model=MessageResponse)
+def reset_password_with_code(
+    payload: ResetWithCodeRequest,
+    db: Session = Depends(get_db),
+) -> MessageResponse:
+    msg = verify_reset_code(db, payload.email, payload.code, payload.new_password)
+    return MessageResponse(detail=msg)
 
 
 @router.get("/profile", response_model=ProfileResponse)
