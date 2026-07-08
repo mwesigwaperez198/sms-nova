@@ -34,6 +34,7 @@ import { SecretaryWorkspace } from "./workspaces/SecretaryWorkspace";
 import { BursarWorkspace } from "./workspaces/BursarWorkspace";
 import { ParentWorkspace } from "./workspaces/ParentWorkspace";
 import { SuperAdminWorkspace } from "./workspaces/SuperAdminWorkspace";
+import { ICTWorkspace } from "./workspaces/ICTWorkspace";
 
 const studentColumns = [
   { key: "admissionNo", label: "Admission No" },
@@ -269,8 +270,9 @@ interface WorkspaceProps {
 function RoleWorkspace(props: WorkspaceProps) {
   switch (props.role) {
     case "admin":
-    case "ict-admin":
       return <AdminWorkspaceFull view={props.view} data={props.data} onViewChange={props.onViewChange} onApprove={props.onApprove} onShareFinance={props.onShareFinance} onShareRequestedBooks={props.onShareRequestedBooks} onSendSms={props.onSendSms} />;
+    case "ict-admin":
+      return <ICTWorkspace view={props.view} data={props.data} onViewChange={props.onViewChange} />;
     case "secretary":
       return <SecretaryWorkspace view={props.view} data={props.data} onViewChange={props.onViewChange} />;
     case "bursar":
@@ -446,19 +448,23 @@ function ApprovalsView({ data, onApprove }: { data: ConnectedData; onApprove: (a
 
 function NotificationsView({ data, roleKey }: { data: ConnectedData; roleKey: string }) {
   const [filter, setFilter] = useState<"all" | "info" | "warning" | "high">("all");
-  const filtered = filter === "all" ? data.notifications : data.notifications.filter(n => n.severity.toLowerCase() === filter);
+  const [roleFilter, setRoleFilter] = useState<string>("all");
+  const roleFiltered = roleFilter === "all" ? data.notifications : data.notifications.filter(n => (n.type ?? "").toLowerCase().includes(roleFilter));
+  const filtered = filter === "all" ? roleFiltered : roleFiltered.filter(n => n.severity.toLowerCase() === filter);
   const severityCounts = {
-    all: data.notifications.length,
-    high: data.notifications.filter(n => n.severity === "High").length,
-    warning: data.notifications.filter(n => n.severity === "Warning" || n.severity === "Medium").length,
-    info: data.notifications.filter(n => n.severity === "Info" || n.severity === "Low").length,
+    all: roleFiltered.length,
+    high: roleFiltered.filter(n => n.severity === "High").length,
+    warning: roleFiltered.filter(n => n.severity === "Warning" || n.severity === "Medium").length,
+    info: roleFiltered.filter(n => n.severity === "Info" || n.severity === "Low").length,
   };
   const roleLabel = roleKey.charAt(0).toUpperCase() + roleKey.slice(1).replace("-", " ");
+  const roleOptions = ["all", "approval", "payment", "attendance", "system", roleKey];
+  const uniqueRoleOptions = [...new Set(roleOptions)];
   return (
     <section className="content-grid">
       <section className="panel">
         <PanelTitle eyebrow={`${roleLabel} Notifications`} title="Alerts, approvals and system messages" />
-        <div className="office-filters">
+        <div className="office-filters" style={{marginBottom:8}}>
           {(["all", "high", "warning", "info"] as const).map(s => (
             <button key={s} className={`tool-button ${filter === s ? "primary" : ""}`} onClick={() => setFilter(s)}>
               {s === "all" ? "All" : s.charAt(0).toUpperCase() + s.slice(1)}
@@ -466,8 +472,16 @@ function NotificationsView({ data, roleKey }: { data: ConnectedData; roleKey: st
             </button>
           ))}
         </div>
+        <div className="office-filters">
+          <span style={{fontSize:"0.82rem",color:"var(--muted)"}}>Filter by type:</span>
+          <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)} style={{fontSize:"0.82rem",padding:"4px 8px",border:"1px solid var(--border)",borderRadius:6,background:"var(--bg)"}}>
+            {uniqueRoleOptions.map(r => (
+              <option key={r} value={r}>{r === "all" ? "All Types" : r.charAt(0).toUpperCase() + r.slice(1)}</option>
+            ))}
+          </select>
+        </div>
         {filtered.length === 0 ? (
-          <p className="empty-state">No {filter !== "all" ? filter : ""} notifications</p>
+          <p className="empty-state">No {filter !== "all" ? filter : ""} notifications{roleFilter !== "all" ? ` (${roleFilter})` : ""}</p>
         ) : (
           <div style={{display:"grid",gap:8,padding:"8px 0"}}>
             {filtered.map(n => (

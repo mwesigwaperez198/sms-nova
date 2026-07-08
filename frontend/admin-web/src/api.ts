@@ -218,7 +218,7 @@ const ROLE_NAV: Record<RoleKey, string[]> = {
   teacher: ["My Classes", "Attendance", "Assessments", "Report Remarks", "Messages"],
   parent: ["Home", "Fees", "Receipts", "Attendance", "Report Card", "Messages"],
   student: ["Dashboard", "My Fees", "Attendance", "Report Card", "Library", "Announcements"],
-  "ict-admin": ["Home", "Approvals", "Students", "Staff", "Finance", "Communication", "Reports", "Settings", "Notifications", "System"]
+  "ict-admin": ["Dashboard", "School Health", "System Health", "Maintenance", "Notifications"]
 };
 
 export interface ConnectedData {
