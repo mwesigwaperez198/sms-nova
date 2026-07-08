@@ -306,7 +306,7 @@ export function SuperAdminWorkspace({ view, data }: SuperAdminWorkspaceProps) {
   if (view === "Plans") {
     const [showCreate, setShowCreate] = useState(false);
     const [planNotice, setPlanNotice] = useState<string | null>(null);
-    const [newPlan, setNewPlan] = useState({ name: "", price: 0, duration_days: 30, max_students: 100, max_staff: 20 });
+    const [newPlan, setNewPlan] = useState<{ name: string; price: number; duration_days: number; max_students: number | null; max_staff: number | null }>({ name: "", price: 0, duration_days: 30, max_students: 100, max_staff: 20 });
 
     const handleCreate = async () => {
       if (!newPlan.name) return;

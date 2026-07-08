@@ -240,12 +240,12 @@ export function AdminWorkspace({ view, data, onViewChange }: AdminWorkspaceProps
           </div>
           {auditEntries.map(a => (
             <div key={a.id} className="list-row">
-              <div className="dot" style={{background: a.severity === "High" ? "#ef4444" : a.severity === "Medium" ? "#f59e0b" : "#10b981"}}/>
+              <div className="dot" style={{background: a.severity === "critical" ? "#ef4444" : a.severity === "warning" ? "#f59e0b" : "#10b981"}}/>
               <div>
                 <strong style={{fontSize:"0.88rem"}}>{a.action}</strong>
                 <br/><span style={{fontSize:"0.78rem",color:"var(--muted)"}}>{a.actor} · {a.entity} · {a.timestamp}</span>
               </div>
-              <span className={`badge ${a.severity === "High" ? "error" : a.severity === "Medium" ? "warning" : "info"}`}>{a.severity}</span>
+              <span className={`badge ${a.severity === "critical" ? "error" : a.severity === "warning" ? "warning" : "info"}`}>{a.severity}</span>
             </div>
           ))}
           {auditEntries.length === 0 && <p className="empty-state">No audit entries recorded yet</p>}

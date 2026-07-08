@@ -44,7 +44,7 @@ export function LoginScreen({ loading, error, onLogin, onSession, onForgotPasswo
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setTwoFactorError(null);
-    setTwoFactorChallenge(null);
+    onClearChallenge?.();
     void onLogin(email, password);
   };
 

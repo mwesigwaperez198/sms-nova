@@ -550,7 +550,7 @@ function FinanceWorkspace({ data }: { data: ConnectedData; onShareFinance: () =>
           {auditEntries.map(a => (
             <div key={a.id} className="flag-item">
               <span><strong>{a.action}</strong><br /><small style={{color:"var(--muted)"}}>{a.actor} · {a.entity} · {a.timestamp}</small></span>
-              <StatusBadge value={a.severity} tone={a.severity === "High" ? "danger" : a.severity === "Medium" ? "warning" : "info"} />
+              <StatusBadge value={a.severity} tone={a.severity === "critical" ? "danger" : a.severity === "warning" ? "warning" : "info"} />
             </div>
           ))}
           {auditEntries.length === 0 && <p style={{color:"var(--muted)",padding:12}}>No audit entries recorded yet</p>}

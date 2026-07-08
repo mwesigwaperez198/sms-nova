@@ -32,6 +32,7 @@ export function AppShell({
   showRoleSwitcher = true,
   onLogout,
   onOpenNotifications,
+  onOpenProfile,
   session,
   searchQuery = "",
   onSearchChange,
