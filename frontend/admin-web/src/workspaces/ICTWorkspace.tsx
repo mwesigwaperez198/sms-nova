@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Activity, Database, HardDrive, Users, Wifi, Shield, RefreshCw, Server, Monitor, CheckCircle, AlertTriangle, XCircle, Smartphone, Bell, UserCheck, UserX, School } from "lucide-react";
+import { Activity, Database, HardDrive, Users, Wifi, Shield, RefreshCw, Server, Monitor, CheckCircle, AlertTriangle, XCircle, Smartphone, Bell, UserCheck, UserX, School, Search } from "lucide-react";
 import type { ConnectedData } from "../api";
 
 interface ICTWorkspaceProps {
