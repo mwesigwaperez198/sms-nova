@@ -29,7 +29,7 @@ import type {
   SmsRecipientGroup
 } from "./types";
 
-const API_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
+const API_URL = import.meta.env.VITE_API_URL ?? "https://sms-msku.onrender.com";
 
 // In-memory token refresh lock to prevent multiple simultaneous refreshes
 let refreshPromise: Promise<string> | null = null;
@@ -116,13 +116,13 @@ export interface Session {
 
 export const roleMap: Record<number, RoleKey> = {
   1: "super-admin", 2: "admin", 3: "teacher",
-  4: "parent", 5: "student", 6: "bursar", 7: "secretary", 8: "librarian"
+  4: "parent", 5: "student", 6: "bursar", 7: "secretary", 8: "librarian", 9: "ict-admin"
 };
 
 export const roleLabels: Record<RoleKey, string> = {
   "super-admin": "Super Admin", admin: "Admin", teacher: "Teacher",
   parent: "Parent", student: "Student", bursar: "Bursar",
-  secretary: "Secretary", librarian: "Librarian"
+  secretary: "Secretary", librarian: "Librarian", "ict-admin": "ICT Admin"
 };
 
 export function mapUserToSession(result: { access_token: string; refresh_token: string; user: { id: number; name: string; email: string; role_id: number; school_id: number | null; school?: { name: string } | null } }): Session {
@@ -216,7 +216,8 @@ const ROLE_NAV: Record<RoleKey, string[]> = {
   librarian: ["Catalog", "Issue & Return", "Book Requests", "Upload to Students", "Reports"],
   teacher: ["My Classes", "Attendance", "Assessments", "Report Remarks", "Messages"],
   parent: ["Home", "Fees", "Receipts", "Attendance", "Report Card", "Messages"],
-  student: ["Dashboard", "My Fees", "Attendance", "Report Card", "Library", "Announcements"]
+  student: ["Dashboard", "My Fees", "Attendance", "Report Card", "Library", "Announcements"],
+  "ict-admin": ["Home", "Approvals", "Students", "Staff", "Finance", "Communication", "Reports", "Settings", "Notifications", "System"]
 };
 
 export interface ConnectedData {
@@ -351,6 +352,7 @@ export async function loadConnectedData(role: RoleKey): Promise<ConnectedData> {
       { id: "all-bursars", label: "All Bursars", count: 0, description: "", roleId: 6 },
       { id: "all-secretaries", label: "All Secretaries", count: 0, description: "", roleId: 7 },
       { id: "all-librarians", label: "All Librarians", count: 0, description: "", roleId: 8 },
+      { id: "all-ict-admins", label: "All ICT Admins", count: 0, description: "", roleId: 9 },
     ],
     redFlags: [],
     teacherClasses: [],
@@ -385,7 +387,8 @@ export async function sendSmsBatch(groupId: string, message: string, _comment: s
     "all-bursars": 6,
     "all-secretaries": 7,
     "all-librarians": 8,
-    "all-admins": 2
+    "all-admins": 2,
+    "all-ict-admins": 9
   };
   const roleId = roleMap[groupId] ?? 4;
   const result = await apiRequest<{ queued: number; failed: number; details: string[] }>(

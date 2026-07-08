@@ -8,7 +8,8 @@ export type RoleKey =
   | "librarian"
   | "teacher"
   | "parent"
-  | "student";
+  | "student"
+  | "ict-admin";
 
 export type StatusTone = "success" | "warning" | "danger" | "info" | "neutral";
 
@@ -200,7 +201,7 @@ export interface AdminNotification {
   title: string;
   message: string;
   type: string;
-  severity: string;
+  severity: "info" | "warning" | "critical";
   status: string;
 }
 

@@ -269,6 +269,7 @@ interface WorkspaceProps {
 function RoleWorkspace(props: WorkspaceProps) {
   switch (props.role) {
     case "admin":
+    case "ict-admin":
       return <AdminWorkspaceFull view={props.view} data={props.data} onViewChange={props.onViewChange} onApprove={props.onApprove} onShareFinance={props.onShareFinance} onShareRequestedBooks={props.onShareRequestedBooks} onSendSms={props.onSendSms} />;
     case "secretary":
       return <SecretaryWorkspace view={props.view} data={props.data} onViewChange={props.onViewChange} />;
@@ -765,7 +766,7 @@ function SettingsView({
 const ROLE_COLORS: Record<string, string> = {
   "super-admin": "#dc2626", admin: "#0891b2", teacher: "#059669",
   bursar: "#7c3aed", secretary: "#ea580c", librarian: "#4f46e5",
-  parent: "#e11d48", student: "#ca8a04",
+  parent: "#e11d48", student: "#ca8a04", "ict-admin": "#6366f1",
 };
 
 function ProfileModal({ session, data, roleKey, onClose }: { session: Session; data: ConnectedData | null; roleKey: string; onClose: () => void }) {

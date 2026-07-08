@@ -120,6 +120,15 @@ export const roles: RoleProfile[] = [
     accent: "#7c3aed",
     icon: BookOpen,
     nav: ["Dashboard", "My Fees", "Attendance", "Report Card", "Library", "Announcements"]
+  },
+  {
+    key: "ict-admin",
+    label: "ICT Admin",
+    email: "ict-admin@novasms.local",
+    title: "System Maintenance",
+    accent: "#6366f1",
+    icon: UserRoundCog,
+    nav: ["Home", "Approvals", "Students", "Staff", "Finance", "Communication", "Reports", "Settings", "Notifications", "System"]
   }
 ];
 
@@ -163,6 +172,11 @@ export const roleMetrics: Record<RoleKey, Metric[]> = {
     { label: "Attendance", value: "94%", hint: "Term average", tone: "success" },
     { label: "Library Books", value: "2", hint: "1 due Friday", tone: "warning" },
     { label: "Average Score", value: "71%", hint: "Term 2 so far", tone: "info" }
+  ],
+  "ict-admin": [
+    { label: "Pending Approvals", value: "7", hint: "Admissions & vouchers", tone: "warning" },
+    { label: "Fee Collection", value: "79%", hint: "UGX 184.2M collected", tone: "success" },
+    { label: "System Health", value: "Good", hint: "All services operational", tone: "success" }
   ]
 };
 

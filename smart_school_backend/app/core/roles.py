@@ -10,6 +10,7 @@ class RoleId(IntEnum):
     BURSAR = 6
     SECRETARY = 7
     LIBRARIAN = 8
+    ICT_ADMIN = 9
 
 
 ROLE_SEED_DATA = (
@@ -52,5 +53,10 @@ ROLE_SEED_DATA = (
         "id": RoleId.LIBRARIAN,
         "name": "librarian",
         "description": "Librarian who manages library books and borrowing.",
+    },
+    {
+        "id": RoleId.ICT_ADMIN,
+        "name": "ict_admin",
+        "description": "School ICT administrator who manages system maintenance and technical operations.",
     },
 )
