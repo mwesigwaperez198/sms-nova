@@ -127,16 +127,25 @@ function App() {
 
     let cancelled = false;
     setConnectionError(null);
-    loadConnectedData(roleKey)
-      .then((result) => {
+
+    loadConnectedData(
+      roleKey,
+      (fresh) => {
         if (!cancelled) {
-          setData(result);
-          setView((currentView) => (result.nav.includes(currentView) ? currentView : result.nav[0] ?? "Home"));
+          setData(fresh);
+          setView((currentView) => (fresh.nav.includes(currentView) ? currentView : fresh.nav[0] ?? "Home"));
         }
-      })
-      .catch((error: Error) => {
-        if (!cancelled) setConnectionError(error.message);
-      });
+      }
+    ).then((result) => {
+      if (!cancelled) {
+        setData(result);
+        if (result.nav.length > 0) {
+          setView((currentView) => (result.nav.includes(currentView) ? currentView : result.nav[0]));
+        }
+      }
+    }).catch((error: Error) => {
+      if (!cancelled) setConnectionError(error.message);
+    });
 
     return () => {
       cancelled = true;

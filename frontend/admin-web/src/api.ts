@@ -30,47 +30,63 @@ import type {
 } from "./types";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "https://sms-msku.onrender.com";
+const REQUEST_TIMEOUT = 10_000;
 
 // In-memory token refresh lock to prevent multiple simultaneous refreshes
 let refreshPromise: Promise<string> | null = null;
 
-async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
+async function apiRequest<T>(path: string, init?: RequestInit, timeout?: number): Promise<T> {
   const url = path.startsWith("http") ? path : `${API_URL}${path}`;
   const token = sessionStorage.getItem("novara_token");
+  const ms = timeout ?? REQUEST_TIMEOUT;
 
-  const response = await fetch(url, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(init?.headers ?? {})
-    }
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
 
-  if (response.status === 401 && token) {
-    const newToken = await attemptTokenRefresh();
-    if (newToken) {
-      const retryResponse = await fetch(url, {
-        ...init,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${newToken}`,
-          ...(init?.headers ?? {})
-        }
-      });
-      if (retryResponse.ok) {
-        return retryResponse.json() as Promise<T>;
+  try {
+    const response = await fetch(url, {
+      ...init,
+      signal: controller.signal,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(init?.headers ?? {})
       }
-    }
-    clearSessionTokens();
-    throw new Error("Session expired. Please login again.");
-  }
+    });
 
-  if (!response.ok) {
-    const detail = await response.json().catch(() => ({ detail: "Request failed" }));
-    throw new Error(detail.detail ?? "Request failed");
+    if (response.status === 401 && token) {
+      const newToken = await attemptTokenRefresh();
+      if (newToken) {
+        const retryResponse = await fetch(url, {
+          ...init,
+          signal: controller.signal,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${newToken}`,
+            ...(init?.headers ?? {})
+          }
+        });
+        if (retryResponse.ok) {
+          return retryResponse.json() as Promise<T>;
+        }
+      }
+      clearSessionTokens();
+      throw new Error("Session expired. Please login again.");
+    }
+
+    if (!response.ok) {
+      const detail = await response.json().catch(() => ({ detail: "Request failed" }));
+      throw new Error(detail.detail ?? "Request failed");
+    }
+    return response.json() as Promise<T>;
+  } catch (err: any) {
+    if (err.name === "AbortError") {
+      throw new Error(`Request timed out after ${ms / 1000}s: ${path}`);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
   }
-  return response.json() as Promise<T>;
 }
 
 async function attemptTokenRefresh(): Promise<string | null> {
@@ -198,6 +214,58 @@ function mapTeacherToStaff(t: any): StaffRecord {
   };
 }
 
+// ===================== Device Cache (role-based) =====================
+
+interface CacheEntry {
+  data: ConnectedData;
+  timestamp: number;
+}
+
+function cacheKey(role: RoleKey): string {
+  return `novara_cache_${role}`;
+}
+
+function getCachedData(role: RoleKey): ConnectedData | null {
+  try {
+    const raw = localStorage.getItem(cacheKey(role));
+    if (!raw) return null;
+    const entry: CacheEntry = JSON.parse(raw);
+    return entry.data as ConnectedData;
+  } catch {
+    return null;
+  }
+}
+
+function setCachedData(role: RoleKey, data: ConnectedData): void {
+  try {
+    const entry: CacheEntry = { data, timestamp: Date.now() };
+    localStorage.setItem(cacheKey(role), JSON.stringify(entry));
+  } catch {
+    // localStorage full or unavailable
+  }
+}
+
+export function clearCachedData(role?: RoleKey): void {
+  if (role) {
+    localStorage.removeItem(cacheKey(role));
+  } else {
+    Object.keys(localStorage)
+      .filter(k => k.startsWith("novara_cache_"))
+      .forEach(k => localStorage.removeItem(k));
+  }
+}
+
+export function getCacheAge(role: RoleKey): number | null {
+  try {
+    const raw = localStorage.getItem(cacheKey(role));
+    if (!raw) return null;
+    const entry: CacheEntry = JSON.parse(raw);
+    return Math.floor((Date.now() - entry.timestamp) / 1000);
+  } catch {
+    return null;
+  }
+}
+
 // ===================== Data Loading =====================
 
 const DEFAULT_HOME: AdminHomeData = {
@@ -253,7 +321,7 @@ export interface ConnectedData {
   systemAlerts: SystemAlert[];
 }
 
-export async function loadConnectedData(role: RoleKey): Promise<ConnectedData> {
+async function fetchConnectedData(role: RoleKey): Promise<ConnectedData> {
   const results = await Promise.allSettled([
     apiRequest<any>("/api/v1/admin/overview").catch(() => null),
     apiRequest<any[]>("/api/v1/students/list").catch(() => []),
@@ -364,6 +432,28 @@ export async function loadConnectedData(role: RoleKey): Promise<ConnectedData> {
     systemSchools: [],
     systemAlerts: []
   };
+}
+
+export async function loadConnectedData(role: RoleKey, onRefresh?: (fresh: ConnectedData) => void): Promise<ConnectedData> {
+  const cached = getCachedData(role);
+
+  if (cached) {
+    fetchConnectedData(role).then(fresh => {
+      setCachedData(role, fresh);
+      onRefresh?.(fresh);
+    }).catch(() => {
+      // API unavailable — cached data already returned
+    });
+    return cached;
+  }
+
+  try {
+    const fresh = await fetchConnectedData(role);
+    setCachedData(role, fresh);
+    return fresh;
+  } catch (error) {
+    throw error;
+  }
 }
 
 // ===================== Legacy stubs (transitional) =====================
