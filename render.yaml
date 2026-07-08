@@ -28,7 +28,7 @@ services:
       - key: DEFAULT_TIMEZONE
         value: Africa/Kampala
       - key: BACKEND_CORS_ORIGINS
-        value: '["https://sms-novara.vercel.app"]'
+        value: '["https://sms-kappa-five.vercel.app","https://sms-i6ta.vercel.app","https://sms-msku.onrender.com"]'
       - key: SECRET_KEY
         generateValue: true
       - key: SMS_GATEWAY
