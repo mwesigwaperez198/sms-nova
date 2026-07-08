@@ -8,7 +8,10 @@ interface ParentWorkspaceProps {
 }
 
 export function ParentWorkspace({ view, data }: ParentWorkspaceProps) {
-  const [activeTab, setActiveTab] = useState<"payments" | "receipts">("payments");
+  const [attendanceComment, setAttendanceComment] = useState("");
+  const [attendanceSaved, setAttendanceSaved] = useState(false);
+  const [reportComment, setReportComment] = useState("");
+  const [reportSaved, setReportSaved] = useState(false);
 
   const child = {
     name: "Ariho Grace",
@@ -21,10 +24,16 @@ export function ParentWorkspace({ view, data }: ParentWorkspaceProps) {
     average: "71%",
   };
 
+  const subjectTeachers = [
+    { subject: "Mathematics", teacher: "Mr. Okello", phone: "+256 700 000001" },
+    { subject: "English", teacher: "Ms. Nambi", phone: "+256 700 000002" },
+    { subject: "Science", teacher: "Mr. Ssempija", phone: "+256 700 000003" },
+    { subject: "Social Studies", teacher: "Mrs. Nakato", phone: "+256 700 000004" },
+  ];
+
   if (view === "Home") {
     return (
       <div className="content-grid">
-        {/* Hero */}
         <div className="student-hero-grad">
           <div className="student-avatar-lg">{child.name.charAt(0)}</div>
           <div>
@@ -33,7 +42,6 @@ export function ParentWorkspace({ view, data }: ParentWorkspaceProps) {
           </div>
         </div>
 
-        {/* Metrics */}
         <div className="metric-grid">
           <div className="metric amber">
             <div className="metric-icon"><Receipt size={22} /></div>
@@ -53,7 +61,6 @@ export function ParentWorkspace({ view, data }: ParentWorkspaceProps) {
           </div>
         </div>
 
-        {/* Quick details */}
         <div className="profile-grid-detail">
           {[
             ["Class", child.class],
@@ -71,7 +78,7 @@ export function ParentWorkspace({ view, data }: ParentWorkspaceProps) {
     );
   }
 
-  if (view === "Fees" || view === "Receipts") {
+  if (view === "Fees") {
     return (
       <div className="content-grid">
         <div className="metric-grid">
@@ -81,52 +88,27 @@ export function ParentWorkspace({ view, data }: ParentWorkspaceProps) {
           <div className="metric teal"><div className="metric-icon"><Download size={22} /></div><div className="metric-body"><strong>PDF</strong><span>Download</span></div></div>
         </div>
 
-        <div className="tab-bar">
-          <button className={`tab-btn ${activeTab === "payments" ? "active" : ""}`} onClick={() => setActiveTab("payments")}><Receipt size={15} />Payments</button>
-          <button className={`tab-btn ${activeTab === "receipts" ? "active" : ""}`} onClick={() => setActiveTab("receipts")}><FileText size={15} />Receipts</button>
+        <div className="table-panel">
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th>Reference</th><th>Amount</th><th>Method</th><th>Date</th><th>Status</th></tr></thead>
+              <tbody>
+                {data.payments.map(p => (
+                  <tr key={p.reference}>
+                    <td><code>{p.reference}</code></td>
+                    <td><strong>{p.amount}</strong></td>
+                    <td>{p.method}</td>
+                    <td>{p.date}</td>
+                    <td><span className={`badge ${p.status === "Confirmed" ? "success" : "warning"}`}>{p.status}</span></td>
+                  </tr>
+                ))}
+                {data.payments.length === 0 && (
+                  <tr><td colSpan={5} style={{ textAlign: "center", color: "var(--muted)", padding: "24px 0" }}>No payment records</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-
-        {activeTab === "payments" && (
-          <div className="table-panel">
-            <div className="table-wrap">
-              <table>
-                <thead><tr><th>Reference</th><th>Amount</th><th>Method</th><th>Date</th><th>Status</th></tr></thead>
-                <tbody>
-                  {data.payments.map(p => (
-                    <tr key={p.reference}>
-                      <td><code>{p.reference}</code></td>
-                      <td><strong>{p.amount}</strong></td>
-                      <td>{p.method}</td>
-                      <td>{p.date}</td>
-                      <td><span className={`badge ${p.status === "Confirmed" ? "success" : "warning"}`}>{p.status}</span></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {activeTab === "receipts" && (
-          <div className="table-panel">
-            <div className="table-wrap">
-              <table>
-                <thead><tr><th>Receipt No</th><th>Amount</th><th>Method</th><th>Date</th><th></th></tr></thead>
-                <tbody>
-                  {data.receipts.map(r => (
-                    <tr key={r.receiptNo}>
-                      <td><code>{r.receiptNo}</code></td>
-                      <td><strong>{r.amount}</strong></td>
-                      <td>{r.method}</td>
-                      <td>{r.date}</td>
-                      <td><button className="tool-button" style={{ minHeight: 30, fontSize: "0.78rem" }}><Download size={13} />PDF</button></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
       </div>
     );
   }
@@ -158,6 +140,24 @@ export function ParentWorkspace({ view, data }: ParentWorkspaceProps) {
               <span className={`badge ${h.status === "Present" ? "success" : h.status === "Late" ? "warning" : "error"}`}>{h.status}</span>
             </div>
           ))}
+        </div>
+        <div className="detail-panel" style={{ marginTop: 16 }}>
+          <div className="panel-title"><strong>Parent Comment</strong></div>
+          <textarea
+            className="input-base"
+            style={{ width: "100%", minHeight: 80, marginTop: 8, resize: "vertical" }}
+            placeholder="Write a comment about your child's attendance..."
+            value={attendanceComment}
+            onChange={e => { setAttendanceComment(e.target.value); setAttendanceSaved(false); }}
+          />
+          <button
+            className="tool-button primary"
+            style={{ marginTop: 8 }}
+            onClick={() => { setAttendanceSaved(true); }}
+          >
+            Save Comment
+          </button>
+          {attendanceSaved && <p style={{ color: "#10b981", fontSize: "0.85rem", marginTop: 6 }}>Comment saved</p>}
         </div>
       </div>
     );
@@ -204,6 +204,38 @@ export function ParentWorkspace({ view, data }: ParentWorkspaceProps) {
             </table>
           </div>
         </div>
+        <div className="detail-panel" style={{ marginTop: 16 }}>
+          <div className="panel-title"><User size={16} /><strong>Subject Teachers</strong></div>
+          <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
+            {subjectTeachers.map(st => (
+              <div key={st.subject} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "var(--bg-secondary)", borderRadius: 6 }}>
+                <div>
+                  <strong style={{ fontSize: "0.85rem" }}>{st.subject}</strong>
+                  <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--muted)" }}>{st.teacher}</p>
+                </div>
+                <a href={`tel:${st.phone}`} style={{ color: "#4fc3f7", fontSize: "0.85rem", textDecoration: "none" }}>{st.phone}</a>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="detail-panel" style={{ marginTop: 16 }}>
+          <div className="panel-title"><strong>Parent Comment</strong></div>
+          <textarea
+            className="input-base"
+            style={{ width: "100%", minHeight: 80, marginTop: 8, resize: "vertical" }}
+            placeholder="Write a comment about your child's report..."
+            value={reportComment}
+            onChange={e => { setReportComment(e.target.value); setReportSaved(false); }}
+          />
+          <button
+            className="tool-button primary"
+            style={{ marginTop: 8 }}
+            onClick={() => { setReportSaved(true); }}
+          >
+            Save Comment
+          </button>
+          {reportSaved && <p style={{ color: "#10b981", fontSize: "0.85rem", marginTop: 6 }}>Comment saved</p>}
+        </div>
       </div>
     );
   }
@@ -229,7 +261,6 @@ export function ParentWorkspace({ view, data }: ParentWorkspaceProps) {
     );
   }
 
-  // Default home
   return (
     <div className="content-grid">
       <div className="student-hero-grad">
@@ -245,7 +276,7 @@ export function ParentWorkspace({ view, data }: ParentWorkspaceProps) {
         <div className="metric blue"><div className="metric-icon"><FileText size={22} /></div><div className="metric-body"><strong>{child.lastGrade}</strong><span>Last Grade</span></div></div>
         <div className="metric teal"><div className="metric-icon"><Bell size={22} /></div><div className="metric-body"><strong>{data.parentMessages.filter(m => !m.read).length}</strong><span>Unread</span></div></div>
       </div>
-      <div className="notice-strip">Select a view — Home, Fees, Receipts, Attendance, Report Card, or Messages.</div>
+      <div className="notice-strip">Select a view — Home, Fees, Attendance, Report Card, or Messages.</div>
     </div>
   );
 }
