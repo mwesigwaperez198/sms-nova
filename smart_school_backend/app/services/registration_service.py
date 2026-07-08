@@ -132,7 +132,7 @@ def complete_registration(
     db.add(school)
     db.flush()
 
-    admin_role = db.query(Role).filter(Role.name == "Admin").first()
+    admin_role = db.query(Role).filter(Role.name == "admin").first()
     if not admin_role:
         raise HTTPException(status_code=500, detail="Admin role not found in system")
 
