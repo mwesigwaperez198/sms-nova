@@ -125,7 +125,7 @@ export const roleLabels: Record<RoleKey, string> = {
   secretary: "Secretary", librarian: "Librarian"
 };
 
-export function mapUserToSession(result: { access_token: string; refresh_token: string; user: { id: number; name: string; email: string; role_id: number; school_id: number | null } }): Session {
+export function mapUserToSession(result: { access_token: string; refresh_token: string; user: { id: number; name: string; email: string; role_id: number; school_id: number | null; school?: { name: string } | null } }): Session {
   const roleKey = roleMap[result.user.role_id] ?? "admin";
   sessionStorage.setItem("novara_token", result.access_token);
   sessionStorage.setItem("novara_refresh_token", result.refresh_token);
@@ -137,7 +137,7 @@ export function mapUserToSession(result: { access_token: string; refresh_token: 
       full_name: result.user.name,
       role: roleLabels[roleKey] ?? "User",
       role_key: roleKey,
-      school: "NOVARA School"
+      school: result.user.school?.name ?? "NOVARA School"
     }
   };
 }
