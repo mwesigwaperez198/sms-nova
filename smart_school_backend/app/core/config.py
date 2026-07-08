@@ -63,12 +63,11 @@ class Settings(BaseSettings):
         if self.database_url.startswith("sqlite"):
             return self.database_url
         url = self.database_url
-        # Render/Vercel-compatible: use pg8000 (pure Python, no C extensions)
-        if "+psycopg" in url or "+psycopg2" in url:
-            url = url.replace("+psycopg2://", "+pg8000://").replace("+psycopg://", "+pg8000://")
-        # pg8000 handles SSL natively — don't append sslmode
-        if "+pg8000" in url and "sslmode" in url:
-            url = url.replace("?sslmode=require", "").replace("&sslmode=require", "")
+        if "+psycopg://" in url and "+psycopg2" not in url:
+            url = url.replace("+psycopg://", "+psycopg2://")
+        if "localhost" not in url and "sslmode" not in url:
+            separator = "&" if "?" in url else "?"
+            url = f"{url}{separator}sslmode=require"
         return url
 
 
