@@ -77,7 +77,7 @@ const FEATURES = [
   {
     icon: "🔐",
     title: "Enterprise Security",
-    desc: "Role-based access across 8 roles, JWT session management, audit logs, and tenant data isolation — fully hardened.",
+    desc: "Role-based access across 7 roles, JWT session management, audit logs, and tenant data isolation — fully hardened.",
   },
 ];
 
@@ -116,7 +116,7 @@ export function LandingPage({ onEnterApp }: LandingPageProps) {
           </h1>
           <p className="landing-subline">
             Fees. Attendance. Report Cards. Library. Communication.<br />
-            One platform. Eight roles. Zero chaos.
+            One platform. Seven roles. Zero chaos.
           </p>
           <div className="landing-hero-actions">
             <button className="landing-btn-primary landing-btn-lg" onClick={onEnterApp}>
