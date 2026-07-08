@@ -60,11 +60,14 @@ class Settings(BaseSettings):
 
     @property
     def database_url_with_ssl(self) -> str:
+        if self.database_url.startswith("sqlite"):
+            return self.database_url
         url = self.database_url
-        if "localhost" not in url and "sqlite" not in url:
-            if "sslmode" not in url:
-                separator = "&" if "?" in url else "?"
-                url = f"{url}{separator}sslmode=require"
+        if "+psycopg://" in url and "psycopg2" not in url:
+            url = url.replace("+psycopg://", "+psycopg2://")
+        if "localhost" not in url and "sslmode" not in url:
+            separator = "&" if "?" in url else "?"
+            url = f"{url}{separator}sslmode=require"
         return url
 
 
