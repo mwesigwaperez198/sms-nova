@@ -23,3 +23,10 @@ except Exception:
     import logging
     logging.basicConfig(level=logging.DEBUG)
     logging.getLogger("vercel").error("Startup error:\n%s", err)
+
+
+# Ensure db driver is available
+try:
+    import pg8000  # noqa: F401
+except ImportError:
+    pass
