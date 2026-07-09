@@ -1,24 +1,32 @@
 import base64
-import io
 import json
 import logging
 from typing import Any
 
 logger = logging.getLogger(__name__)
 
-try:
-    import cv2
-    import numpy as np
-    from deepface import DeepFace
+_DEEPFACE_AVAILABLE: bool | None = None
 
-    DEEPFACE_AVAILABLE = True
-except Exception:
-    DEEPFACE_AVAILABLE = False
-    logger.warning("deepface/cv2 not available — facial recognition disabled")
+
+def _is_available() -> bool:
+    global _DEEPFACE_AVAILABLE
+    if _DEEPFACE_AVAILABLE is None:
+        try:
+            import cv2  # noqa: F401
+            import numpy as np  # noqa: F401
+            from deepface import DeepFace  # noqa: F401
+
+            _DEEPFACE_AVAILABLE = True
+        except Exception:
+            _DEEPFACE_AVAILABLE = False
+            logger.warning("deepface/cv2 not available — facial recognition disabled")
+    return _DEEPFACE_AVAILABLE
 
 
 def _decode_image(data_url: str) -> Any:
-    # data:image/jpeg;base64,...
+    import cv2
+    import numpy as np
+
     if "," in data_url:
         data_url = data_url.split(",", 1)[1]
     img_bytes = base64.b64decode(data_url)
@@ -27,8 +35,10 @@ def _decode_image(data_url: str) -> Any:
 
 
 def extract_embedding(data_url: str) -> list[float] | None:
-    if not DEEPFACE_AVAILABLE:
+    if not _is_available():
         return None
+    from deepface import DeepFace
+
     try:
         img = _decode_image(data_url)
         if img is None:
