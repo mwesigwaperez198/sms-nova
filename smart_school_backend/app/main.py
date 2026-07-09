@@ -25,19 +25,12 @@ except ImportError:
 async def lifespan(app: FastAPI):
     from app.db.base import Base
     from app.db.seed import seed_foundation
-    from app.core.config import get_settings
-    from sqlalchemy import create_engine
-    from sqlalchemy.orm import sessionmaker
+    from app.db.session import engine as _engine, SessionMaker
 
     try:
         import app.models  # noqa: F401
-        settings = get_settings()
-        connect_args = {}
-        if settings.database_url.startswith("sqlite"):
-            connect_args["check_same_thread"] = False
-        engine = create_engine(settings.database_url_with_ssl, pool_pre_ping=True, connect_args=connect_args)
-        Base.metadata.create_all(bind=engine)
-        db = sessionmaker(bind=engine, autoflush=False, autocommit=False)()
+        Base.metadata.create_all(bind=_engine)
+        db = SessionMaker()
         try:
             _run_migrations(db)
             seed_foundation(db)
@@ -114,9 +107,8 @@ def create_app() -> FastAPI:
         db_status = "not_checked"
         db_hint = ""
         try:
-            from sqlalchemy import create_engine, text
-            engine = create_engine(settings.database_url_with_ssl, pool_pre_ping=True)
-            with engine.connect() as conn:
+            from sqlalchemy import text
+            with _engine.connect() as conn:
                 conn.execute(text("SELECT 1"))
             db_status = "ok"
         except Exception as e:

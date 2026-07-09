@@ -27,7 +27,7 @@ export function RegisterSchoolScreen({ onBack }: RegisterSchoolScreenProps) {
   useEffect(() => {
     fetchPlans()
       .then(setPlans)
-      .catch(() => {})
+      .catch((e) => { setError("Failed to load plans: " + e.message); })
       .finally(() => setPlansLoading(false));
   }, []);
 

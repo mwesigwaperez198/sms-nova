@@ -757,7 +757,7 @@ export async function approveRegistration(requestId: number): Promise<{ product_
 }
 
 export async function fetchPlans(): Promise<PlanItem[]> {
-  return apiRequest("/api/v1/platform/plans");
+  return apiRequest("/api/v1/subscriptions/plans");
 }
 
 export async function createPlan(payload: {
