@@ -18,6 +18,8 @@ from app.models.role import Role
 from app.models.user import User
 from app.models.student import Student
 from app.models.notification import Notification
+from app.models.school import School
+from app.models.subscription import SchoolSubscription, SubscriptionPlan
 
 engine = create_engine(
     "sqlite:///./test_smart_school.db",
@@ -29,6 +31,22 @@ TestingSession = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 def seed_test_db(db: Session):
     for rd in ROLE_SEED_DATA:
         db.add(Role(id=int(rd["id"]), name=rd["name"], description=rd["description"]))
+    school = School(
+        id=1, name="Test School", school_code="TST01",
+        email="school@test.ac.ug",
+    )
+    db.add(school)
+    db.flush()
+    plan = SubscriptionPlan(id=1, name="Premium", price=0, duration_days=365, features={})
+    db.add(plan)
+    db.flush()
+    from datetime import datetime, timezone, timedelta
+    sub = SchoolSubscription(
+        school_id=1, plan_id=1, status="active",
+        starts_at=datetime.now(timezone.utc),
+        expires_at=datetime.now(timezone.utc) + timedelta(days=30),
+    )
+    db.add(sub)
     admin = User(
         name="School Admin", email="admin@test.ac.ug",
         password_hash=hash_password("AdminPass123!"),
@@ -39,9 +57,11 @@ def seed_test_db(db: Session):
         password_hash=hash_password("TeachPass123!"),
         role_id=RoleId.TEACHER, school_id=1, is_verified=True,
     )
+    db.add_all([admin, teacher])
+    db.flush()
     stud = Student(school_id=1, name="Student One", admission_number="STU-001", class_name="S1", stream_name="East")
-    notif = Notification(school_id=1, title="Welcome", message="Term starts Monday", type="info", severity="info")
-    db.add_all([admin, teacher, stud, notif])
+    notif = Notification(user_id=admin.id, school_id=1, title="Welcome", message="Term starts Monday", type="info")
+    db.add_all([stud, notif])
     db.commit()
 
 

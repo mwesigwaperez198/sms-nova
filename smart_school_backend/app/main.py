@@ -46,20 +46,46 @@ async def lifespan(app: FastAPI):
 
 
 def _run_migrations(db):
-    migrations = [
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_photo VARCHAR(500)",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS face_descriptor VARCHAR(2000)",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_secret VARCHAR(32)",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_2fa_enabled BOOLEAN NOT NULL DEFAULT false",
-        "ALTER TABLE registration_requests ADD COLUMN IF NOT EXISTS plan_id INTEGER",
-    ]
-    for stmt in migrations:
+    from sqlalchemy import inspect
+
+    inspector = inspect(db.bind)
+    existing_cols = {c["name"] for c in inspector.get_columns("users")}
+    if "profile_photo" not in existing_cols:
         try:
-            db.execute(text(stmt))
+            db.execute(text("ALTER TABLE users ADD COLUMN profile_photo VARCHAR(500)"))
             db.commit()
         except Exception as e:
             db.rollback()
-            logger.warning("Migration skipped (%s): %s", stmt[:60], e)
+            logger.warning("Migration profile_photo: %s", e)
+    if "face_descriptor" not in existing_cols:
+        try:
+            db.execute(text("ALTER TABLE users ADD COLUMN face_descriptor VARCHAR(2000)"))
+            db.commit()
+        except Exception as e:
+            db.rollback()
+            logger.warning("Migration face_descriptor: %s", e)
+    if "totp_secret" not in existing_cols:
+        try:
+            db.execute(text("ALTER TABLE users ADD COLUMN totp_secret VARCHAR(32)"))
+            db.commit()
+        except Exception as e:
+            db.rollback()
+            logger.warning("Migration totp_secret: %s", e)
+    if "is_2fa_enabled" not in existing_cols:
+        try:
+            db.execute(text("ALTER TABLE users ADD COLUMN is_2fa_enabled BOOLEAN NOT NULL DEFAULT false"))
+            db.commit()
+        except Exception as e:
+            db.rollback()
+            logger.warning("Migration is_2fa_enabled: %s", e)
+    rr_cols = {c["name"] for c in inspector.get_columns("registration_requests")}
+    if "plan_id" not in rr_cols:
+        try:
+            db.execute(text("ALTER TABLE registration_requests ADD COLUMN plan_id INTEGER"))
+            db.commit()
+        except Exception as e:
+            db.rollback()
+            logger.warning("Migration plan_id: %s", e)
 
 
 def create_app() -> FastAPI:

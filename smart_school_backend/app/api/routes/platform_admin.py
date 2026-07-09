@@ -11,7 +11,6 @@ from app.api.deps import get_current_user, role_required
 from app.core.roles import RoleId
 from app.db.session import get_db
 from app.models.api_key import ApiKey
-from app.models.audit import AuditLog
 from app.models.notification import Notification
 from app.models.registration import RegistrationKey, RegistrationRequest
 from app.models.school import School
@@ -25,6 +24,7 @@ from app.schemas.subscription import (
     SubscriptionPlanCreate,
     SubscriptionPlanRead,
 )
+from app.services.audit_service import log_action
 from app.services.subscription_service import generate_product_key
 
 router = APIRouter(prefix="/platform", tags=["platform-admin"])
@@ -205,13 +205,7 @@ def toggle_school_status(
         raise HTTPException(status_code=404, detail="School not found")
     school.subscription_status = payload.status
     db.add(school)
-    db.add(AuditLog(
-        action="school_status_changed",
-        actor_id=current_user.id,
-        actor_name=current_user.name,
-        entity=f"school:{school_id}",
-        detail=f"Status changed to {payload.status}",
-    ))
+    log_action(db, current_user=current_user, action="school_status_changed", entity_type="school", entity_id=school_id)
     db.commit()
     return {"detail": f"School {school.name} status set to {payload.status}"}
 
@@ -243,13 +237,7 @@ def approve_registration(
         raise HTTPException(status_code=400, detail="Registration already processed")
 
     reg_key = generate_registration_key(db, request_id)
-    db.add(AuditLog(
-        action="registration_approved",
-        actor_id=current_user.id,
-        actor_name=current_user.name,
-        entity=f"registration:{request_id}",
-        detail=f"Approved registration for {req.school_name}",
-    ))
+    log_action(db, current_user=current_user, action="registration_approved", entity_type="registration", entity_id=request_id)
     db.commit()
 
     return GenerateKeyResponse(
@@ -268,13 +256,7 @@ def generate_key(
     raw_key = generate_product_key(db, payload.school_id, payload.plan_id, current_user.id)
     plan = db.get(SubscriptionPlan, payload.plan_id)
     plan_name = plan.name if plan else "Unknown"
-    db.add(AuditLog(
-        action="key_generated",
-        actor_id=current_user.id,
-        actor_name=current_user.name,
-        entity=f"school:{payload.school_id}",
-        detail=f"Generated {plan_name} subscription key",
-    ))
+    log_action(db, current_user=current_user, action="key_generated", entity_type="school", entity_id=payload.school_id)
     db.commit()
     return GenerateKeyResponse(
         product_key=raw_key,
@@ -329,13 +311,8 @@ def create_plan(
         raise HTTPException(status_code=409, detail="Plan name already exists")
     plan = SubscriptionPlan(**payload.model_dump())
     db.add(plan)
-    db.add(AuditLog(
-        action="plan_created",
-        actor_id=current_user.id,
-        actor_name=current_user.name,
-        entity=f"plan:{plan.name}",
-        detail=f"Created subscription plan {plan.name}",
-    ))
+    db.flush()
+    log_action(db, current_user=current_user, action="plan_created", entity_type="plan", entity_id=plan.id)
     db.commit()
     db.refresh(plan)
     return plan
@@ -467,13 +444,7 @@ def generate_api_key(
     if admin:
         background_tasks.add_task(_send_api_key_email, admin.email, raw_key, school.name)
 
-    db.add(AuditLog(
-        action="api_key_generated",
-        actor_id=current_user.id,
-        actor_name=current_user.name,
-        entity=f"school:{payload.school_id}",
-        detail=f"API key generated for {school.name}",
-    ))
+    log_action(db, current_user=current_user, action="api_key_generated", entity_type="school", entity_id=payload.school_id)
     db.commit()
 
     return GenerateApiKeyResponse(
@@ -493,13 +464,7 @@ def revoke_api_key(
     if not api_key:
         raise HTTPException(status_code=404, detail="API key not found")
     api_key.is_active = False
-    db.add(AuditLog(
-        action="api_key_revoked",
-        actor_id=current_user.id,
-        actor_name=current_user.name,
-        entity=f"api_key:{key_id}",
-        detail=f"API key {api_key.key_prefix}... revoked",
-    ))
+    log_action(db, current_user=current_user, action="api_key_revoked", entity_type="api_key", entity_id=key_id)
     db.commit()
     return {"detail": "API key revoked"}
 
@@ -534,6 +499,7 @@ def trigger_system_check(
     db: Session = Depends(get_db),
     current_user: User = Depends(role_required(RoleId.SUPER_ADMIN)),
 ):
+    from datetime import timedelta
     now = datetime.now(timezone.utc)
     tomorrow = now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
 
@@ -590,21 +556,22 @@ def trigger_system_check(
     from app.models.notification import Notification
 
     for school in schools:
-        db.add(Notification(
-            school_id=school.id,
-            type="system_maintenance",
-            title="System Check Scheduled",
-            body=f"A system-wide check has been scheduled for tonight at midnight. The system will be briefly unavailable.",
-            severity="high",
-        ))
+        admins = db.query(User).filter(
+            User.school_id == school.id,
+            User.role_id.in_([RoleId.ADMIN, RoleId.ICT_ADMIN]),
+            User.is_active == True,
+        ).all()
+        for admin in admins:
+            db.add(Notification(
+                school_id=school.id,
+                user_id=admin.id,
+                sender_id=current_user.id,
+                type="system_maintenance",
+                title="System Check Scheduled",
+                message="A system-wide check has been scheduled for tonight at midnight. The system will be briefly unavailable.",
+            ))
 
-    db.add(AuditLog(
-        action="system_check_triggered",
-        actor_id=current_user.id,
-        actor_name=current_user.name,
-        entity=f"system_check:{check.id}",
-        detail=f"System check scheduled for {tomorrow.strftime('%Y-%m-%d %H:%M UTC')}. {notified} administrators notified.",
-    ))
+    log_action(db, current_user=current_user, action="system_check_triggered", entity_type="system_check", entity_id=check.id)
     db.commit()
 
     return TriggerSystemCheckResponse(
@@ -722,13 +689,7 @@ def add_school(
     )
     db.add(sub)
 
-    db.add(AuditLog(
-        action="school_created",
-        actor_id=current_user.id,
-        actor_name=current_user.name,
-        entity=f"school:{school.id}",
-        detail=f"Created school {payload.name} with admin {payload.admin_email}",
-    ))
+    log_action(db, current_user=current_user, action="school_created", entity_type="school", entity_id=school.id)
     db.commit()
 
     try:

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user, role_required
+from app.api.deps import get_current_user, require_active_subscription, role_required
 from app.core.roles import RoleId
 from app.db.session import get_db
 from app.models.student import Student
@@ -22,7 +22,7 @@ def list_students(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_active_subscription),
 ) -> list[StudentRead]:
     query = db.query(Student).filter(Student.school_id == current_user.school_id)
     return query.order_by(Student.name.asc()).offset(skip).limit(limit).all()

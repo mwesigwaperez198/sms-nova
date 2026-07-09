@@ -29,6 +29,7 @@ def onboard_default_school(client):
 
 class TestAddSchoolEndpoint:
     def test_add_school_requires_super_admin(self, client):
+        onboard_default_school(client)
         admin_token = login(client, "admin@test.ac.ug", "StrongPass123!")
         r = client.post(
             "/api/v1/platform/add-school",
@@ -74,6 +75,18 @@ class TestAddSchoolEndpoint:
 
     def test_add_school_rejects_duplicate_admin_email(self, client):
         super_token = login(client, "owner@example.com", "ChangeMe123!")
+        client.post(
+            "/api/v1/platform/add-school",
+            headers=auth(super_token),
+            json={
+                "name": "Original School",
+                "email": "orig@school.com",
+                "admin_name": "Orig Admin",
+                "admin_email": "newadmin@school.com",
+                "admin_password": "SecurePass123!",
+                "plan_id": 1,
+            },
+        )
         r = client.post(
             "/api/v1/platform/add-school",
             headers=auth(super_token),
@@ -232,6 +245,7 @@ class TestSystemCheckEndpoint:
 
 class TestPlatformStats:
     def test_stats_requires_super_admin(self, client):
+        onboard_default_school(client)
         admin_token = login(client, "admin@test.ac.ug", "StrongPass123!")
         r = client.get("/api/v1/platform/stats", headers=auth(admin_token))
         assert r.status_code == 403
