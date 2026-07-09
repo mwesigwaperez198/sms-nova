@@ -368,6 +368,7 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
             <button className="tool-button" onClick={() => printElement("export-payments")}><Printer size={15}/>Print</button>
           </div>
           <div id="export-payments" className="table-wrap">
+            <table>
               <tbody>
                 {filteredPayments.map(p => (
                   <tr key={p.reference}>
@@ -426,6 +427,7 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
             <button className="tool-button" onClick={() => printElement("export-receipts-list")}><Printer size={15}/>Print Register</button>
           </div>
           <div id="export-receipts-list" className="table-wrap">
+            <table>
               <tbody>
                 {filteredReceipts.map(r => (
                   <tr key={r.id}>
