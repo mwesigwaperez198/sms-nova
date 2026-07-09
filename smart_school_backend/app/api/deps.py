@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.security import decode_access_token
 from app.db.session import get_db
+from app.models.school import School
 from app.models.user import User
 
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -102,7 +103,7 @@ def require_active_subscription(current_user: User = Depends(get_current_user), 
         )
     now = datetime.now(timezone.utc)
     if sub.expires_at.replace(tzinfo=timezone.utc) < now:
-        school = db.get(__import__("app.models.school", fromlist=["School"]).School, current_user.school_id)
+        school = db.get(School, current_user.school_id)
         if school:
             school.subscription_status = "expired"
             db.commit()
