@@ -2,8 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy.orm import Session
 
+from app.api.deps import role_required
+from app.core.roles import RoleId
 from app.db.session import get_db
 from app.models.registration import RegistrationRequest
+from app.models.user import User
 from app.services.auth_service import validate_password_strength
 from app.services.registration_service import (
     complete_registration,
@@ -78,6 +81,7 @@ def register_school(
 def generate_key(
     payload: GenerateKeyRequest,
     db: Session = Depends(get_db),
+    _user: User = Depends(role_required(RoleId.SUPER_ADMIN)),
 ) -> GenerateKeyResponse:
     reg_key = generate_registration_key(db, payload.request_id)
     return GenerateKeyResponse(key=reg_key.key)
