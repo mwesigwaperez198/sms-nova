@@ -22,7 +22,7 @@ def send_email(to: str, subject: str, html: str) -> bool:
                 "Content-Type": "application/json",
             },
             json={
-                "from": "NOVARA School <onboarding@novaratechafrica.kesug.com>",
+                "from": "NOVARA School <onboarding@novara-tech-africa.kesug.com>",
                 "to": [to],
                 "subject": subject,
                 "html": html,
