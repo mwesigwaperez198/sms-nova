@@ -1,6 +1,7 @@
 import {
   LayoutDashboard, Building2, CreditCard, KeyRound,
   Activity, ScrollText, Receipt, AlertTriangle, Settings, LogOut,
+  ChevronLeft, ChevronRight,
   type LucideIcon,
 } from "lucide-react";
 
@@ -39,7 +40,7 @@ export function Sidebar({ activeView, onNavigate, onLogout, collapsed, onToggle 
       )}
       <aside
         className={`fixed top-0 left-0 z-30 h-full bg-zinc-900 border-r border-zinc-800 transition-all duration-200 flex flex-col ${
-          collapsed ? "-translate-x-full lg:translate-x-0 lg:w-16" : "w-64"
+          collapsed ? "w-16" : "w-64"
         }`}
       >
         <div className="h-14 flex items-center gap-2 px-4 border-b border-zinc-800">
@@ -81,6 +82,20 @@ export function Sidebar({ activeView, onNavigate, onLogout, collapsed, onToggle 
         </nav>
 
         <div className="p-2 border-t border-zinc-800">
+          <button
+            onClick={onToggle}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors"
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {collapsed ? (
+              <ChevronRight size={18} className="shrink-0" />
+            ) : (
+              <>
+                <ChevronLeft size={18} className="shrink-0" />
+                <span>Collapse</span>
+              </>
+            )}
+          </button>
           <button
             onClick={onLogout}
             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-zinc-400 hover:text-red-400 hover:bg-zinc-800 transition-colors"

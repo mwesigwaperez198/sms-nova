@@ -28,7 +28,7 @@ const viewTitles: Record<string, string> = {
 function AppContent() {
   const { admin, logout } = useAuth();
   const [view, setView] = useState("dashboard");
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.innerWidth < 1024);
   const [selectedSchoolId, setSelectedSchoolId] = useState<number | null>(null);
   const [theme, setTheme] = useState(() => localStorage.getItem("novara_theme") || "dark");
 
@@ -42,7 +42,7 @@ function AppContent() {
   const handleNavigate = (v: string) => {
     setView(v);
     setSelectedSchoolId(null);
-    setSidebarCollapsed(true);
+    if (window.innerWidth < 1024) setSidebarCollapsed(true);
   };
 
   const handleSelectSchool = (id: number) => {
@@ -64,7 +64,9 @@ function AppContent() {
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
 
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-200 ${
+        sidebarCollapsed ? "lg:ml-16" : "lg:ml-64"
+      }`}>
         <Header
           title={title}
           onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}

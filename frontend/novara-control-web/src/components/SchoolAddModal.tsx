@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X } from "lucide-react";
+import { X, CheckCircle2, Copy, Eye, EyeOff } from "lucide-react";
 import { useData } from "../hooks/useData";
 import { getPlans, createSchool } from "../api/services";
 
@@ -7,11 +7,24 @@ interface SchoolAddModalProps {
   onClose: () => void;
 }
 
+interface ProvisionResult {
+  id: number;
+  name: string;
+  school_code: string;
+  admin_email: string;
+  temp_password: string | null;
+  api_key: string | null;
+  detail: string;
+}
+
 export function SchoolAddModal({ onClose }: SchoolAddModalProps) {
   const { data: plans } = useData(getPlans);
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<ProvisionResult | null>(null);
+  const [showPw, setShowPw] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -33,14 +46,81 @@ export function SchoolAddModal({ onClose }: SchoolAddModalProps) {
     setSaving(true);
     setError(null);
     try {
-      await createSchool(form as any);
-      onClose();
+      const payload = { ...form } as any;
+      if (!payload.plan_id || payload.plan_id === 0) delete payload.plan_id;
+      const res = await createSchool(payload);
+      setResult(res as any);
     } catch (err: any) {
       setError(err.message);
     } finally {
       setSaving(false);
     }
   };
+
+  const copyText = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(label);
+    setTimeout(() => setCopied(null), 2000);
+  };
+
+  if (result) {
+    return (
+      <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 size={18} className="text-emerald-400" />
+              <h3 className="text-sm font-medium">School Provisioned</h3>
+            </div>
+            <button onClick={onClose} className="p-1 rounded-lg text-zinc-500 hover:text-zinc-300">
+              <X size={18} />
+            </button>
+          </div>
+          <div className="p-5 space-y-4">
+            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3 text-sm text-emerald-400">
+              {result.detail}
+            </div>
+
+            <div className="bg-zinc-800/50 rounded-lg p-4 space-y-3">
+              <InfoRow label="School" value={result.name} />
+              <InfoRow label="Code" value={result.school_code} onCopy={() => copyText(result.school_code, "code")} copied={copied === "code"} />
+              <InfoRow label="Admin Email" value={result.admin_email} />
+            </div>
+
+            {result.temp_password && (
+              <div className="bg-zinc-800/50 rounded-lg p-4 space-y-3">
+                <div className="text-xs text-zinc-400 font-medium uppercase tracking-wider">Credentials</div>
+                <InfoRow label="Password" value={result.temp_password}
+                  isPassword showPw={showPw} onTogglePw={() => setShowPw(!showPw)}
+                  onCopy={() => copyText(result.temp_password!, "pw")} copied={copied === "pw"} />
+              </div>
+            )}
+
+            {result.api_key && (
+              <div className="bg-zinc-800/50 rounded-lg p-4 space-y-3">
+                <div className="text-xs text-zinc-400 font-medium uppercase tracking-wider">API Key</div>
+                <div className="flex items-center gap-2">
+                  <code className="text-xs text-zinc-300 font-mono break-all flex-1">{result.api_key}</code>
+                  <button onClick={() => copyText(result.api_key!, "key")} className="p-1 rounded text-zinc-500 hover:text-zinc-300 shrink-0">
+                    {copied === "key" ? <CheckCircle2 size={14} className="text-emerald-400" /> : <Copy size={14} />}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-xs text-amber-400/80">
+              Save these credentials — the temp password and API key won't be shown again.
+            </div>
+          </div>
+          <div className="px-5 py-4 border-t border-zinc-800 flex justify-end">
+            <button onClick={onClose} className="bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-medium rounded-lg px-4 py-2 transition-colors">
+              Done
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
@@ -56,7 +136,6 @@ export function SchoolAddModal({ onClose }: SchoolAddModalProps) {
         </div>
 
         <div className="p-5 space-y-4">
-          {/* Step progress */}
           <div className="flex gap-1.5 mb-4">
             {[1, 2, 3, 4].map((s) => (
               <div
@@ -129,7 +208,7 @@ export function SchoolAddModal({ onClose }: SchoolAddModalProps) {
                   onChange={(e) => update("send_email", e.target.checked)}
                   className="rounded bg-zinc-800 border-zinc-700 text-indigo-500"
                 />
-                Send credentials via email
+                Send credentials & API key via email
               </label>
             </div>
           )}
@@ -140,18 +219,18 @@ export function SchoolAddModal({ onClose }: SchoolAddModalProps) {
               <div className="bg-zinc-800/50 rounded-lg p-3 space-y-2 text-sm">
                 <Row label="School" value={form.name} />
                 <Row label="Email" value={form.email} />
-                <Row label="Plan" value={plans?.find((p) => p.id === form.plan_id)?.name || "N/A"} />
+                <Row label="Plan" value={plans?.find((p) => p.id === form.plan_id)?.name || "No plan selected"} />
                 <Row label="Admin" value={`${form.admin_name} <${form.admin_email}>`} />
                 <Row label="Send Email" value={form.send_email ? "Yes" : "No"} />
               </div>
               <p className="text-xs text-zinc-600">
-                This will create the school, its subscription, admin account, and API keys immediately.
+                This will create the school, subscription, admin account, generate an API key, and email credentials to the admin.
               </p>
             </div>
           )}
 
           {error && (
-            <div className="text-red-400 text-xs bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+            <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-lg px-3 py-2 text-xs text-indigo-300">
               {error}
             </div>
           )}
@@ -206,6 +285,32 @@ function Row({ label, value }: { label: string; value: string }) {
     <div className="flex justify-between">
       <span className="text-zinc-500">{label}</span>
       <span className="text-zinc-200 text-right">{value}</span>
+    </div>
+  );
+}
+
+function InfoRow({ label, value, isPassword, showPw, onTogglePw, onCopy, copied }: {
+  label: string; value: string; isPassword?: boolean; showPw?: boolean; onTogglePw?: () => void;
+  onCopy?: () => void; copied?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-xs text-zinc-500">{label}</span>
+      <div className="flex items-center gap-2">
+        <code className="text-sm text-zinc-200 font-mono">
+          {isPassword && !showPw ? "••••••••" : value}
+        </code>
+        {isPassword && (
+          <button onClick={onTogglePw} className="p-0.5 text-zinc-500 hover:text-zinc-300">
+            {showPw ? <EyeOff size={13} /> : <Eye size={13} />}
+          </button>
+        )}
+        {onCopy && (
+          <button onClick={onCopy} className="p-0.5 text-zinc-500 hover:text-zinc-300">
+            {copied ? <CheckCircle2 size={13} className="text-emerald-400" /> : <Copy size={13} />}
+          </button>
+        )}
+      </div>
     </div>
   );
 }

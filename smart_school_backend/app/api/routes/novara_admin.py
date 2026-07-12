@@ -221,6 +221,8 @@ def create_school(
 ):
     _check_novara(current_user)
     from sqlalchemy import text
+    import secrets as secrets_mod
+    import hashlib
 
     existing = db.execute(
         text("SELECT id FROM schools WHERE email = :email"),
@@ -229,37 +231,121 @@ def create_school(
     if existing:
         raise HTTPException(status_code=400, detail="School with this email already exists")
 
+    school_code = payload.name[:3].upper() + secrets_mod.token_hex(2).upper()
+
     result = db.execute(
         text("""
-            INSERT INTO schools (name, email, phone, subscription_status, created_at, updated_at)
-            VALUES (:name, :email, :phone, 'active', NOW(), NOW())
+            INSERT INTO schools (name, school_code, email, phone, address, country, currency_code, timezone, subscription_status, created_at, updated_at)
+            VALUES (:name, :school_code, :email, :phone, :address, :country, 'UGX', :timezone, 'active', NOW(), NOW())
             RETURNING id
         """),
-        {"name": payload.name, "email": payload.email, "phone": payload.phone},
+        {
+            "name": payload.name,
+            "school_code": school_code,
+            "email": payload.email,
+            "phone": payload.phone,
+            "address": payload.address,
+            "country": payload.country,
+            "timezone": payload.timezone,
+        },
     )
     school_id = result.scalar()
 
-    db.execute(
-        text("""
-            INSERT INTO school_subscriptions (school_id, plan_id, status, starts_at, expires_at, created_at, updated_at)
-            VALUES (:sid, :pid, 'active', NOW(), NOW() + INTERVAL '30 days', NOW(), NOW())
-        """),
-        {"sid": school_id, "pid": payload.plan_id},
-    )
+    plan = db.execute(
+        text("SELECT id, duration_days FROM subscription_plans WHERE id = :pid"),
+        {"pid": payload.plan_id},
+    ).one_or_none()
+
+    if plan:
+        db.execute(
+            text("""
+                INSERT INTO school_subscriptions (school_id, plan_id, status, starts_at, expires_at, created_at, updated_at)
+                VALUES (:sid, :pid, 'active', NOW(), NOW() + (:days || ' days')::INTERVAL, NOW(), NOW())
+            """),
+            {"sid": school_id, "pid": payload.plan_id, "days": str(plan[1])},
+        )
 
     from app.core.security import hash_password
 
-    hashed = hash_password("changeme123")
+    temp_password = secrets_mod.token_urlsafe(8)
+    hashed = hash_password(temp_password)
     db.execute(
         text("""
-            INSERT INTO users (name, email, password_hash, role_id, school_id, is_active, created_at, updated_at)
-            VALUES (:name, :email, :pwd, 2, :sid, true, NOW(), NOW())
+            INSERT INTO users (name, email, password_hash, role_id, school_id, is_active, is_verified, created_at, updated_at)
+            VALUES (:name, :email, :pwd, 2, :sid, true, true, NOW(), NOW())
         """),
         {"name": payload.admin_name, "email": payload.admin_email, "pwd": hashed, "sid": school_id},
     )
 
+    raw_key = f"novara_t{school_id}_{secrets_mod.token_hex(16)}"
+    key_hash = hashlib.sha256(raw_key.encode("utf-8")).hexdigest()
+    key_prefix = raw_key[:10]
+
+    admin_user = db.execute(
+        text("SELECT id FROM users WHERE school_id = :sid AND role_id = 2 LIMIT 1"),
+        {"sid": school_id},
+    ).one_or_none()
+
+    if admin_user:
+        db.execute(
+            text("""
+                INSERT INTO api_keys (school_id, key_hash, key_prefix, is_active, created_by_id, created_at)
+                VALUES (:sid, :kh, :kp, true, :uid, NOW())
+            """),
+            {"sid": school_id, "kh": key_hash, "kp": key_prefix, "uid": admin_user[0]},
+        )
+
     db.commit()
-    return {"id": school_id, "name": payload.name, "status": "active", "detail": "School provisioned"}
+
+    if payload.send_email:
+        plan_name = plan[0] if plan else "N/A"
+        from app.services.email_service import send_email
+        send_email(
+            payload.admin_email,
+            f"Welcome to NOVARA — {payload.name} is Ready",
+            f"""
+            <div style="font-family:sans-serif;max-width:500px;margin:0 auto">
+              <h2 style="color:#4f46e5">Welcome to NOVARA SMS</h2>
+              <p>Hi <strong>{payload.admin_name}</strong>,</p>
+              <p>Your school <strong>{payload.name}</strong> has been provisioned and is ready to use.</p>
+
+              <div style="background:#f4f4f5;padding:16px;border-radius:10px;margin:20px 0">
+                <p style="margin:0 0 8px;font-weight:600">Login Credentials</p>
+                <p style="margin:0">Email: <code>{payload.admin_email}</code></p>
+                <p style="margin:4px 0 0">Password: <code>{temp_password}</code></p>
+                <p style="margin:8px 0 0;color:#666;font-size:0.85rem">Please change your password after first login.</p>
+              </div>
+
+              <div style="background:#f4f4f5;padding:16px;border-radius:10px;margin:20px 0">
+                <p style="margin:0 0 8px;font-weight:600">Subscription Plan</p>
+                <p style="margin:0">Plan: <strong>{plan_name}</strong></p>
+              </div>
+
+              <div style="background:#f4f4f5;padding:16px;border-radius:10px;margin:20px 0">
+                <p style="margin:0 0 8px;font-weight:600">API Key</p>
+                <p style="margin:0;font-family:monospace;font-size:0.9rem;word-break:break-all">{raw_key}</p>
+                <p style="margin:8px 0 0;color:#666;font-size:0.85rem">Keep this key confidential. Use it to authenticate API requests.</p>
+              </div>
+
+              <p style="margin-top:24px">
+                <a href="https://sms-i4ge.vercel.app" style="background:#4f46e5;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600">Open Dashboard</a>
+              </p>
+
+              <p style="color:#999;margin-top:24px;font-size:0.8rem">Novara System Software LTD</p>
+            </div>
+            """,
+        )
+
+    return {
+        "id": school_id,
+        "name": payload.name,
+        "school_code": school_code,
+        "admin_email": payload.admin_email,
+        "temp_password": temp_password if payload.send_email else None,
+        "api_key": raw_key if payload.send_email else None,
+        "status": "active",
+        "detail": "School provisioned. Credentials and API key sent to admin email." if payload.send_email else "School provisioned.",
+    }
 
 
 @router.post("/schools/{school_id}/suspend")
@@ -671,7 +757,7 @@ def approve_registration(
     from sqlalchemy import text
 
     req = db.execute(
-        text("SELECT id, status FROM registration_requests WHERE id = :id"),
+        text("SELECT id, status, admin_email FROM registration_requests WHERE id = :id"),
         {"id": request_id},
     ).one_or_none()
     if not req:
@@ -685,7 +771,7 @@ def approve_registration(
     return {
         "product_key": reg_key.key,
         "expires_at": reg_key.created_at.isoformat() if reg_key.created_at else "",
-        "message": f"Registration approved. Key sent to {req[0]}.",
+        "message": f"Registration approved. Key emailed to {req[2]}.",
     }
 
 

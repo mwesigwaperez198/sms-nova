@@ -281,8 +281,12 @@ export function RegistrationWizard({ onBack, onComplete }: Props) {
           {step === 5 && <StepSecurity successMsg={successMsg} />}
 
           {error && (
-            <div className="login-error" style={{ marginTop: 12 }}>
-              <span className="error-icon">⚠</span>{error}
+            <div style={{
+              marginTop: 12, padding: "10px 14px", borderRadius: 10, fontSize: "0.8rem",
+              background: "rgba(102,126,234,0.08)", border: "1px solid rgba(102,126,234,0.2)",
+              color: "#a5b4fc", lineHeight: 1.5,
+            }}>
+              {error}
             </div>
           )}
 

@@ -2,11 +2,11 @@ import { useData } from "../hooks/useData";
 import { getDashboardStats } from "../api/services";
 import {
   Building2, CreditCard, AlertTriangle, Activity,
-  TrendingUp, Users, ShieldCheck,
+  TrendingUp, Users, ShieldCheck, RefreshCw,
 } from "lucide-react";
 
 export function DashboardPage() {
-  const { data: stats, loading } = useData(getDashboardStats);
+  const { data: stats, loading, refresh } = useData(getDashboardStats);
 
   const cards = [
     {
@@ -61,16 +61,24 @@ export function DashboardPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center gap-3 mb-2">
-        <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center">
-          <TrendingUp size={16} className="text-indigo-400" />
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center">
+            <TrendingUp size={16} className="text-indigo-400" />
+          </div>
+          <div>
+            <h2 className="text-sm font-medium">System Overview</h2>
+            <p className="text-xs text-zinc-500">
+              Health score: {stats?.system_health_score ?? 0}%
+            </p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-sm font-medium">System Overview</h2>
-          <p className="text-xs text-zinc-500">
-            Health score: {stats?.system_health_score ?? 0}%
-          </p>
-        </div>
+        <button
+          onClick={refresh}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-300 hover:bg-zinc-700 transition-colors"
+        >
+          <RefreshCw size={13} /> Refresh
+        </button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
