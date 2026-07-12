@@ -278,8 +278,8 @@ def create_school(
     hashed = hash_password(temp_password)
     db.execute(
         text("""
-            INSERT INTO users (name, email, password_hash, role_id, school_id, is_active, is_verified, created_at, updated_at)
-            VALUES (:name, :email, :pwd, 2, :sid, true, true, NOW(), NOW())
+            INSERT INTO users (name, email, password_hash, role_id, school_id, is_active, is_verified, failed_login_attempts, is_2fa_enabled, created_at, updated_at)
+            VALUES (:name, :email, :pwd, 2, :sid, true, true, 0, false, NOW(), NOW())
         """),
         {"name": payload.admin_name, "email": payload.admin_email, "pwd": hashed, "sid": school_id},
     )
@@ -824,8 +824,8 @@ def approve_registration(
     hashed = hash_password(temp_password)
     db.execute(
         text("""
-            INSERT INTO users (name, email, phone, password_hash, role_id, school_id, is_active, is_verified, created_at, updated_at)
-            VALUES (:name, :email, :phone, :pwd, 2, :sid, true, true, NOW(), NOW())
+            INSERT INTO users (name, email, phone, password_hash, role_id, school_id, is_active, is_verified, failed_login_attempts, is_2fa_enabled, created_at, updated_at)
+            VALUES (:name, :email, :phone, :pwd, 2, :sid, true, true, 0, false, NOW(), NOW())
         """),
         {"name": admin_name, "email": admin_email, "phone": admin_phone or "", "pwd": hashed, "sid": school_id},
     )
