@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Building2, Plus, Search, RefreshCw, Mail, Check, X, Clock, Copy, CheckCircle2, Send } from "lucide-react";
+import { Building2, Plus, Search, RefreshCw, Mail, Check, X, Clock, Copy, CheckCircle2, Smartphone, Landmark, User, Phone, FileText } from "lucide-react";
 import { useData } from "../hooks/useData";
-import { getSchools, getRegistrations, approveRegistration, rejectRegistration, resendKey } from "../api/services";
+import { getSchools, getRegistrations, approveRegistration, rejectRegistration } from "../api/services";
 import { SchoolAddModal } from "../components/SchoolAddModal";
 import type { School } from "../api/types";
 
@@ -16,11 +16,11 @@ export function SchoolsListPage({ onSelectSchool }: SchoolsListPageProps) {
   const [showAdd, setShowAdd] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
   const [activeTab, setActiveTab] = useState<"schools" | "registrations">("schools");
+  const [selectedReg, setSelectedReg] = useState<any>(null);
   const [approvingId, setApprovingId] = useState<number | null>(null);
   const [rejectingId, setRejectingId] = useState<number | null>(null);
   const [keyModal, setKeyModal] = useState<{ key: string; schoolName: string; email: string; emailSent: boolean } | null>(null);
   const [copied, setCopied] = useState(false);
-  const [resendingId, setResendingId] = useState<number | null>(null);
 
   const filtered = (schools ?? []).filter((s) => {
     const matchSearch = s.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -63,18 +63,6 @@ export function SchoolsListPage({ onSelectSchool }: SchoolsListPageProps) {
       alert(e.message);
     } finally {
       setRejectingId(null);
-    }
-  };
-
-  const handleResend = async (id: number) => {
-    setResendingId(id);
-    try {
-      const res = await resendKey(id);
-      alert(res.message);
-    } catch (e: any) {
-      alert(e.message);
-    } finally {
-      setResendingId(null);
     }
   };
 
@@ -249,41 +237,31 @@ export function SchoolsListPage({ onSelectSchool }: SchoolsListPageProps) {
                     <th className="text-left px-4 py-3 font-medium">Plan</th>
                     <th className="text-left px-4 py-3 font-medium">Payment</th>
                     <th className="text-left px-4 py-3 font-medium hidden md:table-cell">Date</th>
-                    <th className="text-right px-4 py-3 font-medium">Actions</th>
+                    <th className="text-left px-4 py-3 font-medium">Verify</th>
                   </tr>
                 </thead>
                 <tbody>
                   {pendingRegs.map((reg: any) => (
-                    <tr key={reg.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
+                    <tr
+                      key={reg.id}
+                      onClick={() => setSelectedReg(reg)}
+                      className="border-b border-zinc-800/50 hover:bg-zinc-800/30 cursor-pointer transition-colors"
+                    >
                       <td className="px-4 py-3">
                         <div className="font-medium text-zinc-100">{reg.school_name}</div>
                         <div className="text-xs text-zinc-500">{reg.admin_email}</div>
                       </td>
                       <td className="px-4 py-3 text-zinc-400 text-xs">{reg.admin_name}</td>
                       <td className="px-4 py-3 text-zinc-300 text-xs">{reg.plan_name}</td>
-                      <td className="px-4 py-3 text-zinc-500 text-xs">{reg.payment_method}</td>
+                      <td className="px-4 py-3 text-zinc-500 text-xs">{reg.payment_method || "—"}</td>
                       <td className="px-4 py-3 text-zinc-500 text-xs hidden md:table-cell">
                         {reg.created_at ? new Date(reg.created_at).toLocaleDateString() : "—"}
                       </td>
-                      <td className="px-4 py-3 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            onClick={() => handleApprove(reg.id, reg.school_name, reg.admin_email)}
-                            disabled={approvingId === reg.id}
-                            className="flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors disabled:opacity-50"
-                          >
-                            <Check size={12} />
-                            {approvingId === reg.id ? "..." : "Approve"}
-                          </button>
-                          <button
-                            onClick={() => handleReject(reg.id)}
-                            disabled={rejectingId === reg.id}
-                            className="flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-colors disabled:opacity-50"
-                          >
-                            <X size={12} />
-                            {rejectingId === reg.id ? "..." : "Reject"}
-                          </button>
-                        </div>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                          <FileText size={11} />
+                          Review
+                        </span>
                       </td>
                     </tr>
                   ))}
@@ -295,6 +273,135 @@ export function SchoolsListPage({ onSelectSchool }: SchoolsListPageProps) {
       )}
 
       {showAdd && <SchoolAddModal onClose={() => { setShowAdd(false); refresh(); }} />}
+
+      {selectedReg && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setSelectedReg(null)}>
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-lg max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
+              <div className="flex items-center gap-2">
+                <Clock size={18} className="text-amber-400" />
+                <h3 className="text-sm font-medium">Registration Details</h3>
+                <span className="px-2 py-0.5 text-[10px] rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                  Pending
+                </span>
+              </div>
+              <button onClick={() => setSelectedReg(null)} className="p-1 rounded-lg text-zinc-500 hover:text-zinc-300">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-5">
+              {/* School Info */}
+              <div>
+                <div className="text-[10px] uppercase tracking-wider text-zinc-600 font-medium mb-2">School Information</div>
+                <div className="bg-zinc-800/50 rounded-lg p-3 space-y-2 text-xs">
+                  <div className="flex items-center gap-2">
+                    <Building2 size={14} className="text-zinc-500 shrink-0" />
+                    <span className="text-zinc-500 w-20">School</span>
+                    <span className="text-zinc-200 font-medium">{selectedReg.school_name}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <User size={14} className="text-zinc-500 shrink-0" />
+                    <span className="text-zinc-500 w-20">Admin</span>
+                    <span className="text-zinc-200">{selectedReg.admin_name}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Mail size={14} className="text-zinc-500 shrink-0" />
+                    <span className="text-zinc-500 w-20">Email</span>
+                    <span className="text-zinc-200">{selectedReg.admin_email}</span>
+                  </div>
+                  {selectedReg.admin_phone && (
+                    <div className="flex items-center gap-2">
+                      <Phone size={14} className="text-zinc-500 shrink-0" />
+                      <span className="text-zinc-500 w-20">Phone</span>
+                      <span className="text-zinc-200">{selectedReg.admin_phone}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <FileText size={14} className="text-zinc-500 shrink-0" />
+                    <span className="text-zinc-500 w-20">Plan</span>
+                    <span className="text-zinc-200">{selectedReg.plan_name}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock size={14} className="text-zinc-500 shrink-0" />
+                    <span className="text-zinc-500 w-20">Date</span>
+                    <span className="text-zinc-200">{selectedReg.created_at ? new Date(selectedReg.created_at).toLocaleString() : "—"}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Info */}
+              <div>
+                <div className="text-[10px] uppercase tracking-wider text-zinc-600 font-medium mb-2">Payment Verification</div>
+                <div className="bg-zinc-800/50 rounded-lg p-3 space-y-2 text-xs">
+                  <div className="flex items-center gap-2">
+                    {selectedReg.payment_method?.includes("MTN") ? (
+                      <Smartphone size={14} className="text-amber-400 shrink-0" />
+                    ) : selectedReg.payment_method?.includes("Airtel") ? (
+                      <Smartphone size={14} className="text-red-400 shrink-0" />
+                    ) : (
+                      <Landmark size={14} className="text-blue-400 shrink-0" />
+                    )}
+                    <span className="text-zinc-500 w-20">Method</span>
+                    <span className="text-zinc-200 font-medium">{selectedReg.payment_method || "Not specified"}</span>
+                  </div>
+                  {(selectedReg.payment_details || selectedReg.payment_reference) && (
+                    <div className="flex items-center gap-2">
+                      <FileText size={14} className="text-zinc-500 shrink-0" />
+                      <span className="text-zinc-500 w-20">Ref / Txn ID</span>
+                      <span className="text-zinc-200 font-mono">{selectedReg.payment_details || selectedReg.payment_reference}</span>
+                    </div>
+                  )}
+                  {!(selectedReg.payment_details || selectedReg.payment_reference) && (
+                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-xs text-amber-400">
+                      No payment reference provided — verify manually before approving
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* NOVARA Account Details */}
+              <div>
+                <div className="text-[10px] uppercase tracking-wider text-zinc-600 font-medium mb-2">NOVARA Account Details</div>
+                <div className="bg-zinc-800/50 rounded-lg p-3 text-xs space-y-1.5">
+                  <div className="flex justify-between">
+                    <span className="text-zinc-500">MTN MoMo</span>
+                    <span className="text-zinc-300 font-mono">0765 866 555</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-zinc-500">Airtel Money</span>
+                    <span className="text-zinc-300 font-mono">0765 866 555</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-zinc-500">Centenary Bank</span>
+                    <span className="text-zinc-300 font-mono">A/C: 20012345678</span>
+                  </div>
+                  <div className="text-[10px] text-zinc-600 pt-1">Novara System Software LTD</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-5 py-4 border-t border-zinc-800 flex items-center justify-between">
+              <button
+                onClick={() => { setSelectedReg(null); handleReject(selectedReg.id); }}
+                disabled={rejectingId === selectedReg.id}
+                className="flex items-center gap-1.5 px-3 py-2 text-xs rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-colors disabled:opacity-50"
+              >
+                <X size={13} />
+                {rejectingId === selectedReg.id ? "Rejecting..." : "Reject"}
+              </button>
+              <button
+                onClick={() => { const r = selectedReg; setSelectedReg(null); handleApprove(r.id, r.school_name, r.admin_email); }}
+                disabled={approvingId === selectedReg.id}
+                className="flex items-center gap-1.5 px-4 py-2 text-xs font-medium rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white transition-colors disabled:opacity-50"
+              >
+                <Check size={13} />
+                {approvingId === selectedReg.id ? "Approving..." : "Verify & Approve"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {keyModal && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
