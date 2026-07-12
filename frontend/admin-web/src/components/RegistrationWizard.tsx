@@ -53,12 +53,16 @@ export function RegistrationWizard({ onBack, onComplete }: Props) {
   const [profilePhoto, setProfilePhoto] = useState("");
   const [showPw, setShowPw] = useState(false);
 
-  useEffect(() => {
+  const loadPlans = () => {
+    setPlansLoading(true);
+    setError(null);
     fetchPlans()
       .then(setPlans)
-      .catch((e) => { console.warn("Failed to load plans:", e.message); setError("Could not load plans. Using default options."); })
+      .catch((e) => { console.warn("Failed to load plans:", e.message); setError("Could not load plans. Check your connection and retry."); })
       .finally(() => setPlansLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { loadPlans(); }, []);
 
   const setSchool = (k: keyof typeof schoolForm) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
@@ -258,7 +262,7 @@ export function RegistrationWizard({ onBack, onComplete }: Props) {
         <div className="login-card">
           {step === 0 && <StepWelcome />}
           {step === 1 && <StepSchool form={schoolForm} setField={setSchool} />}
-          {step === 2 && <StepPlan plans={plans} loading={plansLoading} selected={schoolForm.plan_id} onSelect={(id) => setSchoolForm(p => ({ ...p, plan_id: id }))} paymentMethod={schoolForm.payment_method} paymentDetails={schoolForm.payment_details} onPaymentMethod={setSchool("payment_method")} onPaymentDetails={setSchool("payment_details")} />}
+          {step === 2 && <StepPlan plans={plans} loading={plansLoading} selected={schoolForm.plan_id} onSelect={(id) => setSchoolForm(p => ({ ...p, plan_id: id }))} onRetry={loadPlans} paymentMethod={schoolForm.payment_method} paymentDetails={schoolForm.payment_details} onPaymentMethod={setSchool("payment_method")} onPaymentDetails={setSchool("payment_details")} />}
           {step === 3 && <StepKey successMsg={successMsg} />}
           {step === 4 && <StepActivate form={activateForm} setField={setActivate} profilePhoto={profilePhoto} onPhoto={setProfilePhoto} showPw={showPw} onTogglePw={() => setShowPw(!showPw)} />}
           {step === 5 && <StepSecurity successMsg={successMsg} />}
@@ -383,10 +387,11 @@ function StepSchool({ form, setField }: { form: any; setField: (k: string) => an
 }
 
 function StepPlan({
-  plans, loading, selected, onSelect,
+  plans, loading, selected, onSelect, onRetry,
   paymentMethod, paymentDetails, onPaymentMethod, onPaymentDetails,
 }: {
   plans: PlanItem[]; loading: boolean; selected: number | null; onSelect: (id: number) => void;
+  onRetry: () => void;
   paymentMethod: string; paymentDetails: string;
   onPaymentMethod: (e: any) => void; onPaymentDetails: (e: any) => void;
 }) {
@@ -403,6 +408,14 @@ function StepPlan({
       {loading ? (
         <div style={{ textAlign: "center", padding: 20, color: "var(--muted)" }}>
           <span className="spinner" /> Loading plans...
+        </div>
+      ) : plans.length === 0 ? (
+        <div style={{ textAlign: "center", padding: 20 }}>
+          <p style={{ color: "var(--muted)", marginBottom: 8 }}>No plans available right now.</p>
+          <button type="button" onClick={onRetry} style={{
+            padding: "8px 16px", borderRadius: 8, border: "1px solid rgba(102,126,234,0.4)",
+            background: "rgba(102,126,234,0.15)", color: "#667eea", cursor: "pointer", fontWeight: 600,
+          }}>Retry</button>
         </div>
       ) : (
         <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
