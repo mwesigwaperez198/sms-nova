@@ -37,6 +37,14 @@ Plan → Code → Debug → Produce (with best UI/UX)
 - **Admin Web:** https://sms-cms-brown.vercel.app (Vite + React, Vercel)
 - **Control Web:** https://novara-cms.pages.dev (Vite + React, Cloudflare Pages)
 
+## Two Frontends (Important!)
+- **admin-web** (`/workspace/frontend/admin-web/`) — school-level dashboard, deployed to Vercel (`sms-cms-brown.vercel.app`) AND Cloudflare Pages via `sms-nova.git` repo (`sms-nova.pages.dev`)
+  - Uses `VITE_API_URL` env var; on Vercel uses proxy rewrites to Render; on Cloudflare Pages calls Render directly via `functions/api/v1/[[path]].ts`
+  - Cloudflare builds from `sms-nova.git` repo (NOT `SMS.git`)
+- **novara-control-web** (`/workspace/frontend/novara-control-web/`) — platform-level control panel at `novara-cms.pages.dev`
+  - Has Cloudflare Functions proxy at `functions/api/v1/[[path]].ts`
+  - API client calls `/novara/*` routes
+
 ## Git Push
 - Use classic PAT (`ghp_` prefix) — fine-grained tokens block git HTTPS push even with Contents:write
 - Command: `git remote set-url origin https://<ghp_token>@github.com/mwesigwaperez198/SMS.git && git push origin main`
@@ -57,6 +65,31 @@ Plan → Code → Debug → Produce (with best UI/UX)
 1. Build frontend workspaces for headteacher role
 2. Wire face-auth login button on frontend LoginScreen
 3. Any other backend features needed
+
+## Session Log — 2026-07-11
+
+### Done (all pushed & deployed — commit `3b11a37`)
+- **Cloudflare Pages API proxy for admin-web** — Added `functions/api/v1/[[path]].ts` to `admin-web/` so API calls on `sms-nova.pages.dev` proxy through to `sms-msku.onrender.com` (same pattern as control-web). Fixes CORS/proxy issue where Cloudflare Pages had no backend connection.
+- **No-cache headers** — Added `public/_headers` to prevent Cloudflare CDN from serving stale JS bundles. Every page load fetches fresh assets.
+- **SPA routing for Cloudflare** — Added `public/_redirects` so Cloudflare Pages serves `index.html` for all routes (client-side routing).
+- **RegistrationWizard retry** — Plans section now shows a Retry button when plans fail to load, instead of a dead error state. Also extracted `loadPlans()` helper for reuse.
+- **Two-repo push** — Pushed to both `origin` (SMS.git → Vercel auto-deploy) and `cloudflare` (sms-nova.git → Cloudflare Pages auto-deploy)
+- Backend not changed — CORS defaults to `["*"]` when `BACKEND_CORS_ORIGINS` env is empty, which covers all origins.
+
+### What caused the `sms-nova.pages.dev` issues
+- admin-web on Cloudflare Pages had NO API proxy function (only Vercel had rewrites in `vercel.json`)
+- API calls went to `sms-nova.pages.dev/api/v1/*` which doesn't exist → CORS/404 errors
+- Cloudflare CDN cached old JS bundles (without RegistrationWizard thank-you page)
+- Fix: added `functions/api/v1/[[path]].ts` + `_headers` (no-cache) + `_redirects` (SPA)
+
+### Next session — build these in order
+1. **Headteacher workspace frontend** — wire headteacher-specific pages (staff management, attendance overview, class performance, leave requests)
+2. **Face-auth login button** — wire face-recognition login on LoginScreen
+3. **System Control backend** — add `POST /platform/system-check/trigger` and `POST /platform/maintenance/toggle` endpoints (SettingsPage.tsx calls these but backend may not have them)
+4. **Full registration flow test** — verify Register → Thank You screen → Get Key → Activate works end-to-end on `sms-nova.pages.dev`
+5. **Verify novara-cms login** — test `mwesigwaperez98@gmail.com` / `novara2026` on `novara-cms.pages.dev` (super admin role_id=1)
+6. **Audit remaining workspaces** — check for any other mock data or blank sections
+7. **Production readiness assessment** — current estimate ~80%
 
 ## Session Log — 2026-07-09
 
