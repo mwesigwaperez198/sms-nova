@@ -27,7 +27,7 @@ router = APIRouter(prefix="/fees", tags=["fees"])
 def create_fee_category(
     payload: FeeCategoryCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(role_required(RoleId.ADMIN)),
+    current_user: User = Depends(role_required(RoleId.ADMIN, RoleId.BURSAR)),
 ):
     return fees_service.create_fee_category(db, payload, current_user)
 
@@ -36,7 +36,7 @@ def create_fee_category(
 def create_invoice(
     payload: InvoiceCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(role_required(RoleId.ADMIN)),
+    current_user: User = Depends(role_required(RoleId.ADMIN, RoleId.BURSAR)),
 ):
     return fees_service.create_invoice(db, payload, current_user)
 
@@ -54,7 +54,7 @@ def get_student_fees(
 def record_payment(
     payload: PaymentCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(role_required(RoleId.ADMIN, RoleId.PARENT)),
+    current_user: User = Depends(role_required(RoleId.ADMIN, RoleId.BURSAR, RoleId.PARENT)),
 ):
     return fees_service.record_payment(db, payload, current_user)
 
@@ -72,7 +72,7 @@ def get_payment(
 def get_receipt(
     receipt_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(role_required(RoleId.ADMIN, RoleId.PARENT)),
+    current_user: User = Depends(role_required(RoleId.ADMIN, RoleId.BURSAR, RoleId.PARENT)),
 ):
     return fees_service.get_receipt(db, receipt_id, current_user)
 
@@ -82,7 +82,7 @@ def fees_report(
     academic_year: str | None = None,
     term: str | None = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(role_required(RoleId.ADMIN)),
+    current_user: User = Depends(role_required(RoleId.ADMIN, RoleId.BURSAR)),
 ):
     return fees_service.generate_fees_report(db, current_user.school_id, academic_year, term)
 
@@ -92,6 +92,6 @@ def fees_report_students(
     academic_year: str | None = None,
     term: str | None = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(role_required(RoleId.ADMIN)),
+    current_user: User = Depends(role_required(RoleId.ADMIN, RoleId.BURSAR)),
 ):
     return fees_service.generate_student_fees_report(db, current_user.school_id, academic_year, term)

@@ -35,6 +35,7 @@ class RegistrationKey(Base):
     key: Mapped[str] = mapped_column(String(64), unique=True, nullable=False, index=True)
     school_name: Mapped[str] = mapped_column(String(150), nullable=False)
     admin_email: Mapped[str] = mapped_column(String(255), nullable=False)
+    plan_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     is_used: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False

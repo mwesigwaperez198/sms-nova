@@ -111,7 +111,7 @@ def attendance_summary(
         .join(Student, Attendance.student_id == Student.id)
         .filter(
             Student.school_id == current_user.school_id,
-            Attendance.date == target,
+            Attendance.attendance_date == target,
         )
         .all()
     )
@@ -148,19 +148,19 @@ def class_performance(
 
     rows = (
         db.query(
-            Student.current_class,
+            Student.class_name,
             sa_func.count(Student.id.distinct()).label("student_count"),
             sa_func.avg(Assessment.score).label("avg_score"),
         )
         .outerjoin(Assessment, Assessment.student_id == Student.id)
         .filter(Student.school_id == current_user.school_id)
-        .group_by(Student.current_class)
-        .order_by(Student.current_class)
+        .group_by(Student.class_name)
+        .order_by(Student.class_name)
         .all()
     )
     return [
         ClassPerformance(
-            class_name=row.current_class or "Unassigned",
+            class_name=row.class_name or "Unassigned",
             student_count=row.student_count,
             average_score=round(float(row.avg_score), 1) if row.avg_score is not None else None,
         )

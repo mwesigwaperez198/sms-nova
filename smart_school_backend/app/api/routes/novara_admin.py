@@ -64,7 +64,7 @@ def dashboard_stats(
     total = db.execute(text("SELECT COUNT(*) FROM schools")).scalar() or 0
     active = (
         db.execute(
-            text("SELECT COUNT(*) FROM schools WHERE status = 'active'")
+            text("SELECT COUNT(*) FROM schools WHERE subscription_status = 'active'")
         ).scalar()
         or 0
     )
@@ -91,7 +91,7 @@ def list_schools(
 
     rows = db.execute(
         text("""
-            SELECT s.id, s.name, s.email, s.phone, s.status,
+            SELECT s.id, s.name, s.email, s.phone, s.subscription_status,
                    COALESCE(sp.name, 'N/A') as plan_name
             FROM schools s
             LEFT JOIN school_subscriptions ss ON ss.school_id = s.id AND ss.status = 'active'
@@ -134,7 +134,7 @@ def get_school(
     from sqlalchemy import text
 
     row = db.execute(
-        text("SELECT id, name, email, phone, status FROM schools WHERE id = :id"),
+        text("SELECT id, name, email, phone, subscription_status FROM schools WHERE id = :id"),
         {"id": school_id},
     ).one_or_none()
     if not row:
@@ -180,7 +180,7 @@ def create_school(
 
     result = db.execute(
         text("""
-            INSERT INTO schools (name, email, phone, status, created_at, updated_at)
+            INSERT INTO schools (name, email, phone, subscription_status, created_at, updated_at)
             VALUES (:name, :email, :phone, 'active', NOW(), NOW())
             RETURNING id
         """),
@@ -200,9 +200,9 @@ def create_school(
         {"sid": school_id, "pid": payload.plan_id},
     )
 
-    from app.core.security import get_password_hash
+    from app.core.security import hash_password
 
-    hashed = get_password_hash("changeme123")
+    hashed = hash_password("changeme123")
     db.execute(
         text("""
             INSERT INTO users (name, email, password_hash, role_id, school_id, is_active, created_at, updated_at)
@@ -226,7 +226,7 @@ def suspend_school(
     from sqlalchemy import text
 
     db.execute(
-        text("UPDATE schools SET status = 'suspended', updated_at = NOW() WHERE id = :id"),
+        text("UPDATE schools SET subscription_status = 'suspended', updated_at = NOW() WHERE id = :id"),
         {"id": school_id},
     )
     db.commit()
@@ -244,7 +244,7 @@ def activate_school(
     from sqlalchemy import text
 
     db.execute(
-        text("UPDATE schools SET status = 'active', updated_at = NOW() WHERE id = :id"),
+        text("UPDATE schools SET subscription_status = 'active', updated_at = NOW() WHERE id = :id"),
         {"id": school_id},
     )
     db.commit()

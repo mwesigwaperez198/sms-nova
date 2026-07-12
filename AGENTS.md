@@ -37,6 +37,27 @@ Plan → Code → Debug → Produce (with best UI/UX)
 - **Admin Web:** https://sms-cms-brown.vercel.app (Vite + React, Vercel)
 - **Control Web:** https://novara-cms.pages.dev (Vite + React, Cloudflare Pages)
 
+## Git Push
+- Use classic PAT (`ghp_` prefix) — fine-grained tokens block git HTTPS push even with Contents:write
+- Command: `git remote set-url origin https://<ghp_token>@github.com/mwesigwaperez198/SMS.git && git push origin main`
+- After push: reset remote to clean URL: `git remote set-url origin https://github.com/mwesigwaperez198/SMS.git`
+- Render deploy: `curl -X POST "https://api.render.com/deploy/srv-d97185u7r5hc738lb5pg?key=p5gkwUtMvZI"`
+
+## Session Log — 2026-07-10
+
+### Done (all pushed & deployed)
+- **API key auth middleware** — `verify_api_key` dep in `deps.py`, hashes `X-API-Key` header, checks `api_keys` table, updates `last_used_at`, returns `School` context. Test endpoint: `GET /api/v1/api-auth/school-info`
+- **Facial recognition endpoints** — rewrote `face_auth.py`: correct prefix `/face-auth`, all roles supported, unauthenticated `/face-auth/login` (email+face→tokens), `/face-auth/register`, `/face-auth/verify`, `/face-auth/status`, `/face-auth/remove`. `face_descriptor` widened to VARCHAR(5000) + migration `0006`
+- **Headteacher role (id=10)** — added to `RoleId` enum + seed data. Routes: staff list/toggle-active, school-wide attendance summary, class performance averages, leave apply/list/decide. `LeaveRequest` model + migration `0007`
+- **Alembic env.py fix** — bypass `config.set_main_option` to avoid `%` interpolation error with Supabase URL. Use `create_engine` directly
+- **Migrations applied** — stamped DB at `0005`, ran `0006` + `0007` successfully against live Supabase DB
+- **Pushed & deployed** — commit `2fed53f` pushed to `main`, Render deploy triggered
+
+### Next session
+1. Build frontend workspaces for headteacher role
+2. Wire face-auth login button on frontend LoginScreen
+3. Any other backend features needed
+
 ## Session Log — 2026-07-09
 
 ### Done (all pushed & deployed)

@@ -39,6 +39,7 @@ import { BursarWorkspace } from "./workspaces/BursarWorkspace";
 import { ParentWorkspace } from "./workspaces/ParentWorkspace";
 import { SuperAdminWorkspace } from "./workspaces/SuperAdminWorkspace";
 import { ICTWorkspace } from "./workspaces/ICTWorkspace";
+import { HeadteacherWorkspace } from "./workspaces/HeadteacherWorkspace";
 
 const studentColumns = [
   { key: "admissionNo", label: "Admission No" },
@@ -375,6 +376,8 @@ function RoleWorkspace(props: WorkspaceProps) {
       return <BursarWorkspace view={props.view} data={props.data} onShareFinance={props.onShareFinance} />;
     case "librarian":
       return <LibrarianWorkspace view={props.view} data={props.data} onShareRequestedBooks={props.onShareRequestedBooks} roleKey={props.role} />;
+    case "headteacher":
+      return <HeadteacherWorkspace view={props.view} data={props.data} onViewChange={props.onViewChange} onSendSms={props.onSendSms} />;
     case "teacher":
       return <TeacherWorkspace view={props.view} data={props.data} onSendSms={props.onSendSms} />;
     case "parent":

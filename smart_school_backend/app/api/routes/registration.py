@@ -47,6 +47,7 @@ class CompleteRegistrationRequest(BaseModel):
     password: str = Field(min_length=8, max_length=128)
     full_name: str = Field(min_length=2, max_length=150)
     phone: str | None = None
+    profile_photo: str | None = None
 
 
 class CompleteRegistrationResponse(BaseModel):
@@ -100,6 +101,7 @@ def complete(
         password=payload.password,
         full_name=payload.full_name,
         phone=payload.phone,
+        profile_photo=payload.profile_photo,
     )
     return CompleteRegistrationResponse(
         message="Account created successfully. You can now login.",

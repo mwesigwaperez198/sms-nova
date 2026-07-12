@@ -42,6 +42,18 @@ export function SignUpScreen({ onBack, onComplete }: SignUpScreenProps) {
       setError("Password must be at least 8 characters");
       return;
     }
+    if (!/[A-Z]/.test(form.password)) {
+      setError("Password must contain at least 1 uppercase letter");
+      return;
+    }
+    if (!/[a-z]/.test(form.password)) {
+      setError("Password must contain at least 1 lowercase letter");
+      return;
+    }
+    if (!/[0-9]/.test(form.password)) {
+      setError("Password must contain at least 1 digit");
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -130,7 +142,7 @@ export function SignUpScreen({ onBack, onComplete }: SignUpScreenProps) {
             <label className="form-field">
               <span className="field-label">Password *</span>
               <div style={{display:"flex",alignItems:"center",gap:8}}>
-                <input type={showPw ? "text" : "password"} value={form.password} onChange={set("password")} placeholder="Min 8 chars, 1 uppercase, 1 digit" className="field-input" required />
+                <input type={showPw ? "text" : "password"} value={form.password} onChange={set("password")} placeholder="Min 8 chars, uppercase, lowercase, digit" className="field-input" required />
                 <button type="button" className="tool-button" style={{minHeight:38,minWidth:38,padding:0}} onClick={() => setShowPw(!showPw)}>{showPw ? <EyeOff size={16}/> : <Eye size={16}/>}</button>
               </div>
             </label>

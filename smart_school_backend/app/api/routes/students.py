@@ -32,7 +32,7 @@ def list_students(
 def create_student_record(
     payload: StudentCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(role_required(RoleId.ADMIN)),
+    current_user: User = Depends(role_required(RoleId.ADMIN, RoleId.SECRETARY)),
 ) -> StudentRead:
     return create_student(db, payload, current_user)
 
@@ -42,6 +42,6 @@ def link_student_guardian(
     student_id: int,
     payload: GuardianLinkCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(role_required(RoleId.ADMIN)),
+    current_user: User = Depends(role_required(RoleId.ADMIN, RoleId.SECRETARY)),
 ) -> GuardianLinkRead:
     return link_guardian(db, student_id, payload, current_user)

@@ -137,7 +137,7 @@ def create_cash_entry(
         "payment_method": payload.payment_method,
         "receipt_no": receipt_no,
         "entry_type": payload.entry_type,
-        "created_by": current_user.full_name,
+        "created_by": current_user.name,
         "created_at": datetime.utcnow().isoformat(),
     }
     _cashbook.append(entry)
@@ -168,7 +168,7 @@ def create_quotation(
         "notes": payload.notes,
         "total": f"UGX {total:,.2f}",
         "status": "Draft",
-        "created_by": current_user.full_name,
+        "created_by": current_user.name,
         "created_at": datetime.utcnow().isoformat(),
     }
     _quotations.append(quotation)
@@ -200,7 +200,7 @@ def create_requisition(
         "purpose": payload.purpose,
         "total": f"UGX {total:,.2f}",
         "status": "Pending",
-        "created_by": current_user.full_name,
+        "created_by": current_user.name,
         "created_at": datetime.utcnow().isoformat(),
     }
     _requisitions.append(requisition)

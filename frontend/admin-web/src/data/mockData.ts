@@ -10,7 +10,8 @@ import {
   MessageSquareText,
   ShieldCheck,
   UserRoundCog,
-  UsersRound
+  UsersRound,
+  ClipboardCheck
 } from "lucide-react";
 import type {
   AttendanceRecord,
@@ -66,6 +67,15 @@ export const roles: RoleProfile[] = [
     accent: "#1e3a8a",
     icon: UserRoundCog,
     nav: ["Home", "Approvals", "Students", "Staff", "Finance", "Communication", "Reports", "Settings", "Notifications"]
+  },
+  {
+    key: "headteacher",
+    label: "Head Teacher",
+    email: "headteacher@novasms.local",
+    title: "Academic Leadership",
+    accent: "#0f766e",
+    icon: ClipboardCheck,
+    nav: ["Dashboard", "Staff", "Attendance", "Performance", "Leave Requests", "Messages"]
   },
   {
     key: "secretary",
@@ -142,6 +152,11 @@ export const roleMetrics: Record<RoleKey, Metric[]> = {
     { label: "Pending Approvals", value: "7", hint: "Admissions & vouchers", tone: "warning" },
     { label: "Fee Collection", value: "79%", hint: "UGX 184.2M collected", tone: "success" },
     { label: "Today Attendance", value: "94%", hint: "52 absent across school", tone: "info" }
+  ],
+  headteacher: [
+    { label: "Active Staff", value: "28", hint: "6 departments", tone: "info" },
+    { label: "Attendance Rate", value: "91%", hint: "School-wide today", tone: "success" },
+    { label: "Pending Leaves", value: "3", hint: "Awaiting decision", tone: "warning" }
   ],
   secretary: [
     { label: "New Admissions", value: "24", hint: "This week", tone: "info" },

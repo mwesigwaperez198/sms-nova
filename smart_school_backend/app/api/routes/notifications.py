@@ -68,7 +68,7 @@ def _get_role_notification_type_filter(role_id: int) -> list[str] | None:
 def send_notification(
     payload: NotificationCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(role_required(RoleId.ADMIN, RoleId.TEACHER)),
+    current_user: User = Depends(role_required(RoleId.ADMIN, RoleId.TEACHER, RoleId.HEADTEACHER, RoleId.SECRETARY)),
 ):
     return notification_service.send_notification(db, payload, current_user)
 

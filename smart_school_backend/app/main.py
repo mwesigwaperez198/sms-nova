@@ -92,6 +92,14 @@ def _run_migrations(db):
         except Exception as e:
             db.rollback()
             logger.warning("Migration plan_id: %s", e)
+    rk_cols = {c["name"] for c in inspector.get_columns("registration_keys")} if "registration_keys" in inspector.get_table_names() else set()
+    if "plan_id" not in rk_cols:
+        try:
+            db.execute(text("ALTER TABLE registration_keys ADD COLUMN plan_id INTEGER"))
+            db.commit()
+        except Exception as e:
+            db.rollback()
+            logger.warning("Migration registration_keys.plan_id: %s", e)
 
 
 def create_app() -> FastAPI:

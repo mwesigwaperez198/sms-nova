@@ -8,6 +8,7 @@ from app.core.security import hash_password
 from app.models.registration import RegistrationKey, RegistrationRequest
 from app.models.role import Role
 from app.models.school import School
+from app.models.subscription import SchoolSubscription, SubscriptionPlan
 from app.models.user import User
 from app.services.email_service import notify_registration_request, send_registration_key_email
 
@@ -74,6 +75,7 @@ def generate_registration_key(db: Session, request_id: int) -> RegistrationKey:
         key=key,
         school_name=req.school_name,
         admin_email=req.admin_email,
+        plan_id=req.plan_id,
     )
     db.add(reg_key)
 
@@ -94,6 +96,7 @@ def complete_registration(
     password: str,
     full_name: str,
     phone: str | None,
+    profile_photo: str | None = None,
 ) -> tuple[User, School]:
     reg_key = db.query(RegistrationKey).filter(
         RegistrationKey.key == key,
@@ -147,6 +150,7 @@ def complete_registration(
         school_id=school.id,
         is_active=True,
         is_verified=True,
+        profile_photo=profile_photo,
     )
     db.add(user)
 
@@ -157,5 +161,22 @@ def complete_registration(
     db.commit()
     db.refresh(user)
     db.refresh(school)
+
+    if reg_key.plan_id:
+        plan = db.get(SubscriptionPlan, reg_key.plan_id)
+        if plan:
+            from datetime import datetime, timezone, timedelta
+            now = datetime.now(timezone.utc)
+            sub = SchoolSubscription(
+                school_id=school.id,
+                plan_id=plan.id,
+                status="active",
+                starts_at=now,
+                expires_at=now + timedelta(days=plan.duration_days),
+            )
+            db.add(sub)
+            school.subscription_status = "active"
+            db.add(school)
+            db.commit()
 
     return user, school
