@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { Activity, Database, HardDrive, Users, Wifi, Shield, RefreshCw, Server, Monitor, CheckCircle, AlertTriangle, XCircle, Smartphone, Bell, UserCheck, UserX, School, Search } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Activity, Database, HardDrive, Users, Wifi, Shield, RefreshCw, Server, Monitor, CheckCircle, AlertTriangle, XCircle, Smartphone, Bell, UserCheck, UserX, School, Search, Key } from "lucide-react";
 import type { ConnectedData } from "../api";
-import type { AdminNotification } from "../types";
+import type { AdminNotification, ICTSystemHealth } from "../types";
+import { fetchICTSystemHealth } from "../api";
 
 interface ICTWorkspaceProps {
   view: string;
@@ -9,34 +10,98 @@ interface ICTWorkspaceProps {
   onViewChange: (view: string) => void;
 }
 
-const SYSTEM_HEALTH = [
-  { label: "Database", value: "Operational", status: "success" as const, icon: Database },
-  { label: "API Server", value: "All endpoints OK", status: "success" as const, icon: Server },
-  { label: "Email Service", value: "Queue: 12 pending", status: "warning" as const, icon: Smartphone },
-  { label: "SMS Gateway", value: "Active", status: "success" as const, icon: Wifi },
-  { label: "SSL Certificates", value: "2 expiring in 14 days", status: "warning" as const, icon: Shield },
-];
-
-const RECENT_ALERTS = [
+const FALLBACK_ALERTS = [
   { severity: "critical" as const, message: "Storage above 85% — cleanup recommended", time: "10 min ago" },
   { severity: "warning" as const, message: "Email queue backlog — 12 pending", time: "1 hr ago" },
   { severity: "info" as const, message: "Daily backup completed", time: "3 hrs ago" },
 ];
 
-const MAINTENANCE_TASKS = [
-  { task: "SSL certificate renewal", date: "2026-07-15", status: "Planned" as const, priority: "High" as const },
-  { task: "Database optimization", date: "2026-07-12", status: "In Progress" as const, priority: "Medium" as const },
-  { task: "Storage cleanup", date: "2026-07-10", status: "Pending" as const, priority: "High" as const },
-];
+function buildHealthCards(api: ICTSystemHealth | null) {
+  if (!api) {
+    return [
+      { label: "Database", value: "Loading…", status: "warning" as const, icon: Database },
+      { label: "API Server", value: "Loading…", status: "warning" as const, icon: Server },
+      { label: "Users", value: "—", status: "warning" as const, icon: Users },
+      { label: "Locked Accounts", value: "—", status: "warning" as const, icon: Shield },
+      { label: "2FA Enabled", value: "—", status: "warning" as const, icon: Shield },
+      { label: "Recent Logins (24h)", value: "—", status: "warning" as const, icon: Activity },
+      { label: "Active API Keys", value: "—", status: "warning" as const, icon: Key },
+    ];
+  }
+
+  const dbOk = api.database === "ok";
+  const apiOk = api.api_server === "ok";
+  const lockedWarn = api.locked_accounts > 0;
+
+  return [
+    {
+      label: "Database",
+      value: dbOk ? "Operational" : "Down",
+      status: dbOk ? "success" as const : "error" as const,
+      icon: Database,
+    },
+    {
+      label: "API Server",
+      value: apiOk ? "All endpoints OK" : "Degraded",
+      status: apiOk ? "success" as const : "error" as const,
+      icon: Server,
+    },
+    {
+      label: "Users",
+      value: `${api.active_users} / ${api.total_users}`,
+      status: "success" as const,
+      icon: Users,
+    },
+    {
+      label: "Locked Accounts",
+      value: String(api.locked_accounts),
+      status: lockedWarn ? "warning" as const : "success" as const,
+      icon: lockedWarn ? AlertTriangle : Shield,
+    },
+    {
+      label: "2FA Enabled",
+      value: String(api.two_fa_enabled),
+      status: "success" as const,
+      icon: Shield,
+    },
+    {
+      label: "Recent Logins (24h)",
+      value: String(api.recent_logins_24h),
+      status: "success" as const,
+      icon: Activity,
+    },
+    {
+      label: "Active API Keys",
+      value: String(api.api_keys_active),
+      status: "success" as const,
+      icon: Key,
+    },
+  ];
+}
 
 export function ICTWorkspace({ view, data, onViewChange }: ICTWorkspaceProps) {
   const [userVerifySearch, setUserVerifySearch] = useState("");
+  const [systemHealth, setSystemHealth] = useState<ICTSystemHealth | null>(null);
+  const [healthLoading, setHealthLoading] = useState(true);
+  const [healthError, setHealthError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setHealthLoading(true);
+    fetchICTSystemHealth()
+      .then(res => { if (!cancelled) { setSystemHealth(res); setHealthLoading(false); } })
+      .catch(err => { if (!cancelled) { setHealthError(err?.message ?? "Failed to load"); setHealthLoading(false); } });
+    return () => { cancelled = true; };
+  }, []);
 
   const schoolName = data.school.name;
   const students = data.students;
   const staff = data.staff;
   const activeStudents = students.filter(s => s.status === "Active");
   const activeStaff = staff.filter(s => s.status === "Active");
+
+  const totalUsers = systemHealth ? systemHealth.total_users : activeStudents.length + activeStaff.length;
+  const totalStudents = systemHealth ? systemHealth.total_students : students.length;
 
   const unverifiedUsers = students.filter(s => s.status === "Pending");
   const filteredVerify = unverifiedUsers.filter(s =>
@@ -50,8 +115,8 @@ export function ICTWorkspace({ view, data, onViewChange }: ICTWorkspaceProps) {
           <School size={18} /> {schoolName} — ICT Overview
         </div>
         <div className="metric-grid">
-          <div className="metric teal"><div className="metric-icon"><Server size={22} /></div><div className="metric-body"><strong>{activeStudents.length + activeStaff.length}</strong><span>Active Users</span></div></div>
-          <div className="metric green"><div className="metric-icon"><Users size={22} /></div><div className="metric-body"><strong>{activeStudents.length}</strong><span>Students</span></div></div>
+          <div className="metric teal"><div className="metric-icon"><Server size={22} /></div><div className="metric-body"><strong>{totalUsers}</strong><span>Total Users</span></div></div>
+          <div className="metric green"><div className="metric-icon"><Users size={22} /></div><div className="metric-body"><strong>{totalStudents}</strong><span>Students</span></div></div>
           <div className="metric amber"><div className="metric-icon"><UserCheck size={22} /></div><div className="metric-body"><strong>{activeStaff.length}</strong><span>Staff</span></div></div>
           <div className="metric red"><div className="metric-icon"><AlertTriangle size={22} /></div><div className="metric-body"><strong>{unverifiedUsers.length}</strong><span>Pending Verification</span></div></div>
         </div>
@@ -63,6 +128,12 @@ export function ICTWorkspace({ view, data, onViewChange }: ICTWorkspaceProps) {
               <div><span style={{color:"var(--muted)",fontSize:"0.82rem"}}>Term</span><br/>{data.school.term} — {data.school.academic_year}</div>
               <div><span style={{color:"var(--muted)",fontSize:"0.82rem"}}>Total Students</span><br/>{students.length}</div>
               <div><span style={{color:"var(--muted)",fontSize:"0.82rem"}}>Total Staff</span><br/>{staff.length}</div>
+              {systemHealth && (
+                <>
+                  <div><span style={{color:"var(--muted)",fontSize:"0.82rem"}}>Recent Logins (24h)</span><br/>{systemHealth.recent_logins_24h}</div>
+                  <div><span style={{color:"var(--muted)",fontSize:"0.82rem"}}>Active API Keys</span><br/>{systemHealth.api_keys_active}</div>
+                </>
+              )}
             </div>
           </div>
           <div className="list-panel">
@@ -140,22 +211,35 @@ export function ICTWorkspace({ view, data, onViewChange }: ICTWorkspaceProps) {
   }
 
   if (view === "System Health") {
+    const healthCards = buildHealthCards(systemHealth);
+
     return (
       <div className="content-grid">
         <div className="notice-strip">
           <Monitor size={15} /> {schoolName} — Service Status
         </div>
+        {healthError && (
+          <div className="notice-strip" style={{color:"var(--danger,#ef4444)"}}>
+            <AlertTriangle size={15} /> {healthError}
+          </div>
+        )}
         <div className="metric-grid">
-          {SYSTEM_HEALTH.map((h, i) => (
-            <div key={i} className={`metric ${h.status === "success" ? "green" : "amber"}`}>
-              <div className="metric-icon"><h.icon size={22} /></div>
-              <div className="metric-body"><strong>{h.value}</strong><span>{h.label}</span></div>
-            </div>
-          ))}
+          {healthCards.map((h, i) => {
+            const Icon = h.icon;
+            return (
+              <div key={i} className={`metric ${h.status === "success" ? "green" : h.status === "error" ? "red" : "amber"}`}>
+                <div className="metric-icon"><Icon size={22} /></div>
+                <div className="metric-body"><strong>{h.value}</strong><span>{h.label}</span></div>
+              </div>
+            );
+          })}
         </div>
 
         <div className="list-panel">
-          <div className="panel-title"><strong>Recent Activity</strong></div>
+          <div className="panel-title">
+            <strong>Recent Activity</strong>
+            {healthLoading && <RefreshCw size={14} style={{animation:"spin 1s linear infinite",marginLeft:8}} />}
+          </div>
           <div className="stack-list">
             {[
               { action: "Daily backup completed", time: "Today 03:00 AM", ok: true },
@@ -186,10 +270,10 @@ export function ICTWorkspace({ view, data, onViewChange }: ICTWorkspaceProps) {
           <Bell size={18} />
         </div>
         <div className="stack-list list-panel">
-          {data.notifications.length === 0 && RECENT_ALERTS.length === 0 ? (
+          {data.notifications.length === 0 && FALLBACK_ALERTS.length === 0 ? (
             <p className="empty-state">No notifications</p>
           ) : (
-            (data.notifications.length > 0 ? data.notifications : RECENT_ALERTS.map((a, i) => ({ id: String(i), title: a.message, message: a.message, type: "system" as const, severity: a.severity, status: "Unread" as const })) as AdminNotification[]).map((n, i) => (
+            (data.notifications.length > 0 ? data.notifications : FALLBACK_ALERTS.map((a, i) => ({ id: String(i), title: a.message, message: a.message, type: "system" as const, severity: a.severity, status: "Unread" as const })) as AdminNotification[]).map((n, i) => (
               <div key={i} className="list-row">
                 <div className="dot" style={{background: n.severity === "critical" ? "#ef4444" : n.severity === "warning" ? "#f59e0b" : "#10b981"}} />
                 <div>
@@ -211,8 +295,8 @@ export function ICTWorkspace({ view, data, onViewChange }: ICTWorkspaceProps) {
         <School size={18} /> {schoolName} — ICT Dashboard
       </div>
       <div className="metric-grid">
-        <div className="metric teal"><div className="metric-icon"><Server size={22} /></div><div className="metric-body"><strong>{activeStudents.length + activeStaff.length}</strong><span>Active Users</span></div></div>
-        <div className="metric green"><div className="metric-icon"><Users size={22} /></div><div className="metric-body"><strong>{activeStudents.length}</strong><span>Students</span></div></div>
+        <div className="metric teal"><div className="metric-icon"><Server size={22} /></div><div className="metric-body"><strong>{totalUsers}</strong><span>Total Users</span></div></div>
+        <div className="metric green"><div className="metric-icon"><Users size={22} /></div><div className="metric-body"><strong>{totalStudents}</strong><span>Students</span></div></div>
         <div className="metric amber"><div className="metric-icon"><UserCheck size={22} /></div><div className="metric-body"><strong>{activeStaff.length}</strong><span>Staff</span></div></div>
         <div className="metric red"><div className="metric-icon"><AlertTriangle size={22} /></div><div className="metric-body"><strong>{unverifiedUsers.length}</strong><span>Pending Verification</span></div></div>
       </div>

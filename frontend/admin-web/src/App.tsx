@@ -342,6 +342,7 @@ function App() {
           role={roleKey}
           view={view}
           data={data}
+          session={session}
           onViewChange={setView}
           onApprove={onApprove}
           onShareFinance={onShareFinance}
@@ -357,6 +358,7 @@ interface WorkspaceProps {
   role: RoleKey;
   view: string;
   data: ConnectedData;
+  session?: Session | null;
   onViewChange: (view: string) => void;
   onApprove: (approvalId: string, decision: string) => void;
   onShareFinance: () => void;
@@ -381,9 +383,9 @@ function RoleWorkspace(props: WorkspaceProps) {
     case "teacher":
       return <TeacherWorkspace view={props.view} data={props.data} onSendSms={props.onSendSms} />;
     case "parent":
-      return <ParentWorkspace view={props.view} data={props.data} />;
+      return <ParentWorkspace view={props.view} data={props.data} session={props.session ?? null} />;
     case "student":
-      return <StudentWorkspace view={props.view} data={props.data} />;
+      return <StudentWorkspace view={props.view} data={props.data} session={props.session ?? null} />;
     default:
       return <SuperAdminWorkspace view={props.view} data={props.data} onViewChange={props.onViewChange} />;
   }

@@ -26,7 +26,15 @@ import type {
   AdminNotification,
   ApprovalItem,
   SchoolProfile,
-  SmsRecipientGroup
+  SmsRecipientGroup,
+  StudentSelfData,
+  ChildInfo,
+  ChildData,
+  TeacherClassInfo,
+  ICTSystemHealth,
+  GuardianInfo,
+  LibraryBorrow,
+  OverdueBook
 } from "./types";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "https://sms-msku.onrender.com";
@@ -879,5 +887,116 @@ export async function addSchool(payload: AddSchoolPayload): Promise<AddSchoolRes
   return apiRequest("/api/v1/platform/add-school", {
     method: "POST",
     body: JSON.stringify(payload),
+  });
+}
+
+// ─── Role-Specific Endpoints ─────────────────────────────────
+
+export async function fetchStudentSelfData(): Promise<any> {
+  return apiRequest("/api/v1/me/student-data");
+}
+
+export async function fetchParentChildren(): Promise<any[]> {
+  return apiRequest("/api/v1/me/children");
+}
+
+export async function fetchParentChildData(studentId: number): Promise<any> {
+  return apiRequest(`/api/v1/me/child/${studentId}/data`);
+}
+
+export async function fetchTeacherClasses(): Promise<any[]> {
+  return apiRequest("/api/v1/teacher/classes");
+}
+
+export async function fetchICTSystemHealth(): Promise<any> {
+  return apiRequest("/api/v1/ict/system-health");
+}
+
+export async function fetchSecretaryGuardianList(): Promise<any[]> {
+  return apiRequest("/api/v1/secretary/guardian-list");
+}
+
+export async function fetchLibrarianActiveBorrows(): Promise<any[]> {
+  return apiRequest("/api/v1/librarian/active-borrows");
+}
+
+export async function fetchLibrarianOverdue(): Promise<any[]> {
+  return apiRequest("/api/v1/librarian/overdue");
+}
+
+// ─── Finance Endpoints (DB-backed) ───────────────────────────
+
+export async function fetchCashbook(): Promise<any[]> {
+  return apiRequest("/api/v1/finance/cashbook");
+}
+
+export async function createCashEntry(payload: {
+  date: string;
+  description: string;
+  amount: number;
+  paid_by: string;
+  payment_method: string;
+  entry_type?: string;
+}): Promise<any> {
+  return apiRequest("/api/v1/finance/cash-entry", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function fetchQuotations(): Promise<any[]> {
+  return apiRequest("/api/v1/finance/quotations");
+}
+
+export async function createQuotation(payload: {
+  customer: string;
+  date: string;
+  items: Array<{ description: string; qty: number; unit_price: number; total: number }>;
+  notes?: string;
+}): Promise<any> {
+  return apiRequest("/api/v1/finance/quotations", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function fetchRequisitions(): Promise<any[]> {
+  return apiRequest("/api/v1/finance/requisitions");
+}
+
+export async function createRequisition(payload: {
+  department: string;
+  requested_by: string;
+  date: string;
+  items: Array<{ description: string; qty: number; estimated_cost: number; total: number }>;
+  purpose?: string;
+}): Promise<any> {
+  return apiRequest("/api/v1/finance/requisitions", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function fetchBankAccount(): Promise<any> {
+  return apiRequest("/api/v1/finance/bank-account");
+}
+
+export async function updateBankAccount(payload: {
+  bank_name: string;
+  account_name: string;
+  account_number: string;
+}): Promise<any> {
+  return apiRequest("/api/v1/finance/bank-account", {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+// ─── Student Endpoints ───────────────────────────────────────
+
+export async function uploadStudentPhoto(studentId: number, photoData: string): Promise<any> {
+  return apiRequest(`/api/v1/students/${studentId}/photo`, {
+    method: "POST",
+    body: JSON.stringify({ photo_data: photoData }),
   });
 }

@@ -1,12 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Banknote, Receipt, FileText, TrendingUp, AlertTriangle, Search,
   Plus, Home, BookOpen, Wallet, Scale, Building2, User,
   CheckCircle, XCircle, Clock, Edit3, Save, ArrowUpCircle,
   ArrowDownCircle, DollarSign, Printer, Download, Settings,
-  Eye, CreditCard
+  Eye, CreditCard, LoaderCircle
 } from "lucide-react";
 import type { ConnectedData } from "../api";
+import {
+  fetchCashbook, createCashEntry,
+  fetchQuotations, createQuotation,
+  fetchRequisitions, createRequisition,
+  fetchBankAccount, updateBankAccount
+} from "../api";
 import { printElement, exportAsCSV } from "../utils/exportUtils";
 
 interface BursarWorkspaceProps {
@@ -93,6 +99,65 @@ function parseAmount(str: string): number {
   return parseInt(str.replace(/[^0-9]/g, "") || "0");
 }
 
+function mapCashEntry(a: any): CashEntry {
+  return {
+    id: String(a.id ?? generateId()),
+    date: a.date ?? "",
+    description: a.description ?? "",
+    amount: Number(a.amount) ?? 0,
+    paidBy: a.paid_by ?? "",
+    paymentMethod: a.payment_method ?? "cash",
+    receiptNo: a.receipt_no ?? "",
+    type: a.entry_type === "Expense" ? "Expense" : "Income",
+    createdAt: a.created_at ?? new Date().toISOString()
+  };
+}
+
+function mapQuotation(a: any): Quotation {
+  return {
+    id: String(a.id ?? generateId()),
+    quotationNo: a.quotation_no ?? "",
+    customer: a.customer ?? "",
+    date: a.date ?? "",
+    items: (a.items ?? []).map((i: any) => ({
+      description: i.description ?? "",
+      qty: Number(i.qty) ?? 0,
+      unitPrice: Number(i.unit_price) ?? 0,
+      total: Number(i.total) ?? 0
+    })),
+    notes: a.notes ?? "",
+    total: Number(a.total) ?? 0,
+    status: a.status ?? "Draft"
+  };
+}
+
+function mapRequisition(a: any): Requisition {
+  return {
+    id: String(a.id ?? generateId()),
+    reqNo: a.req_no ?? "",
+    department: a.department ?? "",
+    requestedBy: a.requested_by ?? "",
+    date: a.date ?? "",
+    items: (a.items ?? []).map((i: any) => ({
+      description: i.description ?? "",
+      qty: Number(i.qty) ?? 0,
+      estimatedCost: Number(i.estimated_cost) ?? 0,
+      total: Number(i.total) ?? 0
+    })),
+    purpose: a.purpose ?? "",
+    total: Number(a.total) ?? 0,
+    status: a.status ?? "Pending"
+  };
+}
+
+function mapBankAccount(a: any): BankAccount {
+  return {
+    bankName: a.bank_name ?? "",
+    accountName: a.account_name ?? "",
+    accountNumber: a.account_number ?? ""
+  };
+}
+
 export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceProps) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -106,6 +171,9 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
     accountNumber: "9030001234567"
   });
   const [cashbookTab, setCashbookTab] = useState<"Income" | "Expense">("Income");
+
+  const [loading, setLoading] = useState({ cashbook: false, quotations: false, requisitions: false, bank: false });
+  const [submitting, setSubmitting] = useState(false);
 
   const [showReceiptForm, setShowReceiptForm] = useState(false);
   const [showCashForm, setShowCashForm] = useState(false);
@@ -125,6 +193,61 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
     { description: "", qty: 1, estimatedCost: 0 }
   ]);
   const [bankForm, setBankForm] = useState<BankAccount>({ bankName: "", accountName: "", accountNumber: "" });
+
+  useEffect(() => {
+    loadCashbook();
+    loadQuotations();
+    loadRequisitions();
+    loadBankAccount();
+  }, []);
+
+  async function loadCashbook() {
+    setLoading(p => ({ ...p, cashbook: true }));
+    try {
+      const raw = await fetchCashbook();
+      setCashEntries((raw ?? []).map(mapCashEntry));
+    } catch {
+      setNotice("Failed to load cashbook entries");
+    } finally {
+      setLoading(p => ({ ...p, cashbook: false }));
+    }
+  }
+
+  async function loadQuotations() {
+    setLoading(p => ({ ...p, quotations: true }));
+    try {
+      const raw = await fetchQuotations();
+      setQuotations((raw ?? []).map(mapQuotation));
+    } catch {
+      setNotice("Failed to load quotations");
+    } finally {
+      setLoading(p => ({ ...p, quotations: false }));
+    }
+  }
+
+  async function loadRequisitions() {
+    setLoading(p => ({ ...p, requisitions: true }));
+    try {
+      const raw = await fetchRequisitions();
+      setRequisitions((raw ?? []).map(mapRequisition));
+    } catch {
+      setNotice("Failed to load requisitions");
+    } finally {
+      setLoading(p => ({ ...p, requisitions: false }));
+    }
+  }
+
+  async function loadBankAccount() {
+    setLoading(p => ({ ...p, bank: true }));
+    try {
+      const raw = await fetchBankAccount();
+      if (raw) setBankAccount(mapBankAccount(raw));
+    } catch {
+      // keep defaults
+    } finally {
+      setLoading(p => ({ ...p, bank: false }));
+    }
+  }
 
   const allReceipts: ManualReceipt[] = [
     ...manualReceipts,
@@ -210,92 +333,114 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
     setNotice("Receipt " + receiptNo + " issued");
   };
 
-  const handleCashEntry = () => {
+  const handleCashEntry = async () => {
     if (!cashForm.date || !cashForm.description || !cashForm.amount || !cashForm.paidBy) {
       setNotice("Fill all cash entry fields"); return;
     }
     const amount = parseFloat(cashForm.amount);
     if (isNaN(amount) || amount <= 0) { setNotice("Enter a valid amount"); return; }
-    const receiptNo = "CSH-" + Date.now().toString().slice(-6);
-    const entry: CashEntry = {
-      id: generateId(),
-      date: cashForm.date,
-      description: cashForm.description,
-      amount,
-      paidBy: cashForm.paidBy,
-      paymentMethod: cashForm.paymentMethod,
-      receiptNo,
-      type: cashbookTab === "Income" ? "Income" : "Expense",
-      createdAt: new Date().toISOString()
-    };
-    setCashEntries(prev => [entry, ...prev]);
-    setCashForm({ date: "", description: "", amount: "", paidBy: "", paymentMethod: "cash" });
-    setShowCashForm(false);
-    setNotice("Cash entry recorded — " + receiptNo);
+    setSubmitting(true);
+    try {
+      await createCashEntry({
+        date: cashForm.date,
+        description: cashForm.description,
+        amount,
+        paid_by: cashForm.paidBy,
+        payment_method: cashForm.paymentMethod,
+        entry_type: cashbookTab
+      });
+      setCashForm({ date: "", description: "", amount: "", paidBy: "", paymentMethod: "cash" });
+      setShowCashForm(false);
+      setNotice("Cash entry recorded");
+      await loadCashbook();
+    } catch (e: any) {
+      setNotice(e.message ?? "Failed to create cash entry");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleCreateQuotation = () => {
+  const handleCreateQuotation = async () => {
     if (!quotationForm.customer || !quotationForm.date || quotationItems.length === 0) {
       setNotice("Fill customer, date and at least one item"); return;
     }
-    const items: QuotationItem[] = quotationItems.map(i => ({
-      ...i,
+    const items = quotationItems.map(i => ({
+      description: i.description,
+      qty: i.qty,
+      unit_price: i.unitPrice,
       total: i.qty * i.unitPrice
     }));
-    const total = items.reduce((s, i) => s + i.total, 0);
-    const qNo = "QT-" + Date.now().toString().slice(-6);
-    const quotation: Quotation = {
-      id: generateId(),
-      quotationNo: qNo,
-      customer: quotationForm.customer,
-      date: quotationForm.date,
-      items,
-      notes: quotationForm.notes,
-      total,
-      status: "Draft"
-    };
-    setQuotations(prev => [quotation, ...prev]);
-    setQuotationForm({ customer: "", date: "", notes: "" });
-    setQuotationItems([{ description: "", qty: 1, unitPrice: 0 }]);
-    setShowQuotationForm(false);
-    setNotice("Quotation " + qNo + " created");
+    setSubmitting(true);
+    try {
+      await createQuotation({
+        customer: quotationForm.customer,
+        date: quotationForm.date,
+        items,
+        notes: quotationForm.notes || undefined
+      });
+      setQuotationForm({ customer: "", date: "", notes: "" });
+      setQuotationItems([{ description: "", qty: 1, unitPrice: 0 }]);
+      setShowQuotationForm(false);
+      setNotice("Quotation created");
+      await loadQuotations();
+    } catch (e: any) {
+      setNotice(e.message ?? "Failed to create quotation");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleCreateRequisition = () => {
+  const handleCreateRequisition = async () => {
     if (!requisitionForm.department || !requisitionForm.requestedBy || !requisitionForm.date || requisitionItems.length === 0) {
       setNotice("Fill all requisition fields"); return;
     }
-    const items: RequisitionItem[] = requisitionItems.map(i => ({
-      ...i,
+    const items = requisitionItems.map(i => ({
+      description: i.description,
+      qty: i.qty,
+      estimated_cost: i.estimatedCost,
       total: i.qty * i.estimatedCost
     }));
-    const total = items.reduce((s, i) => s + i.total, 0);
-    const reqNo = "REQ-" + Date.now().toString().slice(-6);
-    const requisition: Requisition = {
-      id: generateId(),
-      reqNo,
-      department: requisitionForm.department,
-      requestedBy: requisitionForm.requestedBy,
-      date: requisitionForm.date,
-      items,
-      purpose: requisitionForm.purpose,
-      total,
-      status: "Pending"
-    };
-    setRequisitions(prev => [requisition, ...prev]);
-    setRequisitionForm({ department: "", requestedBy: "", date: "", purpose: "" });
-    setRequisitionItems([{ description: "", qty: 1, estimatedCost: 0 }]);
-    setShowRequisitionForm(false);
-    setNotice("Requisition " + reqNo + " created");
+    setSubmitting(true);
+    try {
+      await createRequisition({
+        department: requisitionForm.department,
+        requested_by: requisitionForm.requestedBy,
+        date: requisitionForm.date,
+        items,
+        purpose: requisitionForm.purpose || undefined
+      });
+      setRequisitionForm({ department: "", requestedBy: "", date: "", purpose: "" });
+      setRequisitionItems([{ description: "", qty: 1, estimatedCost: 0 }]);
+      setShowRequisitionForm(false);
+      setNotice("Requisition created");
+      await loadRequisitions();
+    } catch (e: any) {
+      setNotice(e.message ?? "Failed to create requisition");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleSaveBank = () => {
+  const handleSaveBank = async () => {
     if (!bankForm.bankName || !bankForm.accountName || !bankForm.accountNumber) {
       setNotice("Fill all bank account fields"); return;
     }
-    setBankAccount(bankForm);
-    setShowBankForm(false);
-    setNotice("Bank account updated");
+    setSubmitting(true);
+    try {
+      await updateBankAccount({
+        bank_name: bankForm.bankName,
+        account_name: bankForm.accountName,
+        account_number: bankForm.accountNumber
+      });
+      setBankAccount(bankForm);
+      setShowBankForm(false);
+      setNotice("Bank account updated");
+      await loadBankAccount();
+    } catch (e: any) {
+      setNotice(e.message ?? "Failed to update bank account");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (view === "Home") {
@@ -492,7 +637,10 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
                 </select>
               </label>
               <div style={{display:"flex",gap:8}}>
-                <button className="tool-button primary" onClick={handleCashEntry}><Plus size={15}/>Record Entry</button>
+                <button className="tool-button primary" disabled={submitting} onClick={handleCashEntry}>
+                  {submitting ? <LoaderCircle size={15} style={{animation:"spin 0.8s linear infinite"}} /> : <Plus size={15}/>}
+                  Record Entry
+                </button>
                 <button className="tool-button" onClick={() => setShowCashForm(false)}>Cancel</button>
               </div>
             </div>
@@ -514,6 +662,9 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
             <button className="tool-button" onClick={() => printElement("export-cashbook")}><Printer size={15}/>Print</button>
           </div>
           <div id="export-cashbook" className="table-wrap">
+            {loading.cashbook ? (
+              <div className="loading-state"><LoaderCircle size={20} style={{animation:"spin 0.8s linear infinite"}} /> Loading cashbook…</div>
+            ) : (
             <table>
               <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Paid By</th><th>Receipt No</th><th>Type</th></tr></thead>
               <tbody>
@@ -530,6 +681,7 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
                 {filteredCashEntries.length === 0 && <tr><td colSpan={6} className="empty-state">No entries found</td></tr>}
               </tbody>
             </table>
+            )}
           </div>
         </div>
       </div>
@@ -580,7 +732,10 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
                 </div>
               ))}
               <div style={{display:"flex",gap:8,marginTop:8}}>
-                <button className="tool-button primary" onClick={handleCreateQuotation}><Save size={15}/>Create Quotation</button>
+                <button className="tool-button primary" disabled={submitting} onClick={handleCreateQuotation}>
+                  {submitting ? <LoaderCircle size={15} style={{animation:"spin 0.8s linear infinite"}} /> : <Save size={15}/>}
+                  Create Quotation
+                </button>
                 <button className="tool-button" onClick={() => { setShowQuotationForm(false); setQuotationItems([{ description: "", qty: 1, unitPrice: 0 }]); }}>Cancel</button>
               </div>
             </div>
@@ -593,6 +748,9 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
             <button className="tool-button" onClick={() => printElement("export-quotations")}><Printer size={15}/>Print</button>
           </div>
           <div id="export-quotations" className="table-wrap">
+            {loading.quotations ? (
+              <div className="loading-state"><LoaderCircle size={20} style={{animation:"spin 0.8s linear infinite"}} /> Loading quotations…</div>
+            ) : (
             <table>
               <thead><tr><th>Quotation No</th><th>Customer</th><th>Date</th><th>Total</th><th>Status</th></tr></thead>
               <tbody>
@@ -612,6 +770,7 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
                 {quotations.length === 0 && <tr><td colSpan={5} className="empty-state">No quotations yet</td></tr>}
               </tbody>
             </table>
+            )}
           </div>
         </div>
       </div>
@@ -663,7 +822,10 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
                 </div>
               ))}
               <div style={{display:"flex",gap:8,marginTop:8}}>
-                <button className="tool-button primary" onClick={handleCreateRequisition}><Save size={15}/>Create Requisition</button>
+                <button className="tool-button primary" disabled={submitting} onClick={handleCreateRequisition}>
+                  {submitting ? <LoaderCircle size={15} style={{animation:"spin 0.8s linear infinite"}} /> : <Save size={15}/>}
+                  Create Requisition
+                </button>
                 <button className="tool-button" onClick={() => { setShowRequisitionForm(false); setRequisitionItems([{ description: "", qty: 1, estimatedCost: 0 }]); }}>Cancel</button>
               </div>
             </div>
@@ -676,6 +838,9 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
             <button className="tool-button" onClick={() => printElement("export-requisitions")}><Printer size={15}/>Print</button>
           </div>
           <div id="export-requisitions" className="table-wrap">
+            {loading.requisitions ? (
+              <div className="loading-state"><LoaderCircle size={20} style={{animation:"spin 0.8s linear infinite"}} /> Loading requisitions…</div>
+            ) : (
             <table>
               <thead><tr><th>Req No</th><th>Department</th><th>Requested By</th><th>Date</th><th>Total</th><th>Status</th></tr></thead>
               <tbody>
@@ -696,6 +861,7 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
                 {requisitions.length === 0 && <tr><td colSpan={6} className="empty-state">No requisitions yet</td></tr>}
               </tbody>
             </table>
+            )}
           </div>
         </div>
       </div>
@@ -819,13 +985,18 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
               </div>
               <Building2 size={18} />
             </div>
-            {showBankForm ? (
+            {loading.bank ? (
+              <div className="loading-state"><LoaderCircle size={20} style={{animation:"spin 0.8s linear infinite"}} /> Loading bank details…</div>
+            ) : showBankForm ? (
               <div className="office-form">
                 <label>Bank Name<input placeholder="e.g. Stanbic Bank" value={bankForm.bankName} onChange={e => setBankForm(p => ({...p, bankName: e.target.value}))} /></label>
                 <label>Account Name<input placeholder="Account holder name" value={bankForm.accountName} onChange={e => setBankForm(p => ({...p, accountName: e.target.value}))} /></label>
                 <label>Account Number<input placeholder="Account number" value={bankForm.accountNumber} onChange={e => setBankForm(p => ({...p, accountNumber: e.target.value}))} /></label>
                 <div style={{display:"flex",gap:8}}>
-                  <button className="tool-button primary" onClick={handleSaveBank}><Save size={15}/>Save</button>
+                  <button className="tool-button primary" disabled={submitting} onClick={handleSaveBank}>
+                    {submitting ? <LoaderCircle size={15} style={{animation:"spin 0.8s linear infinite"}} /> : <Save size={15}/>}
+                    Save
+                  </button>
                   <button className="tool-button" onClick={() => setShowBankForm(false)}>Cancel</button>
                 </div>
               </div>

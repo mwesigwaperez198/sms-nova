@@ -309,3 +309,137 @@ export interface SystemAlert {
   severity: "info" | "warning" | "critical";
   time: string;
 }
+
+export interface StudentSelfData {
+  student_id: number;
+  student_name: string;
+  admission_number: string | null;
+  class_name: string | null;
+  school_name: string;
+  fees: Array<{
+    id: number;
+    amount: string;
+    status: string;
+    due_date: string;
+    description: string;
+    academic_year: string;
+    term: string;
+    category_name: string | null;
+    paid_amount: string;
+  }>;
+  attendance: Array<{
+    id: number;
+    date: string;
+    status: string;
+    remarks: string | null;
+  }>;
+  assessments: Array<{
+    id: number;
+    subject: string;
+    score: number;
+    type: string;
+    academic_year: string;
+    term: string;
+    remarks: string | null;
+  }>;
+  report_cards: Array<{
+    id: number;
+    subject: string;
+    score: number;
+    grade: string;
+    academic_year: string;
+    term: string;
+    status: string;
+    remarks: string | null;
+  }>;
+  notifications: Array<{
+    id: number;
+    title: string;
+    message: string;
+    type: string;
+    status: string;
+    created_at: string;
+  }>;
+}
+
+export interface ChildInfo {
+  student_id: number;
+  student_name: string;
+  admission_number: string | null;
+  class_name: string | null;
+  stream_name: string | null;
+}
+
+export interface ChildData {
+  student: {
+    id: number;
+    name: string;
+    admission_number: string | null;
+    class_name: string | null;
+    stream_name: string | null;
+  } | null;
+  fees: StudentSelfData["fees"];
+  attendance: StudentSelfData["attendance"];
+  assessments: StudentSelfData["assessments"];
+  report_cards: StudentSelfData["report_cards"];
+  notifications: StudentSelfData["notifications"];
+}
+
+export interface TeacherClassInfo {
+  class_name: string;
+  student_count: number;
+  students: Array<{
+    id: number;
+    name: string;
+    admission_number: string | null;
+    class_name: string | null;
+    stream_name: string | null;
+  }>;
+}
+
+export interface ICTSystemHealth {
+  api_server: string;
+  database: string;
+  total_users: number;
+  active_users: number;
+  total_students: number;
+  locked_accounts: number;
+  two_fa_enabled: number;
+  recent_logins_24h: number;
+  api_keys_active: number;
+}
+
+export interface GuardianInfo {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  student_name: string;
+  relationship: string;
+}
+
+export interface LibraryBorrow {
+  id: number;
+  book_id: number;
+  book_title: string;
+  book_author: string;
+  book_isbn: string | null;
+  borrower_id: number;
+  borrower_name: string;
+  issued_by_name: string;
+  borrowed_at: string;
+  due_date: string;
+  returned_at: string | null;
+  status: string;
+  notes: string | null;
+}
+
+export interface OverdueBook {
+  id: number;
+  book_title: string;
+  book_author: string;
+  borrower_name: string;
+  borrower_email: string;
+  borrowed_at: string;
+  due_date: string;
+}
