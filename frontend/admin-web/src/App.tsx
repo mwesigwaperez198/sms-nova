@@ -24,6 +24,7 @@ import { LandingPage } from "./components/LandingPage";
 import { LoginScreen } from "./components/LoginScreen";
 import { ForgotPasswordScreen } from "./components/ForgotPasswordScreen";
 import { RegistrationWizard } from "./components/RegistrationWizard";
+import { SignUpScreen } from "./components/SignUpScreen";
 import { TwoFactorSetup } from "./components/TwoFactorSetup";
 import { PhotoCapture } from "./components/PhotoCapture";
 import { FaceVerification } from "./components/FaceVerification";
@@ -236,8 +237,11 @@ function App() {
     if (showForgotPassword) {
       return <ForgotPasswordScreen onBack={() => setShowForgotPassword(false)} />;
     }
-    if (showRegister || showSignUp) {
-      return <RegistrationWizard onBack={() => { setShowRegister(false); setShowSignUp(false); }} onComplete={() => { setShowRegister(false); setShowSignUp(false); }} />;
+    if (showRegister) {
+      return <RegistrationWizard onBack={() => { setShowRegister(false); }} onComplete={() => { setShowRegister(false); }} />;
+    }
+    if (showSignUp) {
+      return <SignUpScreen onBack={() => setShowSignUp(false)} onComplete={() => setShowSignUp(false)} />;
     }
     if (twoFactorChallenge) {
       return <LoginScreen loading={false} error={null} onLogin={handleLogin} onSession={handleSession} twoFactorChallenge={twoFactorChallenge} onClearChallenge={() => setTwoFactorChallenge(null)} on2faResult={handle2faLoginResult} />;

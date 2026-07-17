@@ -11,7 +11,7 @@ interface SchoolsListPageProps {
 
 export function SchoolsListPage({ onSelectSchool }: SchoolsListPageProps) {
   const { data: schools, loading, error, refresh } = useData(getSchools);
-  const { data: registrations, refresh: refreshRegs } = useData(() => getRegistrations("pending"));
+  const { data: registrations, refresh: refreshRegs } = useData(() => getRegistrations());
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
@@ -30,7 +30,8 @@ export function SchoolsListPage({ onSelectSchool }: SchoolsListPageProps) {
     return matchSearch && matchStatus;
   });
 
-  const pendingRegs = registrations ?? [];
+  const pendingRegs = (registrations ?? []).filter((r: any) => r.status === "pending");
+  const allRegs = registrations ?? [];
 
   const statusColor: Record<string, string> = {
     active: "bg-emerald-500/10 text-emerald-400",
@@ -137,10 +138,10 @@ export function SchoolsListPage({ onSelectSchool }: SchoolsListPageProps) {
             activeTab === "registrations" ? "bg-zinc-800 text-zinc-100" : "text-zinc-500 hover:text-zinc-300"
           }`}
         >
-          Pending Registrations
-          {pendingRegs.length > 0 && (
-            <span className="ml-1.5 px-1.5 py-0.5 text-[10px] bg-amber-500/20 text-amber-400 rounded-full">
-              {pendingRegs.length}
+          All Registrations
+          {allRegs.length > 0 && (
+            <span className="ml-1.5 px-1.5 py-0.5 text-[10px] bg-indigo-500/20 text-indigo-400 rounded-full">
+              {allRegs.length}
             </span>
           )}
         </button>
@@ -221,11 +222,11 @@ export function SchoolsListPage({ onSelectSchool }: SchoolsListPageProps) {
 
       {activeTab === "registrations" && (
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-          {pendingRegs.length === 0 ? (
+          {allRegs.length === 0 ? (
             <div className="px-4 py-12 text-center">
               <Clock size={32} className="text-zinc-700 mx-auto mb-2" />
-              <p className="text-zinc-600 text-sm">No pending registrations</p>
-              <p className="text-zinc-700 text-xs mt-1">New school registrations will appear here</p>
+              <p className="text-zinc-600 text-sm">No registrations yet</p>
+              <p className="text-zinc-700 text-xs mt-1">School registrations will appear here</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -235,13 +236,14 @@ export function SchoolsListPage({ onSelectSchool }: SchoolsListPageProps) {
                     <th className="text-left px-4 py-3 font-medium">School</th>
                     <th className="text-left px-4 py-3 font-medium">Admin</th>
                     <th className="text-left px-4 py-3 font-medium">Plan</th>
-                    <th className="text-left px-4 py-3 font-medium">Payment</th>
+                    <th className="text-left px-4 py-3 font-medium hidden md:table-cell">Payment</th>
+                    <th className="text-left px-4 py-3 font-medium">Status</th>
                     <th className="text-left px-4 py-3 font-medium hidden md:table-cell">Date</th>
-                    <th className="text-left px-4 py-3 font-medium">Verify</th>
+                    <th className="text-left px-4 py-3 font-medium">Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {pendingRegs.map((reg: any) => (
+                  {allRegs.map((reg: any) => (
                     <tr
                       key={reg.id}
                       onClick={() => setSelectedReg(reg)}
@@ -252,16 +254,37 @@ export function SchoolsListPage({ onSelectSchool }: SchoolsListPageProps) {
                         <div className="text-xs text-zinc-500">{reg.admin_email}</div>
                       </td>
                       <td className="px-4 py-3 text-zinc-400 text-xs">{reg.admin_name}</td>
-                      <td className="px-4 py-3 text-zinc-300 text-xs">{reg.plan_name}</td>
-                      <td className="px-4 py-3 text-zinc-500 text-xs">{reg.payment_method || "—"}</td>
+                      <td className="px-4 py-3 text-zinc-300 text-xs">{reg.plan_name || "—"}</td>
+                      <td className="px-4 py-3 text-zinc-500 text-xs hidden md:table-cell">{reg.payment_method || "—"}</td>
+                      <td className="px-4 py-3">
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                          reg.status === "approved" ? "bg-emerald-500/10 text-emerald-400" :
+                          reg.status === "rejected" ? "bg-red-500/10 text-red-400" :
+                          "bg-amber-500/10 text-amber-400"
+                        }`}>
+                          {reg.status}
+                        </span>
+                      </td>
                       <td className="px-4 py-3 text-zinc-500 text-xs hidden md:table-cell">
                         {reg.created_at ? new Date(reg.created_at).toLocaleDateString() : "—"}
                       </td>
                       <td className="px-4 py-3">
-                        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                          <FileText size={11} />
-                          Review
-                        </span>
+                        {reg.status === "pending" ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                            <FileText size={11} />
+                            Review
+                          </span>
+                        ) : reg.status === "approved" ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            <CheckCircle2 size={11} />
+                            Provisioned
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-red-500/10 text-red-400 border border-red-500/20">
+                            <X size={11} />
+                            Rejected
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -382,22 +405,32 @@ export function SchoolsListPage({ onSelectSchool }: SchoolsListPageProps) {
             </div>
 
             <div className="px-5 py-4 border-t border-zinc-800 flex items-center justify-between">
-              <button
-                onClick={() => { setSelectedReg(null); handleReject(selectedReg.id); }}
-                disabled={rejectingId === selectedReg.id}
-                className="flex items-center gap-1.5 px-3 py-2 text-xs rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-colors disabled:opacity-50"
-              >
-                <X size={13} />
-                {rejectingId === selectedReg.id ? "Rejecting..." : "Reject"}
-              </button>
-              <button
-                onClick={() => { const r = selectedReg; setSelectedReg(null); handleApprove(r.id, r.school_name, r.admin_email); }}
-                disabled={approvingId === selectedReg.id}
-                className="flex items-center gap-1.5 px-4 py-2 text-xs font-medium rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white transition-colors disabled:opacity-50"
-              >
-                <Check size={13} />
-                {approvingId === selectedReg.id ? "Approving..." : "Verify & Approve"}
-              </button>
+              {selectedReg.status === "pending" ? (
+                <>
+                  <button
+                    onClick={() => { setSelectedReg(null); handleReject(selectedReg.id); }}
+                    disabled={rejectingId === selectedReg.id}
+                    className="flex items-center gap-1.5 px-3 py-2 text-xs rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-colors disabled:opacity-50"
+                  >
+                    <X size={13} />
+                    {rejectingId === selectedReg.id ? "Rejecting..." : "Reject"}
+                  </button>
+                  <button
+                    onClick={() => { const r = selectedReg; setSelectedReg(null); handleApprove(r.id, r.school_name, r.admin_email); }}
+                    disabled={approvingId === selectedReg.id}
+                    className="flex items-center gap-1.5 px-4 py-2 text-xs font-medium rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white transition-colors disabled:opacity-50"
+                  >
+                    <Check size={13} />
+                    {approvingId === selectedReg.id ? "Approving..." : "Verify & Approve"}
+                  </button>
+                </>
+              ) : (
+                <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                  selectedReg.status === "approved" ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"
+                }`}>
+                  {selectedReg.status === "approved" ? "Already provisioned" : "Rejected"}
+                </span>
+              )}
             </div>
           </div>
         </div>

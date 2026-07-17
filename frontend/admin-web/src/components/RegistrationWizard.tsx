@@ -1,13 +1,10 @@
 import { useEffect, useState } from "react";
 import {
   Building2, ArrowLeft, ArrowRight, Smartphone, Landmark, CreditCard,
-  Check, KeyRound, ShieldCheck, Eye, EyeOff, Camera, Mail,
-  Lock, AlertTriangle, CheckCircle2, Sparkles, Users, BookOpen,
-  ClipboardList, ChevronRight, Info,
+  Check, KeyRound, ShieldCheck, Mail, Users, BookOpen, Sparkles, Info,
 } from "lucide-react";
-import { registerSchool, fetchPlans, completeRegistration, checkRegistrationEmail } from "../api";
+import { registerSchool, fetchPlans, checkRegistrationEmail } from "../api";
 import type { PlanItem } from "../api";
-import { PhotoCapture } from "./PhotoCapture";
 
 interface Props {
   onBack: () => void;
@@ -18,9 +15,7 @@ const STEPS = [
   { id: "welcome", label: "Welcome", icon: Sparkles },
   { id: "school", label: "School Info", icon: Building2 },
   { id: "plan", label: "Choose Plan", icon: CreditCard },
-  { id: "key", label: "Get Your Key", icon: KeyRound },
-  { id: "activate", label: "Activate Account", icon: ShieldCheck },
-  { id: "security", label: "Security Tips", icon: Lock },
+  { id: "done", label: "Done", icon: Check },
 ];
 
 export function RegistrationWizard({ onBack, onComplete }: Props) {
@@ -42,17 +37,6 @@ export function RegistrationWizard({ onBack, onComplete }: Props) {
     payment_details: "",
   });
 
-  const [activateForm, setActivateForm] = useState({
-    key: "",
-    email: "",
-    full_name: "",
-    phone: "",
-    password: "",
-    confirm: "",
-  });
-  const [profilePhoto, setProfilePhoto] = useState("");
-  const [showPw, setShowPw] = useState(false);
-
   const loadPlans = () => {
     setPlansLoading(true);
     setError(null);
@@ -68,18 +52,12 @@ export function RegistrationWizard({ onBack, onComplete }: Props) {
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
       setSchoolForm(p => ({ ...p, [k]: e.target.value }));
 
-  const setActivate = (k: keyof typeof activateForm) =>
-    (e: React.ChangeEvent<HTMLInputElement>) =>
-      setActivateForm(p => ({ ...p, [k]: e.target.value }));
-
   const canNext = () => {
     switch (step) {
       case 0: return true;
       case 1: return schoolForm.school_name && schoolForm.admin_name && schoolForm.admin_email && schoolForm.admin_phone;
       case 2: return schoolForm.plan_id !== null && schoolForm.payment_details;
       case 3: return true;
-      case 4: return activateForm.key && activateForm.email && activateForm.full_name && activateForm.password;
-      case 5: return true;
       default: return false;
     }
   };
@@ -98,7 +76,7 @@ export function RegistrationWizard({ onBack, onComplete }: Props) {
           return;
         }
         if (emailCheck.status === "approved") {
-          setError(`This email already has an approved registration (ID: ${emailCheck.request_id}) for "${emailCheck.school_name}". Go to "Activate Account" to create your account with the key from your email.`);
+          setError(`This email already has an approved registration (ID: ${emailCheck.request_id}) for "${emailCheck.school_name}". Use the "Activate Account" button on the login page with your registration key.`);
           setSubmitting(false);
           return;
         }
@@ -115,34 +93,7 @@ export function RegistrationWizard({ onBack, onComplete }: Props) {
       });
       setSuccessMsg(res.message);
       setSubmitted(true);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleActivate = async () => {
-    setError(null);
-    if (!profilePhoto) { setError("Passport photo is required"); return; }
-    if (activateForm.password !== activateForm.confirm) { setError("Passwords do not match"); return; }
-    if (activateForm.password.length < 8) { setError("Password must be at least 8 characters"); return; }
-    if (!/[A-Z]/.test(activateForm.password)) { setError("Password must contain an uppercase letter"); return; }
-    if (!/[a-z]/.test(activateForm.password)) { setError("Password must contain a lowercase letter"); return; }
-    if (!/[0-9]/.test(activateForm.password)) { setError("Password must contain a digit"); return; }
-
-    setSubmitting(true);
-    try {
-      const res = await completeRegistration({
-        key: activateForm.key,
-        email: activateForm.email,
-        password: activateForm.password,
-        full_name: activateForm.full_name,
-        phone: activateForm.phone || undefined,
-        profile_photo: profilePhoto,
-      });
-      setSuccessMsg(`Account created for ${res.school_name} (${res.school_code})`);
-      setStep(5);
+      setStep(3);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -152,13 +103,10 @@ export function RegistrationWizard({ onBack, onComplete }: Props) {
 
   const next = () => {
     if (step === 2) { handleSubmitSchool(); return; }
-    if (step === 4) { handleActivate(); return; }
     setStep(s => Math.min(s + 1, STEPS.length - 1));
     setError(null);
   };
   const prev = () => { setStep(s => Math.max(s - 1, 0)); setError(null); };
-
-  const selectedPlan = plans.find(p => p.id === schoolForm.plan_id);
 
   if (submitted) {
     return (
@@ -179,7 +127,7 @@ export function RegistrationWizard({ onBack, onComplete }: Props) {
                 width: 64, height: 64, borderRadius: "50%", background: "rgba(52,211,153,0.12)",
                 border: "2px solid rgba(52,211,153,0.3)", display: "grid", placeItems: "center", margin: "0 auto 14px",
               }}>
-                <CheckCircle2 size={32} style={{ color: "#34d399" }} />
+                <Check size={32} style={{ color: "#34d399" }} />
               </div>
               <h2 style={{ fontSize: "1.15rem", color: "#f1f5f9", marginBottom: 6 }}>Thank You, {schoolForm.admin_name}!</h2>
               <p style={{ fontSize: "0.88rem", color: "var(--muted)", lineHeight: 1.6 }}>
@@ -194,9 +142,9 @@ export function RegistrationWizard({ onBack, onComplete }: Props) {
               <div style={{ fontSize: "0.82rem", fontWeight: 600, color: "#a5b4fc", marginBottom: 8 }}>What happens next?</div>
               <div style={{ display: "grid", gap: 10 }}>
                 {[
-                  { num: "1", icon: ClipboardList, title: "Review", desc: "Our team reviews your registration and payment details within 24-48 hours." },
-                  { num: "2", icon: Mail, title: "Email Your Key", desc: `A unique registration key will be sent to ${schoolForm.admin_email}.` },
-                  { num: "3", icon: KeyRound, title: "Activate Account", desc: "Return to this page, click 'Activate Account', enter your key to create your admin login." },
+                  { num: "1", icon: ShieldCheck, title: "Admin Reviews", desc: "Our team reviews your registration and verifies payment within 24-48 hours." },
+                  { num: "2", icon: Mail, title: "Credentials Emailed", desc: `Your login email and temporary password will be sent to ${schoolForm.admin_email}.` },
+                  { num: "3", icon: KeyRound, title: "Log In & Start", desc: "Use the credentials from the email to log in. Change your password on first login." },
                 ].map(({ num, icon: Icon, title, desc }) => (
                   <div key={num} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                     <div style={{
@@ -218,15 +166,15 @@ export function RegistrationWizard({ onBack, onComplete }: Props) {
               borderRadius: 10, border: "1px solid rgba(251,191,36,0.15)",
               display: "flex", gap: 8, alignItems: "flex-start",
             }}>
-              <AlertTriangle size={16} style={{ color: "#fbbf24", flexShrink: 0, marginTop: 2 }} />
+              <Info size={16} style={{ color: "#fbbf24", flexShrink: 0, marginTop: 2 }} />
               <div style={{ fontSize: "0.75rem", color: "var(--muted)", lineHeight: 1.5 }}>
-                <strong style={{ color: "#fbbf24" }}>Important:</strong> Check your email inbox (and spam folder) for the registration key. You cannot activate your account without it.
+                <strong style={{ color: "#fbbf24" }}>Already have a registration key?</strong> Go back to the login page and click <strong>"Activate Account"</strong>.
               </div>
             </div>
 
             <div className="login-actions" style={{ marginTop: 16, justifyContent: "center" }}>
               <button type="button" className="primary-button gradient-button" onClick={onBack}>
-                <span><CheckCircle2 size={16} /> Back to Home</span>
+                <span><Check size={16} /> Back to Home</span>
               </button>
             </div>
           </div>
@@ -276,9 +224,7 @@ export function RegistrationWizard({ onBack, onComplete }: Props) {
           {step === 0 && <StepWelcome />}
           {step === 1 && <StepSchool form={schoolForm} setField={setSchool} />}
           {step === 2 && <StepPlan plans={plans} loading={plansLoading} selected={schoolForm.plan_id} onSelect={(id) => setSchoolForm(p => ({ ...p, plan_id: id }))} onRetry={loadPlans} paymentMethod={schoolForm.payment_method} paymentDetails={schoolForm.payment_details} onPaymentMethod={setSchool("payment_method")} onPaymentDetails={setSchool("payment_details")} />}
-          {step === 3 && <StepKey successMsg={successMsg} />}
-          {step === 4 && <StepActivate form={activateForm} setField={setActivate} profilePhoto={profilePhoto} onPhoto={setProfilePhoto} showPw={showPw} onTogglePw={() => setShowPw(!showPw)} />}
-          {step === 5 && <StepSecurity successMsg={successMsg} />}
+          {step === 3 && <StepDone successMsg={successMsg} />}
 
           {error && (
             <div style={{
@@ -291,7 +237,7 @@ export function RegistrationWizard({ onBack, onComplete }: Props) {
           )}
 
           <div className="login-actions" style={{ marginTop: 16 }}>
-            {step > 0 ? (
+            {step > 0 && step < 3 ? (
               <button type="button" className="secondary-button" onClick={prev}>
                 <ArrowLeft size={16} /> Back
               </button>
@@ -300,21 +246,21 @@ export function RegistrationWizard({ onBack, onComplete }: Props) {
                 <ArrowLeft size={16} /> Home
               </button>
             )}
-            {step < STEPS.length - 1 ? (
+            {step < 2 ? (
+              <button type="button" className="primary-button gradient-button" disabled={!canNext() || submitting} onClick={next}>
+                <span>Next <ArrowRight size={16} /></span>
+              </button>
+            ) : step === 2 ? (
               <button type="button" className="primary-button gradient-button" disabled={!canNext() || submitting} onClick={next}>
                 {submitting ? (
                   <span className="button-with-spinner"><span className="spinner" /> Processing...</span>
-                ) : step === 2 ? (
-                  <span><Check size={16} /> Submit Registration</span>
-                ) : step === 4 ? (
-                  <span><ShieldCheck size={16} /> Activate Account</span>
                 ) : (
-                  <span>Next <ArrowRight size={16} /></span>
+                  <span><Check size={16} /> Submit Registration</span>
                 )}
               </button>
             ) : (
               <button type="button" className="primary-button gradient-button" onClick={onComplete}>
-                <span><CheckCircle2 size={16} /> Proceed to Login</span>
+                <span><Check size={16} /> Proceed to Login</span>
               </button>
             )}
           </div>
@@ -358,9 +304,9 @@ function StepWelcome() {
         <ol style={{ margin: 0, paddingLeft: 18, fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.8 }}>
           <li>Fill in your school & admin details</li>
           <li>Choose a subscription plan</li>
-          <li>Receive a registration key via email</li>
-          <li>Activate your account with the key</li>
-          <li>Start managing your school!</li>
+          <li>Wait for admin review (24-48 hours)</li>
+          <li>Receive login credentials via email</li>
+          <li>Log in and start managing your school!</li>
         </ol>
       </div>
     </div>
@@ -468,11 +414,6 @@ function StepPlan({
               </button>
             );
           })}
-          {!loading && plans.length === 0 && (
-            <div style={{ textAlign: "center", padding: 16, color: "var(--muted)", fontSize: "0.85rem" }}>
-              No plans available. Contact the platform admin.
-            </div>
-          )}
         </div>
       )}
 
@@ -560,44 +501,31 @@ function StepPlan({
   );
 }
 
-function StepKey({ successMsg }: { successMsg: string | null }) {
+function StepDone({ successMsg }: { successMsg: string | null }) {
   return (
-    <div>
-      <div className="login-card-title">
-        <KeyRound size={22} />
-        <div>
-          <p>Step 3</p>
-          <h2>Get Your Registration Key</h2>
-        </div>
+    <div style={{ textAlign: "center", padding: "8px 0" }}>
+      <div style={{
+        width: 64, height: 64, borderRadius: "50%", background: "rgba(52,211,153,0.12)",
+        border: "2px solid rgba(52,211,153,0.3)", display: "grid", placeItems: "center", margin: "0 auto 14px",
+      }}>
+        <Check size={32} style={{ color: "#34d399" }} />
       </div>
-
-      {successMsg && (
-        <div style={{
-          padding: "12px 14px", background: "rgba(52,211,153,0.08)", borderRadius: 10,
-          border: "1px solid rgba(52,211,153,0.2)", marginBottom: 14,
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-            <CheckCircle2 size={18} style={{ color: "#34d399" }} />
-            <strong style={{ color: "#34d399", fontSize: "0.9rem" }}>Registration Submitted!</strong>
-          </div>
-          <p style={{ fontSize: "0.8rem", color: "var(--muted)", lineHeight: 1.6, margin: 0 }}>
-            {successMsg}
-          </p>
-        </div>
-      )}
-
+      <h2 style={{ fontSize: "1.15rem", color: "#f1f5f9", marginBottom: 6 }}>Registration Submitted!</h2>
+      <p style={{ fontSize: "0.85rem", color: "var(--muted)", lineHeight: 1.6, marginBottom: 16 }}>
+        {successMsg || "Your registration has been received. Our team will review it within 24-48 hours."}
+      </p>
       <div style={{
         padding: "14px", background: "rgba(102,126,234,0.08)", borderRadius: 10,
-        border: "1px solid rgba(102,126,234,0.15)", marginBottom: 12,
+        border: "1px solid rgba(102,126,234,0.15)", textAlign: "left",
       }}>
-        <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#a5b4fc", marginBottom: 8 }}>
+        <div style={{ fontSize: "0.82rem", fontWeight: 600, color: "#a5b4fc", marginBottom: 8 }}>
           What happens next?
         </div>
         <div style={{ display: "grid", gap: 10 }}>
           {[
-            { step: "1", icon: Mail, title: "Check Your Email", desc: "Our team reviews your registration and sends a unique key to your email within 48 hours." },
-            { step: "2", icon: KeyRound, title: "Receive Your Key", desc: "You'll get an alphanumeric key like A1B2C3D4E5F6G7H8 — keep it safe!" },
-            { step: "3", icon: ChevronRight, title: "Return Here", desc: "Come back to this page and click 'Next' to activate your account with the key." },
+            { step: "1", icon: ShieldCheck, title: "Admin Reviews", desc: "Our team reviews your registration and verifies payment details." },
+            { step: "2", icon: Mail, title: "Credentials Emailed", desc: "Login email and temporary password sent to your email." },
+            { step: "3", icon: KeyRound, title: "Log In & Start", desc: "Use the credentials to log in and start managing your school." },
           ].map(({ step: s, icon: Icon, title, desc }) => (
             <div key={s} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
               <div style={{
@@ -612,166 +540,6 @@ function StepKey({ successMsg }: { successMsg: string | null }) {
             </div>
           ))}
         </div>
-      </div>
-
-      <div style={{
-        padding: "10px 14px", background: "rgba(251,191,36,0.08)", borderRadius: 10,
-        border: "1px solid rgba(251,191,36,0.15)", display: "flex", gap: 8, alignItems: "flex-start",
-      }}>
-        <Info size={16} style={{ color: "#fbbf24", flexShrink: 0, marginTop: 2 }} />
-        <div style={{ fontSize: "0.75rem", color: "var(--muted)", lineHeight: 1.5 }}>
-          <strong style={{ color: "#fbbf24" }}>Already have a key?</strong> Click <strong>Next</strong> to proceed to account activation.
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StepActivate({
-  form, setField, profilePhoto, onPhoto, showPw, onTogglePw,
-}: {
-  form: any; setField: (k: string) => any;
-  profilePhoto: string; onPhoto: (p: string) => void;
-  showPw: boolean; onTogglePw: () => void;
-}) {
-  const pw = form.password;
-  const hasLen = pw.length >= 8;
-  const hasUpper = /[A-Z]/.test(pw);
-  const hasLower = /[a-z]/.test(pw);
-  const hasDigit = /[0-9]/.test(pw);
-  const pwScore = [hasLen, hasUpper, hasLower, hasDigit].filter(Boolean).length;
-
-  return (
-    <div>
-      <div className="login-card-title">
-        <ShieldCheck size={22} />
-        <div>
-          <p>Step 4</p>
-          <h2>Activate Your Account</h2>
-        </div>
-      </div>
-      <div className="login-form-fields">
-        <label className="form-field">
-          <span className="field-label">Registration Key *</span>
-          <input value={form.key} onChange={setField("key")} placeholder="e.g. A1B2C3D4E5F6G7H8" className="field-input" required />
-          <small style={{ color: "var(--muted)", fontSize: "0.75rem" }}>The key sent to your email after registration approval.</small>
-        </label>
-        <label className="form-field">
-          <span className="field-label">Email Address *</span>
-          <input type="email" value={form.email} onChange={setField("email")} placeholder="Must match registration email" className="field-input" required />
-        </label>
-        <label className="form-field">
-          <span className="field-label">Full Name *</span>
-          <input value={form.full_name} onChange={setField("full_name")} placeholder="Your full legal name" className="field-input" required />
-        </label>
-        <label className="form-field">
-          <span className="field-label">Phone</span>
-          <input type="tel" value={form.phone} onChange={setField("phone")} placeholder="+256 700 000000" className="field-input" />
-        </label>
-        <label className="form-field">
-          <span className="field-label">Password *</span>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <input type={showPw ? "text" : "password"} value={form.password} onChange={setField("password")} placeholder="Min 8 chars, upper, lower, digit" className="field-input" required />
-            <button type="button" className="tool-button" style={{ minHeight: 38, minWidth: 38, padding: 0 }} onClick={onTogglePw}>
-              {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          </div>
-          {pw.length > 0 && (
-            <div style={{ display: "flex", gap: 4, marginTop: 6 }}>
-              {[0, 1, 2, 3].map(i => (
-                <div key={i} style={{
-                  flex: 1, height: 3, borderRadius: 2,
-                  background: i < pwScore ? (pwScore <= 2 ? "#ef4444" : pwScore === 3 ? "#fbbf24" : "#34d399") : "rgba(255,255,255,0.08)",
-                }} />
-              ))}
-            </div>
-          )}
-          {pw.length > 0 && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 6 }}>
-              {[
-                { ok: hasLen, label: "8+ chars" },
-                { ok: hasUpper, label: "Uppercase" },
-                { ok: hasLower, label: "Lowercase" },
-                { ok: hasDigit, label: "Digit" },
-              ].map(({ ok, label }) => (
-                <span key={label} style={{
-                  fontSize: "0.68rem", padding: "2px 8px", borderRadius: 6,
-                  background: ok ? "rgba(52,211,153,0.12)" : "rgba(255,255,255,0.05)",
-                  color: ok ? "#34d399" : "var(--muted)",
-                  border: `1px solid ${ok ? "rgba(52,211,153,0.2)" : "rgba(255,255,255,0.08)"}`,
-                }}>
-                  {ok ? "✓ " : ""}{label}
-                </span>
-              ))}
-            </div>
-          )}
-        </label>
-        <label className="form-field">
-          <span className="field-label">Confirm Password *</span>
-          <input type="password" value={form.confirm} onChange={setField("confirm")} placeholder="Repeat password" className="field-input" required />
-        </label>
-        <div className="form-field">
-          <span className="field-label">Passport Photo *</span>
-          <PhotoCapture onPhoto={onPhoto} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StepSecurity({ successMsg }: { successMsg: string | null }) {
-  const tips = [
-    { icon: Lock, title: "Use a Strong Password", desc: "Minimum 8 characters with uppercase, lowercase, and numbers. Never share your password.", color: "#667eea" },
-    { icon: ShieldCheck, title: "Enable Two-Factor Auth", desc: "Go to Profile → Security after login and set up 2FA with an authenticator app for extra protection.", color: "#34d399" },
-    { icon: Camera, title: "Register Your Face", desc: "Set up face recognition in your profile for quick and secure login on trusted devices.", color: "#a78bfa" },
-    { icon: AlertTriangle, title: "Never Share Your Key", desc: "Your registration key is one-time use. Keep it confidential and delete after activation.", color: "#fbbf24" },
-    { icon: Users, title: "Assign Roles Carefully", desc: "Only give admin access to trusted staff. Use role-based permissions to limit access.", color: "#f472b6" },
-    { icon: BookOpen, title: "Regular Backups", desc: "Export student and financial data regularly from the system settings page.", color: "#38bdf8" },
-  ];
-
-  return (
-    <div>
-      <div className="login-card-title">
-        <Lock size={22} />
-        <div>
-          <p>Step 5</p>
-          <h2>Security Best Practices</h2>
-        </div>
-      </div>
-
-      {successMsg && (
-        <div style={{
-          padding: "12px 14px", background: "rgba(52,211,153,0.08)", borderRadius: 10,
-          border: "1px solid rgba(52,211,153,0.2)", marginBottom: 14,
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <CheckCircle2 size={18} style={{ color: "#34d399" }} />
-            <strong style={{ color: "#34d399", fontSize: "0.9rem" }}>{successMsg}</strong>
-          </div>
-        </div>
-      )}
-
-      <div style={{ display: "grid", gap: 8 }}>
-        {tips.map(({ icon: Icon, title, desc, color }) => (
-          <div key={title} style={{
-            display: "flex", gap: 10, padding: "10px 12px", borderRadius: 10,
-            background: `${color}08`, border: `1px solid ${color}20`,
-          }}>
-            <Icon size={18} style={{ color, flexShrink: 0, marginTop: 2 }} />
-            <div>
-              <div style={{ fontSize: "0.82rem", fontWeight: 600, color: "#f1f5f9" }}>{title}</div>
-              <div style={{ fontSize: "0.73rem", color: "var(--muted)", lineHeight: 1.5 }}>{desc}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div style={{
-        marginTop: 14, padding: "10px 14px", background: "rgba(102,126,234,0.08)",
-        borderRadius: 10, border: "1px solid rgba(102,126,234,0.15)",
-        fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.6,
-      }}>
-        <strong style={{ color: "#a5b4fc" }}>NOVARA SMS</strong> is built with security at its core — all data is encrypted, sessions expire automatically, and every action is audit-logged.
       </div>
     </div>
   );
