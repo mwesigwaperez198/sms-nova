@@ -348,4 +348,4 @@ def get_bank_account(
     if row:
         return BankAccountRead(bank_name=row.bank_name, account_name=row.account_name, account_number=row.account_number)
 
-    return BankAccountRead(bank_name="Stanbic Bank Uganda", account_name="NOVARA School", account_number="9030001234567")
+    return BankAccountRead(bank_name="", account_name="", account_number="")

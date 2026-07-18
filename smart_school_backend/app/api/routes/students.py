@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, require_active_subscription, role_required
@@ -26,6 +26,43 @@ def list_students(
 ) -> list[StudentRead]:
     query = db.query(Student).filter(Student.school_id == current_user.school_id)
     return query.order_by(Student.name.asc()).offset(skip).limit(limit).all()
+
+
+@router.get("/{student_id}", dependencies=[Depends(role_required(RoleId.SUPER_ADMIN, RoleId.ADMIN, RoleId.HEADTEACHER))])
+def get_student(student_id: int, db: Session = Depends(get_db)):
+    s = db.query(Student).filter(Student.id == student_id).first()
+    if not s:
+        raise HTTPException(404, "Student not found")
+    return {
+        "id": s.id,
+        "name": s.name,
+        "admission_number": s.admission_number,
+        "class_name": s.class_name,
+        "user_id": s.user_id,
+    }
+
+
+@router.patch("/{student_id}", dependencies=[Depends(role_required(RoleId.SUPER_ADMIN, RoleId.ADMIN, RoleId.TEACHER, RoleId.HEADTEACHER))])
+def update_student(student_id: int, name: str = None, class_name: str = None, db: Session = Depends(get_db)):
+    s = db.query(Student).filter(Student.id == student_id).first()
+    if not s:
+        raise HTTPException(404, "Student not found")
+    if name is not None:
+        s.name = name
+    if class_name is not None:
+        s.class_name = class_name
+    db.commit()
+    return {"msg": "updated"}
+
+
+@router.delete("/{student_id}", dependencies=[Depends(role_required(RoleId.SUPER_ADMIN, RoleId.ADMIN))])
+def delete_student(student_id: int, db: Session = Depends(get_db)):
+    s = db.query(Student).filter(Student.id == student_id).first()
+    if not s:
+        raise HTTPException(404, "Student not found")
+    s.class_name = f"DELETED-{s.class_name}"
+    db.commit()
+    return {"msg": "deactivated"}
 
 
 @router.post("/", response_model=StudentRead)

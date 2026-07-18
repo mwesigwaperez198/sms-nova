@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Activity, Database, HardDrive, Users, Wifi, Shield, RefreshCw, Server, Monitor, CheckCircle, AlertTriangle, XCircle, Smartphone, Bell, UserCheck, UserX, School, Search, Key } from "lucide-react";
 import type { ConnectedData } from "../api";
 import type { AdminNotification, ICTSystemHealth } from "../types";
-import { fetchICTSystemHealth } from "../api";
+import { fetchICTSystemHealth, apiRequest } from "../api";
 
 interface ICTWorkspaceProps {
   view: string;
@@ -10,11 +10,7 @@ interface ICTWorkspaceProps {
   onViewChange: (view: string) => void;
 }
 
-const FALLBACK_ALERTS = [
-  { severity: "critical" as const, message: "Storage above 85% — cleanup recommended", time: "10 min ago" },
-  { severity: "warning" as const, message: "Email queue backlog — 12 pending", time: "1 hr ago" },
-  { severity: "info" as const, message: "Daily backup completed", time: "3 hrs ago" },
-];
+const FALLBACK_ALERTS: any[] = [];
 
 function buildHealthCards(api: ICTSystemHealth | null) {
   if (!api) {
@@ -178,8 +174,8 @@ export function ICTWorkspace({ view, data, onViewChange }: ICTWorkspaceProps) {
                   <td><span className="badge warning">{s.status}</span></td>
                   <td>
                     <div style={{display:"flex",gap:4}}>
-                      <button className="tool-button primary" style={{minHeight:26,fontSize:"0.78rem"}}><CheckCircle size={12} />Approve</button>
-                      <button className="tool-button" style={{minHeight:26,fontSize:"0.78rem"}}><UserX size={12} />Reject</button>
+                      <button className="tool-button primary" style={{minHeight:26,fontSize:"0.78rem"}} onClick={() => apiRequest(`/api/v1/users/${s.admissionNo}`, { method: "PATCH", body: JSON.stringify({ is_active: true }) }).then(() => window.location.reload())}><CheckCircle size={12} />Approve</button>
+                      <button className="tool-button" style={{minHeight:26,fontSize:"0.78rem"}} onClick={() => apiRequest(`/api/v1/users/${s.admissionNo}`, { method: "DELETE" }).then(() => window.location.reload())}><UserX size={12} />Reject</button>
                     </div>
                   </td>
                 </tr>
@@ -245,21 +241,7 @@ export function ICTWorkspace({ view, data, onViewChange }: ICTWorkspaceProps) {
             {healthLoading && <RefreshCw size={14} style={{animation:"spin 1s linear infinite",marginLeft:8}} />}
           </div>
           <div className="stack-list">
-            {[
-              { action: "Daily backup completed", time: "Today 03:00 AM", ok: true },
-              { action: "User verification: 3 new students approved", time: "Yesterday 11:20 AM", ok: true },
-              { action: "Database migration applied", time: "2 days ago", ok: true },
-              { action: "High CPU detected — resolved", time: "3 days ago", ok: false },
-            ].map((e, i) => (
-              <div key={i} className="list-row">
-                <div className="dot" style={{background: e.ok ? "#10b981" : "#f59e0b"}} />
-                <div>
-                  <strong style={{fontSize:"0.88rem"}}>{e.action}</strong>
-                  <br /><span style={{fontSize:"0.78rem",color:"var(--muted)"}}>{e.time}</span>
-                </div>
-                <span className={`badge ${e.ok ? "success" : "warning"}`}>{e.ok ? "Completed" : "Warning"}</span>
-              </div>
-            ))}
+            <p className="empty-state">Activity log coming soon</p>
           </div>
         </div>
       </div>

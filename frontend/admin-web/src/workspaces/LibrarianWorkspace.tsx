@@ -48,6 +48,15 @@ export function LibrarianWorkspace({ view, data, onShareRequestedBooks }: Librar
     }).catch(() => {});
   }, []);
 
+  const overdueCount = overdueBooks.length;
+  const books = data.libraryBooks;
+  const filtered = books.filter(b =>
+    !search || b.title.toLowerCase().includes(search.toLowerCase()) || b.code.toLowerCase().includes(search.toLowerCase())
+  );
+  const totalAvailable = books.reduce((sum, b) => sum + (b.available || 0), 0);
+  const totalBorrowed = books.reduce((sum, b) => sum + (b.borrowed || 0), 0);
+  const pendingRequests = data.requestedBooks.filter(r => r.status === "Pending" || r.status === "pending");
+
   const handleIssueStudentSearch = (val: string) => {
     setIssueStudent(val);
     setIssueStudentId(null);
@@ -402,17 +411,15 @@ export function LibrarianWorkspace({ view, data, onShareRequestedBooks }: Librar
         <div className="list-panel glass-card">
           <div className="panel-title"><strong style={{fontSize:"0.9rem"}}>Recent Distributions</strong></div>
           <div className="stack-list">
-            {[
-              {code:"BK-ENG-0045",cls:"P5 Blue",time:"2 hrs ago",ok:true},
-              {code:"BK-MAT-0112",cls:"S6 Sciences",time:"Yesterday",ok:true},
-              {code:"BK-SCI-0028",cls:"S1 East",time:"Processing",ok:false},
-            ].map((d,i) => (
+            {activeBorrows.length > 0 ? activeBorrows.slice(0, 5).map((b: any, i: number) => (
               <div key={i} className="list-row">
-                <div className="dot" style={{background: d.ok ? "#10b981" : "#f59e0b"}} />
-                <div><strong style={{fontSize:"0.88rem"}}>{d.code}</strong> → {d.cls}<br/><span style={{fontSize:"0.78rem",color:"var(--muted)"}}>{d.time}</span></div>
-                <span className={`badge ${d.ok ? "success" : "warning"}`}>{d.ok ? "Done" : "Pending"}</span>
+                <div className="dot" />
+                <div><strong style={{fontSize:"0.88rem"}}>{b.book_title || `Book #${b.book_id}`}</strong> → {b.borrower_name || "Student"}<br/><span style={{fontSize:"0.78rem",color:"var(--muted)"}}>Due: {b.due_date?.split("T")[0] ?? "—"}</span></div>
+                <span className="badge info">Active</span>
               </div>
-            ))}
+            )) : (
+              <div className="empty-state" style={{padding:24}}>No recent distributions</div>
+            )}
           </div>
         </div>
       </div>

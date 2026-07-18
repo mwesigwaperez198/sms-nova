@@ -7,6 +7,7 @@ import {
 import {
   approvalDecision as submitApprovalDecision,
   clearSessionTokens,
+  fetchSchoolSettings,
   loadConnectedData,
   login,
   mapUserToSession,
@@ -14,6 +15,7 @@ import {
   sendSmsBatch,
   shareFinanceDocument,
   shareRequestedBooks,
+  updateSchoolSettings,
   verifyFaceLogin
 } from "./api";
 import type { ConnectedData, FaceChallenge, Session, TwoFactorChallenge } from "./api";
@@ -778,8 +780,10 @@ function SettingsView({
   data: ConnectedData;
   onResetPassword: (currentPassword: string, newPassword: string) => Promise<string>;
 }) {
-  const school = data.school;
   const [settingsNotice, setSettingsNotice] = useState<string | null>(null);
+  const [settingsError, setSettingsError] = useState<string | null>(null);
+  const [settingsSaving, setSettingsSaving] = useState(false);
+  const [settingsLoading, setSettingsLoading] = useState(true);
   const [passwordNotice, setPasswordNotice] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSaving, setPasswordSaving] = useState(false);
@@ -788,31 +792,112 @@ function SettingsView({
     newPassword: "",
     confirmPassword: ""
   });
+  const [schoolForm, setSchoolForm] = useState({
+    name: "",
+    short_name: "",
+    phone: "",
+    email: "",
+    address: "",
+    admission_number_format: "",
+    primary_color: "",
+    secondary_color: "",
+    cashless_enabled: false,
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchSchoolSettings()
+      .then((settings: any) => {
+        if (cancelled) return;
+        setSchoolForm({
+          name: settings.name ?? data.school.name,
+          short_name: settings.short_name ?? data.school.short_name,
+          phone: settings.phone ?? data.school.phone,
+          email: settings.email ?? data.school.email,
+          address: settings.address ?? data.school.address,
+          admission_number_format: settings.admission_number_format ?? data.school.admission_number_format,
+          primary_color: settings.primary_color ?? data.school.primary_color,
+          secondary_color: settings.secondary_color ?? data.school.secondary_color,
+          cashless_enabled: settings.cashless_enabled ?? data.school.cashless_enabled,
+        });
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setSchoolForm({
+          name: data.school.name,
+          short_name: data.school.short_name,
+          phone: data.school.phone,
+          email: data.school.email,
+          address: data.school.address,
+          admission_number_format: data.school.admission_number_format,
+          primary_color: data.school.primary_color,
+          secondary_color: data.school.secondary_color,
+          cashless_enabled: data.school.cashless_enabled,
+        });
+      })
+      .finally(() => { if (!cancelled) setSettingsLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const handleSaveSettings = async () => {
+    setSettingsNotice(null);
+    setSettingsError(null);
+    setSettingsSaving(true);
+    try {
+      await updateSchoolSettings({
+        name: schoolForm.name,
+        email: schoolForm.email,
+        phone: schoolForm.phone,
+        address: schoolForm.address,
+      });
+      setSettingsNotice("School settings saved successfully.");
+    } catch (err: any) {
+      setSettingsError(err.message ?? "Failed to save settings.");
+    } finally {
+      setSettingsSaving(false);
+    }
+  };
+
   const items = [
-    ["School Name", school.name],
-    ["Short Name", school.short_name],
-    ["Phone", school.phone],
-    ["Email", school.email],
-    ["Address", school.address],
-    ["Admission Format", school.admission_number_format],
-    ["Primary Color", school.primary_color],
-    ["Secondary Color", school.secondary_color],
-    ["Cashless Payments", school.cashless_enabled ? "Enabled" : "Disabled"]
+    ["School Name", schoolForm.name],
+    ["Short Name", schoolForm.short_name],
+    ["Phone", schoolForm.phone],
+    ["Email", schoolForm.email],
+    ["Address", schoolForm.address],
+    ["Admission Format", schoolForm.admission_number_format],
+    ["Primary Color", schoolForm.primary_color],
+    ["Secondary Color", schoolForm.secondary_color],
+    ["Cashless Payments", schoolForm.cashless_enabled ? "Enabled" : "Disabled"]
   ];
 
   return (
     <section className="workspace-grid">
       <section className="panel subpanel">
-        <PanelTitle eyebrow="Settings" title="School profile and branding" aside={<button className="primary-button" onClick={() => setSettingsNotice("School settings queued for sync.")}>Save Settings</button>} />
+        <PanelTitle eyebrow="Settings" title="School profile and branding" aside={<button className="primary-button" onClick={handleSaveSettings} disabled={settingsSaving}>{settingsSaving ? "Saving..." : "Save Settings"}</button>} />
         {settingsNotice ? <div className="notice">{settingsNotice}</div> : null}
-        <div className="profile-grid">
-          {items.map(([label, value]) => (
-            <div className="profile-item" key={label}>
-              <span>{label}</span>
-              <strong>{value}</strong>
-            </div>
-          ))}
-        </div>
+        {settingsError ? <div className="notice notice-error">{settingsError}</div> : null}
+        {settingsLoading ? (
+          <p style={{color: "var(--muted)", padding: 16}}>Loading school settings...</p>
+        ) : (
+          <div style={{display: "grid", gap: 12, padding: "8px 0"}}>
+            <label className="form-label">
+              School Name
+              <input value={schoolForm.name} onChange={e => setSchoolForm(f => ({...f, name: e.target.value}))} />
+            </label>
+            <label className="form-label">
+              Phone
+              <input value={schoolForm.phone} onChange={e => setSchoolForm(f => ({...f, phone: e.target.value}))} />
+            </label>
+            <label className="form-label">
+              Email
+              <input value={schoolForm.email} onChange={e => setSchoolForm(f => ({...f, email: e.target.value}))} />
+            </label>
+            <label className="form-label">
+              Address
+              <input value={schoolForm.address} onChange={e => setSchoolForm(f => ({...f, address: e.target.value}))} />
+            </label>
+          </div>
+        )}
       </section>
 
       <section className="panel subpanel">

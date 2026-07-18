@@ -493,9 +493,20 @@ def system_health(
         db_latency = 0
         db_status = "down"
 
+    # Measure API Gateway latency (time from start of request)
+    api_latency = int((time.time() - start) * 1000)
+    
+    # Auth check latency (JWT decode time)
+    auth_start = time.time()
+    try:
+        _check_novara(current_user)
+        auth_latency = int((time.time() - auth_start) * 1000)
+    except Exception:
+        auth_latency = 0
+
     return [
-        {"service_name": "API Gateway", "status": "ok", "latency_ms": 12, "checked_at": datetime.now(timezone.utc).isoformat()},
-        {"service_name": "Auth Service", "status": "ok", "latency_ms": 8, "checked_at": datetime.now(timezone.utc).isoformat()},
+        {"service_name": "API Gateway", "status": "ok", "latency_ms": api_latency, "checked_at": datetime.now(timezone.utc).isoformat()},
+        {"service_name": "Auth Service", "status": "ok", "latency_ms": auth_latency, "checked_at": datetime.now(timezone.utc).isoformat()},
         {"service_name": "Database", "status": db_status, "latency_ms": db_latency, "checked_at": datetime.now(timezone.utc).isoformat()},
         {"service_name": "Email Service", "status": "ok", "latency_ms": 0, "checked_at": datetime.now(timezone.utc).isoformat()},
     ]

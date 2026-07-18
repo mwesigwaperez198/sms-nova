@@ -374,9 +374,14 @@ async function fetchConnectedData(role: RoleKey): Promise<ConnectedData> {
     apiRequest<any[]>("/api/v1/library/books?limit=50").catch(() => []),
     apiRequest<any[]>("/api/v1/admin/audit-logs").catch(() => []),
     apiRequest<any[]>("/api/v1/notifications").catch(() => []),
+    apiRequest<any[]>("/api/v1/fees/payments/list").catch(() => []),
+    apiRequest<any[]>("/api/v1/fees/receipts/list").catch(() => []),
+    apiRequest<any[]>("/api/v1/fees/balances").catch(() => []),
+    apiRequest<any[]>("/api/v1/fees/invoices/list").catch(() => []),
+    apiRequest<any[]>("/api/v1/fees/categories/list").catch(() => []),
   ]);
 
-  const [overview, studentsList, teachersList, libraryBooksList, auditLogsList, notificationsList] = results.map(r => r.status === "fulfilled" ? r.value : null);
+  const [overview, studentsList, teachersList, libraryBooksList, auditLogsList, notificationsList, paymentsList, receiptsList, balancesList, invoicesList, categoriesList] = results.map(r => r.status === "fulfilled" ? r.value : null);
 
   const students: StudentRecord[] = (studentsList ?? []).map(mapStudent);
   const staff: StaffRecord[] = (teachersList ?? []).map(mapTeacherToStaff);
@@ -398,6 +403,33 @@ async function fetchConnectedData(role: RoleKey): Promise<ConnectedData> {
     detail: l.entity_id ? `#${l.entity_id}` : (l.detail ?? ""),
     timestamp: l.created_at ?? "",
     severity: "info"
+  }));
+
+  const payments: PaymentRecord[] = (paymentsList ?? []).map((p: any) => ({
+    reference: String(p.id ?? p.reference ?? ""),
+    student: p.student_name ?? p.admission_number ?? "",
+    method: p.payment_method ?? p.method ?? "",
+    amount: p.amount != null ? `UGX ${Number(p.amount).toLocaleString()}` : "UGX 0",
+    date: p.created_at ?? p.date ?? "",
+    status: p.status ?? "Pending",
+  }));
+
+  const receipts: ReceiptRecord[] = (receiptsList ?? []).map((r: any) => ({
+    receiptNo: String(r.id ?? r.receipt_number ?? ""),
+    student: r.student_name ?? "",
+    amount: r.amount != null ? `UGX ${Number(r.amount).toLocaleString()}` : "UGX 0",
+    method: r.payment_method ?? "",
+    date: r.created_at ?? r.date ?? "",
+    issuedBy: r.issued_by_name ?? "",
+  }));
+
+  const feeBalances: FeeBalance[] = (balancesList ?? []).map((b: any) => ({
+    student: b.student_name ?? b.name ?? "",
+    className: b.class_name ?? "",
+    expected: b.total_invoiced != null ? `UGX ${Number(b.total_invoiced).toLocaleString()}` : "UGX 0",
+    paid: b.total_paid != null ? `UGX ${Number(b.total_paid).toLocaleString()}` : "UGX 0",
+    balance: b.balance != null ? `UGX ${Number(b.balance).toLocaleString()}` : "UGX 0",
+    status: (b.balance ?? 0) > 0 ? "Owing" : "Cleared",
   }));
 
   const home: AdminHomeData = overview ? {
@@ -450,9 +482,9 @@ async function fetchConnectedData(role: RoleKey): Promise<ConnectedData> {
     fullStudents: [],
     imports: [],
     financeDocuments: [],
-    payments: [],
-    receipts: [],
-    feeBalances: [],
+    payments,
+    receipts,
+    feeBalances,
     libraryBooks,
     studentLibraryBooks: [],
     requestedBooks: [],
@@ -504,12 +536,12 @@ export async function loadConnectedData(role: RoleKey, onRefresh?: (fresh: Conne
 
 // ===================== Legacy stubs (transitional) =====================
 
-export async function shareFinanceDocument(_doc: string): Promise<string> {
-  return "Document shared to Admin inbox.";
+export async function shareFinanceDocument(_docId: string, _targetRole: string = ""): Promise<string> {
+  return "Document shared.";
 }
 
 export async function shareRequestedBooks(): Promise<string> {
-  return "Book requests forwarded to Admin for approval.";
+  return "Book requests forwarded for approval.";
 }
 
 export async function approvalDecision(id: string, decision: string): Promise<string> {
@@ -991,6 +1023,41 @@ export async function updateBankAccount(payload: {
     method: "PUT",
     body: JSON.stringify(payload),
   });
+}
+
+// ─── School Settings ─────────────────────────────────────────
+
+export async function fetchSchoolSettings() {
+  return apiRequest<any>("/api/v1/admin/school-settings");
+}
+
+export async function updateSchoolSettings(data: { name?: string; email?: string; phone?: string; address?: string }) {
+  return apiRequest<any>("/api/v1/admin/school-settings", {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+// ─── Fee Endpoints ───────────────────────────────────────────
+
+export async function fetchFeePayments() {
+  return apiRequest<any[]>("/api/v1/fees/payments/list").catch(() => []);
+}
+
+export async function fetchFeeReceipts() {
+  return apiRequest<any[]>("/api/v1/fees/receipts/list").catch(() => []);
+}
+
+export async function fetchFeeBalances() {
+  return apiRequest<any[]>("/api/v1/fees/balances").catch(() => []);
+}
+
+export async function fetchFeeInvoices() {
+  return apiRequest<any[]>("/api/v1/fees/invoices/list").catch(() => []);
+}
+
+export async function fetchFeeCategories() {
+  return apiRequest<any[]>("/api/v1/fees/categories/list").catch(() => []);
 }
 
 // ─── Student Endpoints ───────────────────────────────────────

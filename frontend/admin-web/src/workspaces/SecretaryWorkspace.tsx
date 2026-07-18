@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { Users, UserPlus, FileText, Upload, Search, Download, X } from "lucide-react";
+import { Users, UserPlus, FileText, Upload, Search, Download, X, CheckCircle, AlertCircle } from "lucide-react";
 import type { ConnectedData, GuardianInfo } from "../api";
-import { fetchSecretaryGuardianList, createStudent } from "../api";
+import { fetchSecretaryGuardianList, apiRequest } from "../api";
 import { printElement } from "../utils/exportUtils";
 
 interface SecretaryWorkspaceProps {
@@ -38,10 +38,29 @@ export function SecretaryWorkspace({ view, data, onViewChange }: SecretaryWorksp
     setSubmitting(true);
     try {
       const admNo = `ADM-${Date.now().toString(36).toUpperCase()}`;
-      await createStudent({
-        name: form.fullName,
-        admission_number: admNo,
-        class_name: form.targetClass,
+      await apiRequest("/api/v1/students/", {
+        method: "POST",
+        body: JSON.stringify({
+          name: form.fullName,
+          admission_number: admNo,
+          class_name: form.targetClass,
+          sex: form.sex,
+          date_of_birth: form.dob,
+          guardian_name: form.guardianName,
+          guardian_phone: form.contact,
+          guardian_email: "",
+          address: form.address,
+          blood_group: "",
+          allergies: "",
+          medical_conditions: form.currentSkills,
+          previous_school: form.previousSchool,
+          parent_status: form.parentStatus,
+          father_name: form.fatherName,
+          mother_name: form.motherName,
+          skills: form.currentSkills,
+          desired_skills: form.desiredSkills,
+          expectations: form.expectations,
+        }),
       });
       setSubmitMsg("Admission submitted successfully!");
       setForm(EMPTY_FORM);
@@ -83,21 +102,39 @@ export function SecretaryWorkspace({ view, data, onViewChange }: SecretaryWorksp
 
   // ---------- Import Students ----------
   const [importFiles, setImportFiles] = useState<{ name: string; size: number; preview: Record<string, string>[] }[]>([]);
+  const [importResults, setImportResults] = useState<{ success: number; failed: number; errors: string[] } | null>(null);
+  const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
 
-  const handleFiles = useCallback((files: FileList | File[]) => {
+  function parseCSVText(text: string): Record<string, string>[] {
+    const lines = text.split(/\r?\n/).filter(Boolean);
+    if (lines.length < 2) return [];
+    const headers = lines[0].split(",").map(h => h.replace(/^"|"$/g, "").trim());
+    return lines.slice(1).map(line => {
+      const values: string[] = [];
+      let current = "", inQuote = false;
+      for (const ch of line) {
+        if (ch === '"') { inQuote = !inQuote; continue; }
+        if (ch === "," && !inQuote) { values.push(current.trim()); current = ""; continue; }
+        current += ch;
+      }
+      values.push(current.trim());
+      const row: Record<string, string> = {};
+      headers.forEach((h, i) => { row[h] = values[i] ?? ""; });
+      return row;
+    });
+  }
+
+  const handleFiles = useCallback(async (files: FileList | File[]) => {
     const newFiles: typeof importFiles = [];
     for (const file of Array.from(files)) {
-      if (file.name.endsWith(".csv") || file.name.endsWith(".xlsx") || file.name.endsWith(".xls")) {
-        newFiles.push({
-          name: file.name,
-          size: file.size,
-          preview: [
-            { "Admission No": "2025-001", "Full Name": "Sample Student", Gender: "Male", Class: "S1" },
-            { "Admission No": "2025-002", "Full Name": "Sample Student 2", Gender: "Female", Class: "S2" },
-          ],
-        });
+      if (file.name.endsWith(".csv")) {
+        const text = await file.text();
+        const preview = parseCSVText(text);
+        newFiles.push({ name: file.name, size: file.size, preview });
+      } else if (file.name.endsWith(".xlsx") || file.name.endsWith(".xls")) {
+        newFiles.push({ name: file.name, size: file.size, preview: [] });
       }
     }
     setImportFiles(prev => [...prev, ...newFiles]);
@@ -269,10 +306,27 @@ export function SecretaryWorkspace({ view, data, onViewChange }: SecretaryWorksp
             />
           </div>
 
+          {importResults && (
+            <div className={`notice-strip ${importResults.failed === 0 ? "success" : ""}`} style={{margin:"8px 16px"}}>
+              {importResults.failed === 0 ? (
+                <><CheckCircle size={16}/> {importResults.success} student(s) imported successfully.</>
+              ) : (
+                <><AlertCircle size={16}/> {importResults.success} succeeded, {importResults.failed} failed.
+                  {importResults.errors.length > 0 && (
+                    <ul style={{margin:"4px 0 0 18px",fontSize:"0.82rem"}}>
+                      {importResults.errors.map((e, ei) => <li key={ei}>{e}</li>)}
+                    </ul>
+                  )}
+                </>
+              )}
+              <button className="tool-button" style={{marginLeft:12}} onClick={() => setImportResults(null)}><X size={14}/></button>
+            </div>
+          )}
+
           {importFiles.length > 0 && (
             <div style={{padding:"12px 16px",display:"grid",gap:8}}>
-              {importFiles.map((f, i) => (
-                <div key={i} className="import-file-card">
+              {importFiles.map((f, fi) => (
+                <div key={fi} className="import-file-card">
                   <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                     <div style={{display:"flex",alignItems:"center",gap:10}}>
                       <FileText size={18} style={{color:"var(--primary)"}} />
@@ -281,23 +335,63 @@ export function SecretaryWorkspace({ view, data, onViewChange }: SecretaryWorksp
                         <br /><span style={{fontSize:"0.78rem",color:"var(--muted)"}}>{(f.size / 1024).toFixed(1)} KB · {f.preview.length} records</span>
                       </div>
                     </div>
-                    <button className="tool-button" style={{minHeight:30,minWidth:30,padding:0}} onClick={() => removeFile(i)}><X size={14}/></button>
+                    <button className="tool-button" style={{minHeight:30,minWidth:30,padding:0}} onClick={() => removeFile(fi)}><X size={14}/></button>
                   </div>
-                  <div className="table-wrap" style={{marginTop:8}}>
-                    <table>
-                      <thead><tr>{Object.keys(f.preview[0]).map(k => <th key={k}>{k}</th>)}</tr></thead>
-                      <tbody>
-                        {f.preview.map((row, ri) => (
-                          <tr key={ri}>
-                            {Object.values(row).map((v, ci) => <td key={ci}>{v}</td>)}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  {f.preview.length > 0 ? (
+                    <div className="table-wrap" style={{marginTop:8}}>
+                      <table>
+                        <thead><tr>{Object.keys(f.preview[0]).map(k => <th key={k}>{k}</th>)}</tr></thead>
+                        <tbody>
+                          {f.preview.map((row, ri) => (
+                            <tr key={ri}>
+                              {Object.values(row).map((v, ci) => <td key={ci}>{v}</td>)}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p style={{padding:8,fontSize:"0.82rem",color:"var(--muted)"}}>
+                      {f.name.endsWith(".csv") ? "No rows parsed." : "XLSX parsing is not supported in-browser. Please use CSV format."}
+                    </p>
+                  )}
                   <div style={{display:"flex",gap:8,justifyContent:"flex-end",marginTop:8}}>
-                    <button className="tool-button primary"><Upload size={14}/> Import All</button>
-                    <button className="tool-button">Validate Only</button>
+                    <button
+                      className="tool-button primary"
+                      disabled={importing || f.preview.length === 0}
+                      onClick={async () => {
+                        setImporting(true);
+                        setImportResults(null);
+                        let success = 0, failed = 0;
+                        const errors: string[] = [];
+                        for (const row of f.preview) {
+                          const payload: Record<string, string> = {};
+                          for (const [k, v] of Object.entries(row)) {
+                            const lk = k.toLowerCase();
+                            if (lk.includes("name")) payload.name = v;
+                            if (lk.includes("admission") || lk.includes("adm")) payload.admission_number = v;
+                            if (lk.includes("class") || lk.includes("grade")) payload.class_name = v;
+                            if (lk.includes("gender") || lk.includes("sex")) payload.sex = v;
+                            if (lk.includes("stream")) payload.stream_name = v;
+                          }
+                          try {
+                            await apiRequest("/api/v1/students/", {
+                              method: "POST",
+                              body: JSON.stringify(payload),
+                            });
+                            success++;
+                          } catch (err: any) {
+                            failed++;
+                            errors.push(`Row ${success + failed}: ${err.message || "Error"}`);
+                          }
+                        }
+                        setImportResults({ success, failed, errors });
+                        setImporting(false);
+                      }}
+                    >
+                      <Upload size={14}/> {importing ? "Importing…" : "Import All"}
+                    </button>
+                    <button className="tool-button" disabled={importing}>Validate Only</button>
                   </div>
                 </div>
               ))}
@@ -350,16 +444,12 @@ export function SecretaryWorkspace({ view, data, onViewChange }: SecretaryWorksp
             <label><Search size={15}/><input placeholder="Search documents…" /></label>
             <button className="tool-button primary"><Upload size={15}/>Upload Document</button>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:14,padding:16}}>
-            {data.secretaryDocuments.map(doc => (
-              <div key={doc.id} className="detail-panel glass-card" style={{padding:16,display:"grid",gap:8}}>
-                <FileText size={28} style={{color:"var(--primary)"}} />
-                <strong style={{fontSize:"0.9rem"}}>{doc.title}</strong>
-                <span style={{fontSize:"0.78rem",color:"var(--muted)"}}>{doc.type?.toUpperCase()} · {doc.date}</span>
-                {doc.student && <span style={{fontSize:"0.78rem",color:"var(--muted)"}}>Student: {doc.student}</span>}
-                <button className="tool-button" style={{marginTop:4}}><Download size={14}/>Download</button>
-              </div>
-            ))}
+          <div style={{padding:16}}>
+            <div className="empty-state" style={{padding:32,textAlign:"center"}}>
+              <FileText size={48} style={{color:"var(--muted)",marginBottom:12}} />
+              <p style={{fontSize:"0.9rem",marginBottom:8}}>Document management will be available in the next update.</p>
+              <p style={{fontSize:"0.82rem",color:"var(--muted)"}}>Use the Student Profiles view to manage student records.</p>
+            </div>
           </div>
         </div>
       </div>

@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.api.deps import role_required
+from app.api.deps import require_active_subscription, role_required
 from app.core.roles import RoleId
 from app.db.session import get_db
 from app.models.audit import AuditLog
+from app.models.school import School
 from app.models.user import User
 from app.schemas.admin import AdminOverviewRead, AnalyticsRead
 from app.schemas.audit import AuditLogRead
@@ -55,3 +56,44 @@ def audit_logs(
         .limit(100)
         .all()
     )
+
+
+@router.get("/school-settings", dependencies=[Depends(require_active_subscription)])
+def get_school_settings(
+    current_user: User = Depends(role_required(RoleId.ADMIN, RoleId.SUPER_ADMIN)),
+    db: Session = Depends(get_db),
+):
+    school = db.query(School).filter(School.id == current_user.school_id).first()
+    if not school:
+        raise HTTPException(404, "School not found")
+    return {
+        "id": school.id,
+        "name": school.name,
+        "email": school.email,
+        "phone": getattr(school, "phone", ""),
+        "address": getattr(school, "address", ""),
+    }
+
+
+@router.patch("/school-settings", dependencies=[Depends(role_required(RoleId.SUPER_ADMIN, RoleId.ADMIN))])
+def update_school_settings(
+    name: str = None,
+    email: str = None,
+    phone: str = None,
+    address: str = None,
+    current_user: User = Depends(role_required(RoleId.SUPER_ADMIN, RoleId.ADMIN)),
+    db: Session = Depends(get_db),
+):
+    school = db.query(School).filter(School.id == current_user.school_id).first()
+    if not school:
+        raise HTTPException(404, "School not found")
+    if name is not None:
+        school.name = name
+    if email is not None:
+        school.email = email
+    if phone is not None:
+        school.phone = phone
+    if address is not None:
+        school.address = address
+    db.commit()
+    return {"msg": "updated"}
