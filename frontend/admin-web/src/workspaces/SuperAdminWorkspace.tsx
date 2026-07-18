@@ -124,9 +124,13 @@ export function SuperAdminWorkspace({ view, data, onViewChange }: SuperAdminWork
     ];
     return (
       <div className="content-grid">
+        <div className="welcome-banner">
+          <h2>Platform Overview</h2>
+          <p>Manage schools, subscriptions, and system health across the entire Nova platform.</p>
+        </div>
         <Metrics />
         <div className="office-layout">
-          <div className="list-panel">
+          <div className="list-panel glass-card">
             <div className="panel-title"><strong style={{fontSize:"0.9rem"}}>System Health</strong></div>
             <div className="stack-list">
               {health.map(h => (
@@ -138,7 +142,7 @@ export function SuperAdminWorkspace({ view, data, onViewChange }: SuperAdminWork
               ))}
             </div>
           </div>
-          <div className="list-panel">
+          <div className="list-panel glass-card">
             <div className="panel-title"><strong style={{fontSize:"0.9rem"}}>Platform Overview</strong></div>
             <div className="stack-list">
               {perf.map(([label, val]) => (
@@ -184,7 +188,7 @@ export function SuperAdminWorkspace({ view, data, onViewChange }: SuperAdminWork
     return (
       <div className="content-grid">
         <Metrics />
-        <div className="table-panel">
+        <div className="table-panel glass-card">
           <div className="office-filters">
             <label><Search size={15}/><input placeholder="Search school name or code…" value={search} onChange={e => setSearch(e.target.value)} /></label>
             <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{padding:"4px 8px",borderRadius:4,background:"var(--surface)",color:"var(--text)",border:"1px solid var(--border)"}}>
@@ -199,7 +203,7 @@ export function SuperAdminWorkspace({ view, data, onViewChange }: SuperAdminWork
           </div>
 
           {showAddSchool && (
-            <div className="panel" style={{padding:20,marginBottom:16,display:"grid",gap:14}}>
+            <div className="panel glass-card" style={{padding:20,marginBottom:16,display:"grid",gap:14}}>
               <div className="panel-title"><strong>Add New School</strong></div>
               {addSchoolNotice && <div className="notice">{addSchoolNotice}</div>}
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:12}}>
@@ -283,7 +287,7 @@ export function SuperAdminWorkspace({ view, data, onViewChange }: SuperAdminWork
 
     return (
       <div className="content-grid">
-        <div className="table-panel">
+        <div className="table-panel glass-card">
           <div className="office-filters">
             <select value={regFilter} onChange={e => setRegFilter(e.target.value)} style={{padding:"4px 8px",borderRadius:4,background:"var(--surface)",color:"var(--text)",border:"1px solid var(--border)"}}>
               <option value="">All</option>
@@ -390,7 +394,7 @@ export function SuperAdminWorkspace({ view, data, onViewChange }: SuperAdminWork
 
     return (
       <div className="content-grid">
-        <div className="table-panel">
+        <div className="table-panel glass-card">
           <div className="office-filters">
             <div style={{display:"flex",gap:4}}>
               <button className={`tool-button ${keyTab === "product" ? "primary" : ""}`} onClick={() => setKeyTab("product")}>Product Keys</button>
@@ -411,7 +415,7 @@ export function SuperAdminWorkspace({ view, data, onViewChange }: SuperAdminWork
               </div>
 
               {showGenerate && (
-                <div className="panel" style={{padding:16,marginBottom:16,display:"grid",gap:12}}>
+                <div className="panel glass-card" style={{padding:16,marginBottom:16,display:"grid",gap:12}}>
                   <strong>Generate New Product Key</strong>
                   <select value={selectedSchool} onChange={e => setSelectedSchool(e.target.value)} style={{padding:"6px 10px",borderRadius:4,background:"var(--surface)",color:"var(--text)",border:"1px solid var(--border)"}}>
                     <option value="">Select school</option>
@@ -456,7 +460,7 @@ export function SuperAdminWorkspace({ view, data, onViewChange }: SuperAdminWork
               </div>
 
               {showApiGenerate && (
-                <div className="panel" style={{padding:16,marginBottom:16,display:"grid",gap:12}}>
+                <div className="panel glass-card" style={{padding:16,marginBottom:16,display:"grid",gap:12}}>
                   <strong>Generate New API Key</strong>
                   <select value={apiSelectedSchool} onChange={e => setApiSelectedSchool(e.target.value)} style={{padding:"6px 10px",borderRadius:4,background:"var(--surface)",color:"var(--text)",border:"1px solid var(--border)"}}>
                     <option value="">Select school</option>
@@ -519,7 +523,7 @@ export function SuperAdminWorkspace({ view, data, onViewChange }: SuperAdminWork
 
     return (
       <div className="content-grid">
-        <div className="table-panel">
+        <div className="table-panel glass-card">
           <div className="office-filters">
             <strong style={{fontSize:"0.95rem"}}>Subscription Plans</strong>
             <button className="tool-button primary" onClick={() => setShowCreate(!showCreate)}><CreditCard size={15}/>Create Plan</button>
@@ -527,7 +531,7 @@ export function SuperAdminWorkspace({ view, data, onViewChange }: SuperAdminWork
           {planNotice && <div className="notice">{planNotice}</div>}
 
           {showCreate && (
-            <div className="panel" style={{padding:16,marginBottom:16,display:"grid",gap:12}}>
+            <div className="panel glass-card" style={{padding:16,marginBottom:16,display:"grid",gap:12}}>
               <strong>New Plan</strong>
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(180px,1fr))",gap:8}}>
                 <label className="form-label">Name <input value={newPlan.name} onChange={e => setNewPlan(p => ({...p,name:e.target.value}))} /></label>
@@ -571,7 +575,7 @@ export function SuperAdminWorkspace({ view, data, onViewChange }: SuperAdminWork
   if (view === "Audit Log") {
     return (
       <div className="content-grid">
-        <div className="table-panel">
+        <div className="table-panel glass-card">
           <div className="office-filters">
             <label><Search size={15}/><input placeholder="Search action, actor…" value={search} onChange={e => setSearch(e.target.value)} /></label>
             <button className="tool-button" onClick={() => printElement("export-audit-log")}><FileText size={15}/>Export</button>
@@ -608,7 +612,7 @@ export function SuperAdminWorkspace({ view, data, onViewChange }: SuperAdminWork
 
     return (
       <div className="content-grid">
-        <div className="table-panel">
+        <div className="table-panel glass-card">
           <div className="office-filters">
             <label><Search size={15}/><input placeholder="Search name, email…" value={userSearch} onChange={e => setUserSearch(e.target.value)} /></label>
             <span style={{fontSize:"0.85rem",color:"var(--muted)"}}>{filteredUsers.length} user(s)</span>
@@ -706,7 +710,7 @@ export function SuperAdminWorkspace({ view, data, onViewChange }: SuperAdminWork
     return (
       <div className="content-grid">
         <Metrics />
-        <div className="panel" style={{padding:20,display:"grid",gap:16,marginBottom:16}}>
+        <div className="panel glass-card" style={{padding:20,display:"grid",gap:16,marginBottom:16}}>
           <div className="panel-title"><ShieldCheck size={20} style={{color:"var(--primary)"}}/><strong>System Check</strong></div>
           <p style={{fontSize:"0.85rem",color:"var(--muted)",margin:0}}>Trigger a comprehensive system-wide check. The check will run at midnight and notify all school administrators. During maintenance, the system will be temporarily unavailable.</p>
           <div style={{display:"flex",gap:8,alignItems:"center"}}>
@@ -718,7 +722,7 @@ export function SuperAdminWorkspace({ view, data, onViewChange }: SuperAdminWork
           {scNotice && <div className="notice">{scNotice}</div>}
         </div>
 
-        <div className="table-panel">
+        <div className="table-panel glass-card">
           <div className="panel-title" style={{padding:"12px 16px"}}><strong>Check History</strong></div>
           <div className="table-wrap">
             <table>
@@ -751,19 +755,19 @@ export function SuperAdminWorkspace({ view, data, onViewChange }: SuperAdminWork
       <div className="content-grid">
         <Metrics />
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
-          <div className="detail-panel" style={{ padding: 20, display: "grid", gap: 10 }}>
+          <div className="detail-panel glass-card" style={{ padding: 20, display: "grid", gap: 10 }}>
             <Users size={28} style={{ color: "var(--primary)" }} />
             <strong>Users</strong>
             <span style={{ fontSize: "1.5rem", fontWeight: 700 }}>{s?.total_users ?? 0}</span>
             <span style={{ fontSize: "0.82rem", color: "var(--muted)" }}>registered across all schools</span>
           </div>
-          <div className="detail-panel" style={{ padding: 20, display: "grid", gap: 10 }}>
+          <div className="detail-panel glass-card" style={{ padding: 20, display: "grid", gap: 10 }}>
             <Key size={28} style={{ color: "var(--primary)" }} />
             <strong>Keys Generated</strong>
             <span style={{ fontSize: "1.5rem", fontWeight: 700 }}>{s?.keys_generated_30d ?? 0}</span>
             <span style={{ fontSize: "0.82rem", color: "var(--muted)" }}>in the last 30 days</span>
           </div>
-          <div className="detail-panel" style={{ padding: 20, display: "grid", gap: 10 }}>
+          <div className="detail-panel glass-card" style={{ padding: 20, display: "grid", gap: 10 }}>
             <Globe size={28} style={{ color: "var(--primary)" }} />
             <strong>Schools</strong>
             <span style={{ fontSize: "1.5rem", fontWeight: 700 }}>{s?.total_schools ?? 0}</span>

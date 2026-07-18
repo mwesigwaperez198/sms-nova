@@ -132,7 +132,7 @@ export function StudentWorkspace({ view, data, session }: StudentWorkspaceProps)
                 <div className="metric red"><div className="metric-icon"><FileText size={22} /></div><div className="metric-body"><strong>UGX {totalBalance.toLocaleString()}</strong><span>Balance</span></div></div>
                 <div className="metric blue"><div className="metric-icon"><FileText size={22} /></div><div className="metric-body"><strong>{fees.length}</strong><span>Invoices</span></div></div>
               </div>
-              <div className="table-panel">
+              <div className="table-panel glass-card">
                 <div className="table-wrap">
                   <table>
                     <thead><tr><th>Description</th><th>Amount</th><th>Paid</th><th>Balance</th><th>Status</th><th>Due</th></tr></thead>
@@ -190,7 +190,7 @@ export function StudentWorkspace({ view, data, session }: StudentWorkspaceProps)
         case "Report Card":
           return (
             <>
-              <div className="table-panel">
+              <div className="table-panel glass-card">
                 <div className="table-wrap">
                   <table>
                     <thead><tr><th>Subject</th><th>Score</th><th>Grade</th><th>Term</th><th>Year</th></tr></thead>
@@ -381,7 +381,7 @@ export function StudentWorkspace({ view, data, session }: StudentWorkspaceProps)
             <Download size={15} />Download
           </button>
         </div>
-        <div id="export-report-card" className="table-panel">
+        <div id="export-report-card" className="table-panel glass-card">
           <div className="table-wrap">
             <table>
               <thead><tr><th>Subject</th><th>Score</th><th>Grade</th><th>Term</th><th>Year</th></tr></thead>
@@ -442,7 +442,7 @@ export function StudentWorkspace({ view, data, session }: StudentWorkspaceProps)
           <div className="metric red"><div className="metric-icon"><FileText size={22} /></div><div className="metric-body"><strong>UGX {totalBalance.toLocaleString()}</strong><span>Balance</span></div></div>
           <div className="metric blue"><div className="metric-icon"><FileText size={22} /></div><div className="metric-body"><strong>{fees.length}</strong><span>Invoices</span></div></div>
         </div>
-        <div className="table-panel">
+        <div className="table-panel glass-card">
           <div className="table-wrap">
             <table>
               <thead><tr><th>Description</th><th>Amount</th><th>Paid</th><th>Balance</th><th>Status</th><th>Due</th></tr></thead>
@@ -496,7 +496,7 @@ export function StudentWorkspace({ view, data, session }: StudentWorkspaceProps)
   if (view === "Biometric Setup") {
     return (
       <div className="content-grid">
-        <div className="detail-panel" style={{ padding: 24, maxWidth: 480, margin: "0 auto" }}>
+        <div className="detail-panel glass-card" style={{ padding: 24, maxWidth: 480, margin: "0 auto" }}>
           <div className="panel-title">
             <div className="panel-title-left"><p className="eyebrow">Identity</p><strong>Biometric Registration</strong></div>
             <Camera size={18} />
@@ -534,10 +534,14 @@ export function StudentWorkspace({ view, data, session }: StudentWorkspaceProps)
     );
   }
 
-  return (
-    <div className="content-grid">
-      <div className="student-hero-grad">
-        <div className="student-avatar-lg">{studentName.charAt(0)}</div>
+    return (
+      <div className="content-grid">
+        <div className="welcome-banner">
+          <h2>Student Dashboard</h2>
+          <p>View your fees, attendance, report cards, and library books.</p>
+        </div>
+        <div className="student-hero-grad">
+          <div className="student-avatar-lg">{studentName.charAt(0)}</div>
         <div>
           <strong style={{ fontSize: "1.2rem" }}>{studentName}</strong>
           <p style={{ margin: "4px 0 0", opacity: 0.85, fontSize: "0.9rem" }}>{className} · {admNo}</p>

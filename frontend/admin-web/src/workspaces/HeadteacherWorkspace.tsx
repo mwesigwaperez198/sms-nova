@@ -148,6 +148,10 @@ export function HeadteacherWorkspace({ view, data, onViewChange, onSendSms }: He
   if (view === "Dashboard") {
     return (
       <div className="content-grid">
+        <div className="welcome-banner">
+          <h2>Academic Leadership</h2>
+          <p>Monitor staff performance, attendance, and leave requests.</p>
+        </div>
         <div className="notice-strip" style={{ fontWeight: 600, fontSize: "1.1rem" }}>
           <School size={18} /> {data.school.name} — Headteacher Dashboard
         </div>
@@ -170,7 +174,7 @@ export function HeadteacherWorkspace({ view, data, onViewChange, onSendSms }: He
           </div>
         </div>
         <div className="office-layout">
-          <div className="list-panel">
+          <div className="list-panel glass-card">
             <div className="panel-title">
               <div className="panel-title-left"><p className="eyebrow">Overview</p><strong>Quick Navigation</strong></div>
               <ChevronRight size={18} />
@@ -183,7 +187,7 @@ export function HeadteacherWorkspace({ view, data, onViewChange, onSendSms }: He
               <button className="tool-button" onClick={() => onViewChange("Messages")}><MessageSquare size={15} />Messages</button>
             </div>
           </div>
-          <div className="list-panel">
+          <div className="list-panel glass-card">
             <div className="panel-title"><strong>Staff by Role</strong></div>
             <div className="stack-list">
               {Object.entries(staff.reduce((acc, s) => { acc[s.role_name] = (acc[s.role_name] || 0) + 1; return acc; }, {} as Record<string, number>)).map(([role, count]) => (
@@ -225,7 +229,7 @@ export function HeadteacherWorkspace({ view, data, onViewChange, onSendSms }: He
             <div className="metric-body"><strong>{totalStudents}</strong><span>Students</span></div>
           </div>
         </div>
-        <div className="table-panel">
+        <div className="table-panel glass-card">
           <div className="office-filters">
             <label><Search size={15} /><input placeholder="Search staff by name or email…" value={staffSearch} onChange={e => setStaffSearch(e.target.value)} /></label>
             <button className="tool-button" onClick={fetchStaff}><RefreshCw size={15} />Refresh</button>
@@ -309,7 +313,7 @@ export function HeadteacherWorkspace({ view, data, onViewChange, onSendSms }: He
             <div className="metric amber"><div className="metric-icon"><Clock size={22} /></div><div className="metric-body"><strong>—</strong><span>Late</span></div></div>
           </div>
         )}
-        <div className="detail-panel" style={{ padding: 20 }}>
+        <div className="detail-panel glass-card" style={{ padding: 20 }}>
           <div className="panel-title">
             <div className="panel-title-left"><p className="eyebrow">Attendance</p><strong>Rate Overview</strong></div>
             <TrendingUp size={18} />
@@ -378,7 +382,7 @@ export function HeadteacherWorkspace({ view, data, onViewChange, onSendSms }: He
             </div>
           </div>
         </div>
-        <div className="table-panel">
+        <div className="table-panel glass-card">
           <div className="table-wrap">
             <table>
               <thead>
@@ -431,7 +435,7 @@ export function HeadteacherWorkspace({ view, data, onViewChange, onSendSms }: He
           </div>
         </div>
         {leaveNotice && <div className="notice-strip success">{leaveNotice}</div>}
-        <div className="table-panel">
+        <div className="table-panel glass-card">
           <div className="office-filters">
             <select value={leaveFilter} onChange={e => setLeaveFilter(e.target.value)}>
               <option value="">All Status</option>
@@ -485,7 +489,7 @@ export function HeadteacherWorkspace({ view, data, onViewChange, onSendSms }: He
   if (view === "Messages") {
     return (
       <div className="office-layout">
-        <div className="detail-panel">
+        <div className="detail-panel glass-card">
           <div className="panel-title">
             <div className="panel-title-left"><p className="eyebrow">Communication</p><strong>Message Staff</strong></div>
             <MessageSquare size={18} />
@@ -511,7 +515,7 @@ export function HeadteacherWorkspace({ view, data, onViewChange, onSendSms }: He
             }}><MessageSquare size={15} />Send to Staff</button>
           </div>
         </div>
-        <div className="list-panel">
+        <div className="list-panel glass-card">
           <div className="panel-title"><strong style={{ fontSize: "0.9rem" }}>Recent Messages</strong></div>
           <div className="stack-list">
             {data.parentMessages.slice(0, 8).map(msg => (

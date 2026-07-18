@@ -114,7 +114,11 @@ export function SecretaryWorkspace({ view, data, onViewChange }: SecretaryWorksp
   if (view === "Register Student") {
     return (
       <div className="office-layout">
-        <div className="detail-panel">
+        <div className="welcome-banner">
+          <h2>Front Desk</h2>
+          <p>Register students, manage profiles, and handle documents.</p>
+        </div>
+        <div className="detail-panel glass-card">
           <div className="panel-title">
             <div className="panel-title-left"><p className="eyebrow">Admissions</p><strong>Student Intake Form</strong></div>
             <UserPlus size={18} />
@@ -185,7 +189,7 @@ export function SecretaryWorkspace({ view, data, onViewChange }: SecretaryWorksp
           </form>
         </div>
 
-        <div className="list-panel">
+        <div className="list-panel glass-card">
           <div className="panel-title"><strong style={{fontSize:"0.9rem"}}>Recent Admissions</strong></div>
           <div className="stack-list">
             {data.students.slice(0,8).map(s => (
@@ -207,7 +211,7 @@ export function SecretaryWorkspace({ view, data, onViewChange }: SecretaryWorksp
   if (view === "Student Profiles") {
     return (
       <div className="content-grid">
-        <div className="table-panel">
+        <div className="table-panel glass-card">
           <div className="office-filters">
             <label><Search size={15}/><input placeholder="Search name, admission no, class…" value={search} onChange={e => setSearch(e.target.value)} /></label>
             <button className="tool-button primary" onClick={() => onViewChange("Register Student")}><UserPlus size={15}/>New Admission</button>
@@ -240,7 +244,7 @@ export function SecretaryWorkspace({ view, data, onViewChange }: SecretaryWorksp
   if (view === "Import Students") {
     return (
       <div className="content-grid">
-        <div className="table-panel">
+        <div className="table-panel glass-card">
           <div className="panel-title">
             <strong style={{fontSize:"0.9rem"}}>Import Students</strong>
             <Upload size={18} />
@@ -307,7 +311,7 @@ export function SecretaryWorkspace({ view, data, onViewChange }: SecretaryWorksp
   if (view === "Guardians") {
     return (
       <div className="content-grid">
-        <div className="table-panel">
+        <div className="table-panel glass-card">
           <div className="office-filters">
             <label><Search size={15}/><input placeholder="Search guardian name, student, email…" value={search} onChange={e => setSearch(e.target.value)} /></label>
             <span style={{fontSize:"0.82rem",color:"var(--muted)"}}>{filteredGuardians.length} guardians</span>
@@ -341,14 +345,14 @@ export function SecretaryWorkspace({ view, data, onViewChange }: SecretaryWorksp
   if (view === "Documents") {
     return (
       <div className="content-grid">
-        <div className="table-panel">
+        <div className="table-panel glass-card">
           <div className="office-filters">
             <label><Search size={15}/><input placeholder="Search documents…" /></label>
             <button className="tool-button primary"><Upload size={15}/>Upload Document</button>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:14,padding:16}}>
             {data.secretaryDocuments.map(doc => (
-              <div key={doc.id} className="detail-panel" style={{padding:16,display:"grid",gap:8}}>
+              <div key={doc.id} className="detail-panel glass-card" style={{padding:16,display:"grid",gap:8}}>
                 <FileText size={28} style={{color:"var(--primary)"}} />
                 <strong style={{fontSize:"0.9rem"}}>{doc.title}</strong>
                 <span style={{fontSize:"0.78rem",color:"var(--muted)"}}>{doc.type?.toUpperCase()} · {doc.date}</span>

@@ -2802,6 +2802,78 @@ tbody tr:hover {
   50% { opacity: 0.5; transform: scale(1.4); }
 }
 
+/* ─── Micro-Interactions & Enhanced States ────────────────────── */
+
+/* Role-colored spinner */
+[data-role="super-admin"] .spinner { border-top-color: var(--role-super-admin); }
+[data-role="admin"] .spinner { border-top-color: var(--role-admin); }
+[data-role="teacher"] .spinner { border-top-color: var(--role-teacher); }
+[data-role="bursar"] .spinner { border-top-color: var(--role-bursar); }
+[data-role="secretary"] .spinner { border-top-color: var(--role-secretary); }
+[data-role="librarian"] .spinner { border-top-color: var(--role-librarian); }
+[data-role="parent"] .spinner { border-top-color: var(--role-parent); }
+[data-role="student"] .spinner { border-top-color: var(--role-student); }
+
+/* Success/Error toast animations */
+.toast-enter {
+  animation: toastSlideIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.toast-exit {
+  animation: toastSlideOut 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+@keyframes toastSlideIn {
+  from { opacity: 0; transform: translateY(-12px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes toastSlideOut {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(-12px) scale(0.95); }
+}
+
+/* Success/Error notice with bounce-in */
+.notice, .notice-error {
+  animation: bounceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes bounceIn {
+  0% { opacity: 0; transform: scale(0.9); }
+  60% { transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* Enhanced form focus glow with role colors */
+[data-role="super-admin"] .form-label input:focus,
+[data-role="super-admin"] .form-label textarea:focus,
+[data-role="super-admin"] .office-form input:focus,
+[data-role="super-admin"] .office-form textarea:focus { border-color: var(--role-super-admin); box-shadow: 0 0 0 3px rgba(220,38,38,0.15); }
+[data-role="admin"] .form-label input:focus,
+[data-role="admin"] .form-label textarea:focus,
+[data-role="admin"] .office-form input:focus,
+[data-role="admin"] .office-form textarea:focus { border-color: var(--role-admin); box-shadow: 0 0 0 3px rgba(8,145,178,0.15); }
+[data-role="teacher"] .form-label input:focus,
+[data-role="teacher"] .form-label textarea:focus,
+[data-role="teacher"] .office-form input:focus,
+[data-role="teacher"] .office-form textarea:focus { border-color: var(--role-teacher); box-shadow: 0 0 0 3px rgba(5,150,105,0.15); }
+[data-role="bursar"] .form-label input:focus,
+[data-role="bursar"] .form-label textarea:focus,
+[data-role="bursar"] .office-form input:focus,
+[data-role="bursar"] .office-form textarea:focus { border-color: var(--role-bursar); box-shadow: 0 0 0 3px rgba(124,58,237,0.15); }
+[data-role="secretary"] .form-label input:focus,
+[data-role="secretary"] .form-label textarea:focus,
+[data-role="secretary"] .office-form input:focus,
+[data-role="secretary"] .office-form textarea:focus { border-color: var(--role-secretary); box-shadow: 0 0 0 3px rgba(234,88,12,0.15); }
+[data-role="librarian"] .form-label input:focus,
+[data-role="librarian"] .form-label textarea:focus,
+[data-role="librarian"] .office-form input:focus,
+[data-role="librarian"] .office-form textarea:focus { border-color: var(--role-librarian); box-shadow: 0 0 0 3px rgba(79,70,229,0.15); }
+[data-role="parent"] .form-label input:focus,
+[data-role="parent"] .form-label textarea:focus,
+[data-role="parent"] .office-form input:focus,
+[data-role="parent"] .office-form textarea:focus { border-color: var(--role-parent); box-shadow: 0 0 0 3px rgba(225,29,72,0.15); }
+[data-role="student"] .form-label input:focus,
+[data-role="student"] .form-label textarea:focus,
+[data-role="student"] .office-form input:focus,
+[data-role="student"] .office-form textarea:focus { border-color: var(--role-student); box-shadow: 0 0 0 3px rgba(202,138,4,0.15); }
+
 /* Enhanced metric cards with glass morphism */
 .metric {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -2841,6 +2913,131 @@ tbody tr:hover {
 [data-role="parent"] thead th { color: var(--role-parent); }
 [data-role="student"] thead th { color: var(--role-student); }
 [data-role="super-admin"] thead th { color: var(--role-super-admin); }
+
+/* Role-specific nav link active states */
+[data-role="super-admin"] .nav-link.active { border-color: rgba(220,38,38,0.4); background: rgba(220,38,38,0.1); color: var(--role-super-admin); box-shadow: 0 0 20px rgba(220,38,38,0.15); }
+[data-role="admin"] .nav-link.active { border-color: rgba(8,145,178,0.4); background: rgba(8,145,178,0.1); color: var(--role-admin); box-shadow: 0 0 20px rgba(8,145,178,0.15); }
+[data-role="teacher"] .nav-link.active { border-color: rgba(5,150,105,0.4); background: rgba(5,150,105,0.1); color: var(--role-teacher); box-shadow: 0 0 20px rgba(5,150,105,0.15); }
+[data-role="bursar"] .nav-link.active { border-color: rgba(124,58,237,0.4); background: rgba(124,58,237,0.1); color: var(--role-bursar); box-shadow: 0 0 20px rgba(124,58,237,0.15); }
+[data-role="secretary"] .nav-link.active { border-color: rgba(234,88,12,0.4); background: rgba(234,88,12,0.1); color: var(--role-secretary); box-shadow: 0 0 20px rgba(234,88,12,0.15); }
+[data-role="librarian"] .nav-link.active { border-color: rgba(79,70,229,0.4); background: rgba(79,70,229,0.1); color: var(--role-librarian); box-shadow: 0 0 20px rgba(79,70,229,0.15); }
+[data-role="parent"] .nav-link.active { border-color: rgba(225,29,72,0.4); background: rgba(225,29,72,0.1); color: var(--role-parent); box-shadow: 0 0 20px rgba(225,29,72,0.15); }
+[data-role="student"] .nav-link.active { border-color: rgba(202,138,4,0.4); background: rgba(202,138,4,0.1); color: var(--role-student); box-shadow: 0 0 20px rgba(202,138,4,0.15); }
+
+/* Role-specific nav indicator dots */
+[data-role="super-admin"] .nav-indicator { background: var(--role-super-admin); }
+[data-role="admin"] .nav-indicator { background: var(--role-admin); }
+[data-role="teacher"] .nav-indicator { background: var(--role-teacher); }
+[data-role="bursar"] .nav-indicator { background: var(--role-bursar); }
+[data-role="secretary"] .nav-indicator { background: var(--role-secretary); }
+[data-role="librarian"] .nav-indicator { background: var(--role-librarian); }
+[data-role="parent"] .nav-indicator { background: var(--role-parent); }
+[data-role="student"] .nav-indicator { background: var(--role-student); }
+
+/* Role-specific primary button accents */
+[data-role="super-admin"] .primary-button { background: linear-gradient(135deg, var(--role-super-admin), #b91c1c); border-color: var(--role-super-admin); box-shadow: 0 4px 15px rgba(220,38,38,0.3); }
+[data-role="admin"] .primary-button { background: linear-gradient(135deg, var(--role-admin), #0e7490); border-color: var(--role-admin); box-shadow: 0 4px 15px rgba(8,145,178,0.3); }
+[data-role="teacher"] .primary-button { background: linear-gradient(135deg, var(--role-teacher), #047857); border-color: var(--role-teacher); box-shadow: 0 4px 15px rgba(5,150,105,0.3); }
+[data-role="bursar"] .primary-button { background: linear-gradient(135deg, var(--role-bursar), #6d28d9); border-color: var(--role-bursar); box-shadow: 0 4px 15px rgba(124,58,237,0.3); }
+[data-role="secretary"] .primary-button { background: linear-gradient(135deg, var(--role-secretary), #c2410c); border-color: var(--role-secretary); box-shadow: 0 4px 15px rgba(234,88,12,0.3); }
+[data-role="librarian"] .primary-button { background: linear-gradient(135deg, var(--role-librarian), #4338ca); border-color: var(--role-librarian); box-shadow: 0 4px 15px rgba(79,70,229,0.3); }
+[data-role="parent"] .primary-button { background: linear-gradient(135deg, var(--role-parent), #be123c); border-color: var(--role-parent); box-shadow: 0 4px 15px rgba(225,29,72,0.3); }
+[data-role="student"] .primary-button { background: linear-gradient(135deg, var(--role-student), #a16207); border-color: var(--role-student); box-shadow: 0 4px 15px rgba(202,138,4,0.3); }
+
+/* Role-specific metric card border accents */
+[data-role="super-admin"] .metric { border-top: 3px solid var(--role-super-admin); }
+[data-role="admin"] .metric { border-top: 3px solid var(--role-admin); }
+[data-role="teacher"] .metric { border-top: 3px solid var(--role-teacher); }
+[data-role="bursar"] .metric { border-top: 3px solid var(--role-bursar); }
+[data-role="secretary"] .metric { border-top: 3px solid var(--role-secretary); }
+[data-role="librarian"] .metric { border-top: 3px solid var(--role-librarian); }
+[data-role="parent"] .metric { border-top: 3px solid var(--role-parent); }
+[data-role="student"] .metric { border-top: 3px solid var(--role-student); }
+
+/* Role-specific notification card accents */
+[data-role="super-admin"] .notification-card { border-left-color: var(--role-super-admin); }
+[data-role="admin"] .notification-card { border-left-color: var(--role-admin); }
+[data-role="teacher"] .notification-card { border-left-color: var(--role-teacher); }
+[data-role="bursar"] .notification-card { border-left-color: var(--role-bursar); }
+[data-role="secretary"] .notification-card { border-left-color: var(--role-secretary); }
+[data-role="librarian"] .notification-card { border-left-color: var(--role-librarian); }
+[data-role="parent"] .notification-card { border-left-color: var(--role-parent); }
+[data-role="student"] .notification-card { border-left-color: var(--role-student); }
+
+/* Role-specific chart bar fill colors */
+[data-role="super-admin"] .bar-fill { background: var(--role-super-admin); }
+[data-role="admin"] .bar-fill { background: var(--role-admin); }
+[data-role="teacher"] .bar-fill { background: var(--role-teacher); }
+[data-role="bursar"] .bar-fill { background: var(--role-bursar); }
+[data-role="secretary"] .bar-fill { background: var(--role-secretary); }
+[data-role="librarian"] .bar-fill { background: var(--role-librarian); }
+[data-role="parent"] .bar-fill { background: var(--role-parent); }
+[data-role="student"] .bar-fill { background: var(--role-student); }
+
+/* Role-specific topbar bottom border accent */
+[data-role="super-admin"] .topbar-modern { border-bottom-color: rgba(220,38,38,0.3); }
+[data-role="admin"] .topbar-modern { border-bottom-color: rgba(8,145,178,0.3); }
+[data-role="teacher"] .topbar-modern { border-bottom-color: rgba(5,150,105,0.3); }
+[data-role="bursar"] .topbar-modern { border-bottom-color: rgba(124,58,237,0.3); }
+[data-role="secretary"] .topbar-modern { border-bottom-color: rgba(234,88,12,0.3); }
+[data-role="librarian"] .topbar-modern { border-bottom-color: rgba(79,70,229,0.3); }
+[data-role="parent"] .topbar-modern { border-bottom-color: rgba(225,29,72,0.3); }
+[data-role="student"] .topbar-modern { border-bottom-color: rgba(202,138,4,0.3); }
+
+/* Role-specific sidebar active indicator */
+[data-role="super-admin"] .nav-link.active .nav-indicator { background: var(--role-super-admin); transform: scale(1.5); box-shadow: 0 0 8px var(--role-super-admin); }
+[data-role="admin"] .nav-link.active .nav-indicator { background: var(--role-admin); transform: scale(1.5); box-shadow: 0 0 8px var(--role-admin); }
+[data-role="teacher"] .nav-link.active .nav-indicator { background: var(--role-teacher); transform: scale(1.5); box-shadow: 0 0 8px var(--role-teacher); }
+[data-role="bursar"] .nav-link.active .nav-indicator { background: var(--role-bursar); transform: scale(1.5); box-shadow: 0 0 8px var(--role-bursar); }
+[data-role="secretary"] .nav-link.active .nav-indicator { background: var(--role-secretary); transform: scale(1.5); box-shadow: 0 0 8px var(--role-secretary); }
+[data-role="librarian"] .nav-link.active .nav-indicator { background: var(--role-librarian); transform: scale(1.5); box-shadow: 0 0 8px var(--role-librarian); }
+[data-role="parent"] .nav-link.active .nav-indicator { background: var(--role-parent); transform: scale(1.5); box-shadow: 0 0 8px var(--role-parent); }
+[data-role="student"] .nav-link.active .nav-indicator { background: var(--role-student); transform: scale(1.5); box-shadow: 0 0 8px var(--role-student); }
+
+/* Role-specific dashboard welcome banners */
+.welcome-banner {
+  display: grid;
+  gap: 8px;
+  padding: 24px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+  margin-bottom: 18px;
+  transition: all 0.3s ease;
+}
+.welcome-banner:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+.welcome-banner h2 {
+  margin: 0;
+  font-size: clamp(1.2rem, 2vw, 1.6rem);
+  font-weight: 800;
+  color: #f1f5f9;
+}
+.welcome-banner p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+[data-role="super-admin"] .welcome-banner { background: linear-gradient(135deg, rgba(220,38,38,0.08) 0%, rgba(185,28,28,0.05) 100%); border-left: 4px solid var(--role-super-admin); }
+[data-role="admin"] .welcome-banner { background: linear-gradient(135deg, rgba(8,145,178,0.08) 0%, rgba(14,116,144,0.05) 100%); border-left: 4px solid var(--role-admin); }
+[data-role="teacher"] .welcome-banner { background: linear-gradient(135deg, rgba(5,150,105,0.08) 0%, rgba(4,120,87,0.05) 100%); border-left: 4px solid var(--role-teacher); }
+[data-role="bursar"] .welcome-banner { background: linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(109,40,217,0.05) 100%); border-left: 4px solid var(--role-bursar); }
+[data-role="secretary"] .welcome-banner { background: linear-gradient(135deg, rgba(234,88,12,0.08) 0%, rgba(194,65,12,0.05) 100%); border-left: 4px solid var(--role-secretary); }
+[data-role="librarian"] .welcome-banner { background: linear-gradient(135deg, rgba(79,70,229,0.08) 0%, rgba(67,56,202,0.05) 100%); border-left: 4px solid var(--role-librarian); }
+[data-role="parent"] .welcome-banner { background: linear-gradient(135deg, rgba(225,29,72,0.08) 0%, rgba(190,18,60,0.05) 100%); border-left: 4px solid var(--role-parent); }
+[data-role="student"] .welcome-banner { background: linear-gradient(135deg, rgba(202,138,4,0.08) 0%, rgba(161,98,7,0.05) 100%); border-left: 4px solid var(--role-student); }
+
+/* Role-specific panel header accents */
+[data-role="super-admin"] .panel { border-top: 3px solid var(--role-super-admin); }
+[data-role="admin"] .panel { border-top: 3px solid var(--role-admin); }
+[data-role="teacher"] .panel { border-top: 3px solid var(--role-teacher); }
+[data-role="bursar"] .panel { border-top: 3px solid var(--role-bursar); }
+[data-role="secretary"] .panel { border-top: 3px solid var(--role-secretary); }
+[data-role="librarian"] .panel { border-top: 3px solid var(--role-librarian); }
+[data-role="parent"] .panel { border-top: 3px solid var(--role-parent); }
+[data-role="student"] .panel { border-top: 3px solid var(--role-student); }
 
 /* Responsive */
 @media (max-width:1100px) {

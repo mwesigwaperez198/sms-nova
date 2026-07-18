@@ -120,6 +120,10 @@ export function ParentWorkspace({ view, data, session }: ParentWorkspaceProps) {
   if (view === "Home") {
     return (
       <div className="content-grid">
+        <div className="welcome-banner">
+          <h2>Parent Portal</h2>
+          <p>Track your child's fees, attendance, and academic progress.</p>
+        </div>
         {childSelector}
         <div className="student-hero-grad">
           <div className="student-avatar-lg">{childName.charAt(0)}</div>
@@ -177,7 +181,7 @@ export function ParentWorkspace({ view, data, session }: ParentWorkspaceProps) {
           <div className="metric teal"><div className="metric-icon"><Download size={22} /></div><div className="metric-body"><strong>PDF</strong><span>Download</span></div></div>
         </div>
 
-        <div className="table-panel">
+        <div className="table-panel glass-card">
           <div className="table-wrap">
             <table>
               <thead><tr><th>Description</th><th>Amount</th><th>Paid</th><th>Due</th><th>Status</th></tr></thead>
@@ -231,7 +235,7 @@ export function ParentWorkspace({ view, data, session }: ParentWorkspaceProps) {
           ))}
           {attendance.length === 0 && <p className="empty-state">No attendance records yet</p>}
         </div>
-        <div className="detail-panel" style={{ marginTop: 16 }}>
+        <div className="detail-panel glass-card" style={{ marginTop: 16 }}>
           <div className="panel-title"><strong>Parent Comment</strong></div>
           <textarea
             className="input-base"
@@ -269,7 +273,7 @@ export function ParentWorkspace({ view, data, session }: ParentWorkspaceProps) {
             <Download size={15} />Download
           </button>
         </div>
-        <div id="export-child-report" className="table-panel">
+        <div id="export-child-report" className="table-panel glass-card">
           <div className="table-wrap">
             <table>
               <thead><tr><th>Subject</th><th>Score</th><th>Grade</th><th>Term</th></tr></thead>
@@ -289,7 +293,7 @@ export function ParentWorkspace({ view, data, session }: ParentWorkspaceProps) {
             </table>
           </div>
         </div>
-        <div className="detail-panel" style={{ marginTop: 16 }}>
+        <div className="detail-panel glass-card" style={{ marginTop: 16 }}>
           <div className="panel-title"><User size={16} /><strong>Parent Comment</strong></div>
           <textarea
             className="input-base"

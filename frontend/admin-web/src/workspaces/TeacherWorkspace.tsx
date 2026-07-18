@@ -187,7 +187,11 @@ export function TeacherWorkspace({ view, data, onSendSms }: TeacherWorkspaceProp
   if (view === "Attendance") {
     return (
       <div className="content-grid">
-        <div className="table-panel">
+        <div className="welcome-banner">
+          <h2>Teaching Workspace</h2>
+          <p>Manage your classes, track attendance, and enter assessments.</p>
+        </div>
+        <div className="table-panel glass-card">
           <div className="office-filters">
             {classesLoading ? (
               <span style={{ color: "var(--muted)", fontSize: "0.85rem" }}>Loading classes…</span>
@@ -254,7 +258,7 @@ export function TeacherWorkspace({ view, data, onSendSms }: TeacherWorkspaceProp
   if (view === "Assessments" || view === "Report Remarks") {
     return (
       <div className="content-grid">
-        <div className="table-panel">
+        <div className="table-panel glass-card">
           <div className="office-filters">
             {classesLoading ? (
               <span style={{ color: "var(--muted)", fontSize: "0.85rem" }}>Loading classes…</span>
@@ -339,7 +343,7 @@ export function TeacherWorkspace({ view, data, onSendSms }: TeacherWorkspaceProp
   if (view === "Messages") {
     return (
       <div className="office-layout">
-        <div className="detail-panel">
+        <div className="detail-panel glass-card">
           <div className="panel-title">
             <div className="panel-title-left"><p className="eyebrow">Communication</p><strong>Message Parents</strong></div>
             <MessageSquare size={18} />
@@ -365,7 +369,7 @@ export function TeacherWorkspace({ view, data, onSendSms }: TeacherWorkspaceProp
           </div>
         </div>
 
-        <div className="list-panel">
+        <div className="list-panel glass-card">
           <div className="panel-title"><strong style={{ fontSize: "0.9rem" }}>Message History</strong></div>
           <div className="stack-list">
             {data.parentMessages.slice(0, 6).map(msg => (
@@ -424,7 +428,7 @@ export function TeacherWorkspace({ view, data, onSendSms }: TeacherWorkspaceProp
           </div>
 
           {repSelectClass && (
-            <div className="detail-panel">
+            <div className="detail-panel glass-card">
               <div className="panel-title">
                 <div className="panel-title-left"><p className="eyebrow">Class Rep</p><strong>{repSelectClass.split("|")[0]} {repSelectClass.split("|")[1]}</strong></div>
                 <Star size={18} />

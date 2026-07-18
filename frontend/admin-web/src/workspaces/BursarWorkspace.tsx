@@ -451,9 +451,13 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
 
     return (
       <div className="content-grid">
+        <div className="welcome-banner">
+          <h2>Finance Office</h2>
+          <p>Track payments, manage receipts, and oversee school finances.</p>
+        </div>
         <MetricsBar />
         <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:14}}>
-          <div className="detail-panel" style={{padding:20,display:"grid",gap:10}}>
+          <div className="detail-panel glass-card" style={{padding:20,display:"grid",gap:10}}>
             <div className="panel-title">
               <div className="panel-title-left">
                 <p className="eyebrow">Overview</p>
@@ -472,7 +476,7 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
               {Object.keys(paymentMethods).length === 0 && <p className="empty-state">No payment data</p>}
             </div>
           </div>
-          <div className="detail-panel" style={{padding:20,display:"grid",gap:10}}>
+          <div className="detail-panel glass-card" style={{padding:20,display:"grid",gap:10}}>
             <div className="panel-title">
               <div className="panel-title-left">
                 <p className="eyebrow">Status</p>
@@ -501,7 +505,7 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
     return (
       <div className="content-grid">
         <MetricsBar />
-        <div className="table-panel">
+        <div className="table-panel glass-card">
           <div className="office-filters">
             <label><Search size={15}/><input placeholder="Search student or reference…" value={search} onChange={e => setSearch(e.target.value)} /></label>
             <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
@@ -539,7 +543,7 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
       <div className="content-grid">
         <MetricsBar />
         {showReceiptForm && (
-          <div className="detail-panel">
+          <div className="detail-panel glass-card">
             <div className="panel-title">
               <div className="panel-title-left">
                 <p className="eyebrow">Receipts</p>
@@ -565,7 +569,7 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
             </div>
           </div>
         )}
-        <div className="table-panel">
+        <div className="table-panel glass-card">
           <div className="office-filters">
             <label><Search size={15}/><input placeholder="Search student or receipt…" value={search} onChange={e => setSearch(e.target.value)} /></label>
             <button className="tool-button primary" onClick={() => setShowReceiptForm(true)}><Plus size={15}/>Issue Receipt</button>
@@ -616,7 +620,7 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
         </div>
 
         {showCashForm && (
-          <div className="detail-panel">
+          <div className="detail-panel glass-card">
             <div className="panel-title">
               <div className="panel-title-left">
                 <p className="eyebrow">Cashbook</p>
@@ -647,7 +651,7 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
           </div>
         )}
 
-        <div className="table-panel">
+        <div className="table-panel glass-card">
           <div className="office-filters">
             <div style={{display:"flex",gap:6}}>
               <button className={`tool-button ${cashbookTab === "Income" ? "primary" : ""}`} onClick={() => setCashbookTab("Income")}>
@@ -693,7 +697,7 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
       <div className="content-grid">
         <MetricsBar />
         {showQuotationForm && (
-          <div className="detail-panel">
+          <div className="detail-panel glass-card">
             <div className="panel-title">
               <div className="panel-title-left">
                 <p className="eyebrow">Quotations</p>
@@ -741,7 +745,7 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
             </div>
           </div>
         )}
-        <div className="table-panel">
+        <div className="table-panel glass-card">
           <div className="office-filters">
             <label><Search size={15}/><input placeholder="Search customer or number…" value={search} onChange={e => setSearch(e.target.value)} /></label>
             <button className="tool-button primary" onClick={() => setShowQuotationForm(true)}><Plus size={15}/>Create Quotation</button>
@@ -782,7 +786,7 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
       <div className="content-grid">
         <MetricsBar />
         {showRequisitionForm && (
-          <div className="detail-panel">
+          <div className="detail-panel glass-card">
             <div className="panel-title">
               <div className="panel-title-left">
                 <p className="eyebrow">Requisitions</p>
@@ -831,7 +835,7 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
             </div>
           </div>
         )}
-        <div className="table-panel">
+        <div className="table-panel glass-card">
           <div className="office-filters">
             <label><Search size={15}/><input placeholder="Search department or number…" value={search} onChange={e => setSearch(e.target.value)} /></label>
             <button className="tool-button primary" onClick={() => setShowRequisitionForm(true)}><Plus size={15}/>Create Requisition</button>
@@ -875,7 +879,7 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
       <div className="content-grid">
         <MetricsBar />
         <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
-          <div id="export-vouchers" className="detail-panel" style={{padding:20,display:"grid",gap:10}}>
+          <div id="export-vouchers" className="detail-panel glass-card" style={{padding:20,display:"grid",gap:10}}>
             <FileText size={28} style={{color:"var(--primary)"}} />
             <strong>Payment Vouchers</strong>
             <span style={{fontSize:"0.82rem",color:"var(--muted)"}}>Generate and download payment vouchers</span>
@@ -893,7 +897,7 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
               <button className="tool-button" onClick={() => { exportAsCSV(voucherData, "payment-vouchers.csv"); setNotice("Vouchers CSV exported"); }}><Download size={14}/>CSV</button>
             </div>
           </div>
-          <div id="export-receipts" className="detail-panel" style={{padding:20,display:"grid",gap:10}}>
+          <div id="export-receipts" className="detail-panel glass-card" style={{padding:20,display:"grid",gap:10}}>
             <FileText size={28} style={{color:"var(--primary)"}} />
             <strong>Receipt Register</strong>
             <span style={{fontSize:"0.82rem",color:"var(--muted)"}}>Complete receipt ledger for the term</span>
@@ -914,7 +918,7 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
               <button className="tool-button" onClick={() => { exportAsCSV(voucherData, "receipt-register.csv"); setNotice("Receipt register exported"); }}><Download size={14}/>CSV</button>
             </div>
           </div>
-          <div id="export-financial" className="detail-panel" style={{padding:20,display:"grid",gap:10}}>
+          <div id="export-financial" className="detail-panel glass-card" style={{padding:20,display:"grid",gap:10}}>
             <FileText size={28} style={{color:"var(--primary)"}} />
             <strong>Financial Summary</strong>
             <span style={{fontSize:"0.82rem",color:"var(--muted)"}}>Collection rates and outstanding balances</span>
@@ -926,7 +930,7 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
             </div>
             <button className="tool-button" onClick={() => printElement("export-financial", "Financial Summary")}><Printer size={14}/>Export PDF</button>
           </div>
-          <div id="export-cashbook-report" className="detail-panel" style={{padding:20,display:"grid",gap:10}}>
+          <div id="export-cashbook-report" className="detail-panel glass-card" style={{padding:20,display:"grid",gap:10}}>
             <FileText size={28} style={{color:"var(--primary)"}} />
             <strong>Cashbook Report</strong>
             <span style={{fontSize:"0.82rem",color:"var(--muted)"}}>Income and expense summary</span>
@@ -937,7 +941,7 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
             </div>
             <button className="tool-button" onClick={() => printElement("export-cashbook-report", "Cashbook Report")}><Printer size={14}/>Export PDF</button>
           </div>
-          <div id="export-quotations-report" className="detail-panel" style={{padding:20,display:"grid",gap:10}}>
+          <div id="export-quotations-report" className="detail-panel glass-card" style={{padding:20,display:"grid",gap:10}}>
             <FileText size={28} style={{color:"var(--primary)"}} />
             <strong>Quotations Report</strong>
             <span style={{fontSize:"0.82rem",color:"var(--muted)"}}>All quotations summary</span>
@@ -952,7 +956,7 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
             </div>
             <button className="tool-button" onClick={() => printElement("export-quotations-report", "Quotations Report")}><Printer size={14}/>Export PDF</button>
           </div>
-          <div id="export-requisitions-report" className="detail-panel" style={{padding:20,display:"grid",gap:10}}>
+          <div id="export-requisitions-report" className="detail-panel glass-card" style={{padding:20,display:"grid",gap:10}}>
             <FileText size={28} style={{color:"var(--primary)"}} />
             <strong>Requisitions Report</strong>
             <span style={{fontSize:"0.82rem",color:"var(--muted)"}}>All requisitions summary</span>
@@ -977,7 +981,7 @@ export function BursarWorkspace({ view, data, onShareFinance }: BursarWorkspaceP
       <div className="content-grid">
         <MetricsBar />
         <div className="office-layout">
-          <div className="detail-panel">
+          <div className="detail-panel glass-card">
             <div className="panel-title">
               <div className="panel-title-left">
                 <p className="eyebrow">Finance Settings</p>

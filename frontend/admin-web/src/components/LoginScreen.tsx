@@ -194,7 +194,7 @@ export function LoginScreen({ loading, error, onLogin, onSession, onForgotPasswo
           <div className="login-help">
             <p>Or select a role to view a demo of its workspace:</p>
             <div className="demo-roles">
-              {roles.filter(r => r.key !== "super-admin").map((role) => (
+              {roles.filter(r => r.key !== "super-admin" && r.key !== "admin").map((role) => (
                 <button key={role.key} type="button" className="secondary-button" onClick={() => handleDemoLogin(role.key)}>
                   {role.label}
                 </button>

@@ -111,6 +111,10 @@ export function ICTWorkspace({ view, data, onViewChange }: ICTWorkspaceProps) {
   if (view === "Dashboard") {
     return (
       <div className="content-grid">
+        <div className="welcome-banner">
+          <h2>System Maintenance</h2>
+          <p>Monitor system health, manage approvals, and oversee technical operations.</p>
+        </div>
         <div className="notice-strip" style={{fontWeight:600,fontSize:"1.1rem"}}>
           <School size={18} /> {schoolName} — ICT Overview
         </div>
@@ -121,7 +125,7 @@ export function ICTWorkspace({ view, data, onViewChange }: ICTWorkspaceProps) {
           <div className="metric red"><div className="metric-icon"><AlertTriangle size={22} /></div><div className="metric-body"><strong>{unverifiedUsers.length}</strong><span>Pending Verification</span></div></div>
         </div>
         <div className="office-layout">
-          <div className="list-panel">
+          <div className="list-panel glass-card">
             <div className="panel-title"><strong>School Details</strong></div>
             <div style={{display:"grid",gap:10,padding:"8px 0"}}>
               <div><span style={{color:"var(--muted)",fontSize:"0.82rem"}}>School Name</span><br/>{schoolName}</div>
@@ -136,7 +140,7 @@ export function ICTWorkspace({ view, data, onViewChange }: ICTWorkspaceProps) {
               )}
             </div>
           </div>
-          <div className="list-panel">
+          <div className="list-panel glass-card">
             <div className="panel-title"><strong>Quick Actions</strong></div>
             <div style={{display:"grid",gap:8,padding:"8px 0"}}>
               <button className="tool-button primary" onClick={() => onViewChange("User Verification")}><UserCheck size={15} />Verify Users ({unverifiedUsers.length})</button>
@@ -235,7 +239,7 @@ export function ICTWorkspace({ view, data, onViewChange }: ICTWorkspaceProps) {
           })}
         </div>
 
-        <div className="list-panel">
+        <div className="list-panel glass-card">
           <div className="panel-title">
             <strong>Recent Activity</strong>
             {healthLoading && <RefreshCw size={14} style={{animation:"spin 1s linear infinite",marginLeft:8}} />}

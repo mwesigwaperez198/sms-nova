@@ -152,6 +152,10 @@ export function LibrarianWorkspace({ view, data, onShareRequestedBooks }: Librar
   if (view === "Catalog") {
     return (
       <div className="content-grid">
+        <div className="welcome-banner">
+          <h2>Library Management</h2>
+          <p>Manage book catalog, issue/return, and track library resources.</p>
+        </div>
         {/* Metric row */}
         <div className="metric-grid">
           <div className="metric teal">
@@ -175,7 +179,7 @@ export function LibrarianWorkspace({ view, data, onShareRequestedBooks }: Librar
         {/* Office layout */}
         <div className="office-layout">
           {/* Left — searchable table */}
-          <div className="table-panel">
+          <div className="table-panel glass-card">
             <div className="office-filters">
               <label><Search size={15} /><input placeholder="Search title or code…" value={search} onChange={e => setSearch(e.target.value)} /></label>
               <button className="tool-button primary" onClick={() => printElement("export-library-catalog")}><FileText size={15} />Export PDF</button>
@@ -208,7 +212,7 @@ export function LibrarianWorkspace({ view, data, onShareRequestedBooks }: Librar
           </div>
 
           {/* Right — add book form */}
-          <div className="detail-panel">
+          <div className="detail-panel glass-card">
             <div className="panel-title">
               <div className="panel-title-left">
                 <p className="eyebrow">Catalog</p>
@@ -246,7 +250,7 @@ export function LibrarianWorkspace({ view, data, onShareRequestedBooks }: Librar
         )}
         <div className="office-layout">
           {/* Issue */}
-          <div className="detail-panel">
+          <div className="detail-panel glass-card">
             <div className="panel-title">
               <div className="panel-title-left"><p className="eyebrow">Circulation</p><strong>Issue Book</strong></div>
               <BookOpen size={18} />
@@ -264,7 +268,7 @@ export function LibrarianWorkspace({ view, data, onShareRequestedBooks }: Librar
           </div>
 
           {/* Return */}
-          <div className="detail-panel">
+          <div className="detail-panel glass-card">
             <div className="panel-title">
               <div className="panel-title-left"><p className="eyebrow">Circulation</p><strong>Return Book</strong></div>
               <RotateCcw size={18} />
@@ -298,7 +302,7 @@ export function LibrarianWorkspace({ view, data, onShareRequestedBooks }: Librar
         </div>
 
         {/* Overdue table */}
-        <div className="list-panel">
+        <div className="list-panel glass-card">
           <div className="panel-title">
             <strong style={{fontSize:"0.9rem"}}>Overdue Books</strong>
           </div>
@@ -355,7 +359,7 @@ export function LibrarianWorkspace({ view, data, onShareRequestedBooks }: Librar
           {data.requestedBooks.length === 0 && <p className="empty-state">No requests</p>}
         </div>
 
-        <div className="detail-panel">
+        <div className="detail-panel glass-card">
           <div className="panel-title">
             <div className="panel-title-left"><p className="eyebrow">New</p><strong>Add Book Request</strong></div>
             <Plus size={18} />
@@ -376,7 +380,7 @@ export function LibrarianWorkspace({ view, data, onShareRequestedBooks }: Librar
   if (view === "Upload to Students") {
     return (
       <div className="office-layout">
-        <div className="detail-panel">
+        <div className="detail-panel glass-card">
           <div className="panel-title">
             <div className="panel-title-left"><p className="eyebrow">Distribution</p><strong>Push Book to Class Library</strong></div>
             <Upload size={18} />
@@ -401,7 +405,7 @@ export function LibrarianWorkspace({ view, data, onShareRequestedBooks }: Librar
           </div>
         </div>
 
-        <div className="list-panel">
+        <div className="list-panel glass-card">
           <div className="panel-title"><strong style={{fontSize:"0.9rem"}}>Recent Distributions</strong></div>
           <div className="stack-list">
             {[
@@ -432,7 +436,7 @@ export function LibrarianWorkspace({ view, data, onShareRequestedBooks }: Librar
         </div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
           {[["Catalog PDF","Full book catalog export"],["Members PDF","Registered borrowers list"],["Fines PDF","Outstanding fines report"]].map(([title,desc]) => (
-            <div key={title} className="detail-panel" style={{padding:20,display:"grid",gap:10}}>
+            <div key={title} className="detail-panel glass-card" style={{padding:20,display:"grid",gap:10}}>
               <FileText size={28} style={{color:"var(--primary)"}} />
               <strong>{title}</strong>
               <span style={{fontSize:"0.82rem",color:"var(--muted)"}}>{desc}</span>

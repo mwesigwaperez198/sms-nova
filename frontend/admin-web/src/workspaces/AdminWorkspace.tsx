@@ -95,6 +95,10 @@ export function AdminWorkspace({ view, data, onViewChange }: AdminWorkspaceProps
     const { student_summary: ss, finance_summary: fs } = data.home;
     return (
       <div className="content-grid">
+        <div className="welcome-banner">
+          <h2>School Control Center</h2>
+          <p>Oversee all school operations, approvals, and communication from one place.</p>
+        </div>
         <div className="metric-grid">
           <div className="metric teal" style={{ borderTop: `3px solid ${accent}` }}><div className="metric-icon"><Users size={22}/></div><div className="metric-body"><strong>{ss.total.toLocaleString()}</strong><span>Students</span></div></div>
           <div className="metric green" style={{ borderTop: "3px solid #059669" }}><div className="metric-icon"><GraduationCap size={22}/></div><div className="metric-body"><strong>{data.staff.length}</strong><span>Staff</span></div></div>
@@ -155,7 +159,7 @@ export function AdminWorkspace({ view, data, onViewChange }: AdminWorkspaceProps
   if (view === "Students") {
     return (
       <div className="content-grid">
-        <div className="table-panel">
+        <div className="table-panel glass-card">
           <div className="panel-title">
             <strong style={{fontSize:"0.9rem", color: accent}}>Student Records</strong>
             <span className="badge info">{filteredStudents.length} students</span>
@@ -191,7 +195,7 @@ export function AdminWorkspace({ view, data, onViewChange }: AdminWorkspaceProps
   if (view === "Staff") {
     return (
       <div className="content-grid">
-        <div className="table-panel">
+        <div className="table-panel glass-card">
           <div className="panel-title"><strong style={{fontSize:"0.9rem", color: accent}}>Staff Directory</strong><span className="badge info">{data.staff.length} staff</span></div>
           <div className="office-filters">
             <label><Search size={15}/><input placeholder="Search staff…" /></label>
@@ -300,14 +304,14 @@ export function AdminWorkspace({ view, data, onViewChange }: AdminWorkspaceProps
     ];
     return (
       <div className="content-grid">
-        <div className="table-panel">
+        <div className="table-panel glass-card">
           <div className="panel-title">
             <strong style={{fontSize:"0.9rem", color: accent}}>Full System Analysis</strong>
             <BarChart3 size={18} style={{color:accent}}/>
           </div>
           <div id="export-admin-report" style={{display:"grid",gap:16,padding:16}}>
             {reportSections.map(section => (
-              <div key={section.title} className="detail-panel" style={{padding:16, borderTop: `3px solid ${accent}`}}>
+              <div key={section.title} className="detail-panel glass-card" style={{padding:16, borderTop: `3px solid ${accent}`}}>
                 <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
                   <span style={{color:accent}}>{section.icon}</span>
                   <strong style={{fontSize:"0.95rem"}}>{section.title}</strong>
@@ -336,7 +340,7 @@ export function AdminWorkspace({ view, data, onViewChange }: AdminWorkspaceProps
   if (view === "Communication") {
     return (
       <div className="office-layout">
-        <div className="detail-panel">
+        <div className="detail-panel glass-card">
           <div className="panel-title" style={{borderBottom: `2px solid ${accent}40`}}>
             <div className="panel-title-left"><p className="eyebrow">Communication</p><strong>Send SMS Broadcast</strong></div>
             <MessageSquare size={18} style={{color:accent}}/>
@@ -371,7 +375,7 @@ export function AdminWorkspace({ view, data, onViewChange }: AdminWorkspaceProps
           </div>
         </div>
 
-        <div className="detail-panel">
+        <div className="detail-panel glass-card">
           <div className="panel-title" style={{borderBottom: `2px solid ${accent}40`}}>
             <strong style={{fontSize:"0.9rem"}}>In-App Notification</strong>
             <Bell size={16} style={{color:accent}}/>
@@ -449,7 +453,7 @@ export function AdminWorkspace({ view, data, onViewChange }: AdminWorkspaceProps
             <div key={label} className="detail-cell" style={{borderLeft: `3px solid ${accent}`}}><span>{label}</span><strong>{val}</strong></div>
           ))}
         </div>
-        <div className="detail-panel" style={{padding:16}}>
+        <div className="detail-panel glass-card" style={{padding:16}}>
           <p className="eyebrow" style={{marginBottom:12}}>Change Password</p>
           <div className="office-form">
             <label>Current Password<input type="password" value={pwdCurrent} onChange={e => setPwdCurrent(e.target.value)} placeholder="••••••••" /></label>
