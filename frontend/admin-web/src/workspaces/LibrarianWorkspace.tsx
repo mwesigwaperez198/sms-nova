@@ -241,8 +241,6 @@ export function LibrarianWorkspace({ view, data, onShareRequestedBooks }: Librar
     );
   }
 
-  const overdueCount = overdueBooks.length;
-
   if (view === "Issue & Return") {
     return (
       <div style={{display:"grid",gap:14}}>
