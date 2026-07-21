@@ -26,7 +26,7 @@ class Settings(BaseSettings):
 
     database_url: str = "sqlite:///./smart_school.db"
 
-    secret_key: str = "change-this-secret-before-production"
+    secret_key: str = ""
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
     refresh_token_expire_minutes: int = 60 * 24 * 7

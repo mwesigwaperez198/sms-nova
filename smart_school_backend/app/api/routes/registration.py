@@ -133,6 +133,7 @@ def check_registration_status(
 @router.get("/requests", response_model=list[RegisterSchoolResponse])
 def list_requests(
     db: Session = Depends(get_db),
+    current_user: User = Depends(role_required(RoleId.SUPER_ADMIN)),
 ) -> list[RegisterSchoolResponse]:
     requests = db.query(RegistrationRequest).order_by(RegistrationRequest.created_at.desc()).all()
     return [

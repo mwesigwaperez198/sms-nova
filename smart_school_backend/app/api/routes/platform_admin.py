@@ -701,7 +701,7 @@ class AddSchoolRequest(BaseModel):
     timezone: str = "Africa/Kampala"
     admin_name: str
     admin_email: str
-    admin_password: str = "changeme2026"
+    admin_password: str
     plan_id: int
 
 

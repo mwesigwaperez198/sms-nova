@@ -13,14 +13,11 @@ router = APIRouter(prefix="/incidents", tags=["incidents"])
 
 @router.get("/")
 def list_incidents(
-    school_id: int | None = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     q = db.query(Incident)
-    if school_id:
-        q = q.filter(Incident.school_id == school_id)
-    elif current_user.school_id:
+    if current_user.school_id:
         q = q.filter(Incident.school_id == current_user.school_id)
     return q.order_by(Incident.id.desc()).limit(50).all()
 
@@ -56,6 +53,8 @@ def update_incident(
 ):
     inc = db.query(Incident).filter(Incident.id == incident_id).first()
     if not inc:
+        raise HTTPException(404, "Incident not found")
+    if current_user.school_id and inc.school_id != current_user.school_id:
         raise HTTPException(404, "Incident not found")
     if status:
         inc.status = status

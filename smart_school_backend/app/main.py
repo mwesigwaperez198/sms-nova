@@ -320,13 +320,13 @@ def create_app() -> FastAPI:
         app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
         app.add_middleware(SlowAPIMiddleware)
 
-    origins = [str(o) for o in settings.backend_cors_origins] if settings.backend_cors_origins else ["*"]
+    origins = [str(o) for o in settings.backend_cors_origins] if settings.backend_cors_origins else ["https://sms-cms-brown.vercel.app", "https://sms-nova.pages.dev", "https://novara-cms.pages.dev"]
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
         allow_credentials=bool(settings.backend_cors_origins),
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST", "PATCH", "DELETE", "PUT"],
+        allow_headers=["Authorization", "Content-Type", "X-API-Key"],
     )
 
     @app.middleware("http")
@@ -374,21 +374,16 @@ def create_app() -> FastAPI:
     @app.get("/api/health", tags=["health"])
     def health_check() -> dict:
         db_status = "not_checked"
-        db_hint = ""
         try:
             from sqlalchemy import text
             with _engine.connect() as conn:
                 conn.execute(text("SELECT 1"))
             db_status = "ok"
-        except Exception as e:
-            msg = str(e)
+        except Exception:
             db_status = "error"
-            db_hint = msg[:300]
         return {
             "status": "ok",
-            "environment": settings.environment,
             "db": db_status,
-            "db_hint": db_hint,
         }
 
     return app

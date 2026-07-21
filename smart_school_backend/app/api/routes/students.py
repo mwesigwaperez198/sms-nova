@@ -29,9 +29,11 @@ def list_students(
 
 
 @router.get("/{student_id}", dependencies=[Depends(role_required(RoleId.SUPER_ADMIN, RoleId.ADMIN, RoleId.HEADTEACHER))])
-def get_student(student_id: int, db: Session = Depends(get_db)):
+def get_student(student_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     s = db.query(Student).filter(Student.id == student_id).first()
     if not s:
+        raise HTTPException(404, "Student not found")
+    if current_user.role_id != RoleId.SUPER_ADMIN and s.school_id != current_user.school_id:
         raise HTTPException(404, "Student not found")
     return {
         "id": s.id,
@@ -43,9 +45,11 @@ def get_student(student_id: int, db: Session = Depends(get_db)):
 
 
 @router.patch("/{student_id}", dependencies=[Depends(role_required(RoleId.SUPER_ADMIN, RoleId.ADMIN, RoleId.TEACHER, RoleId.HEADTEACHER))])
-def update_student(student_id: int, name: str = None, class_name: str = None, db: Session = Depends(get_db)):
+def update_student(student_id: int, name: str = None, class_name: str = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     s = db.query(Student).filter(Student.id == student_id).first()
     if not s:
+        raise HTTPException(404, "Student not found")
+    if current_user.role_id != RoleId.SUPER_ADMIN and s.school_id != current_user.school_id:
         raise HTTPException(404, "Student not found")
     if name is not None:
         s.name = name
@@ -56,9 +60,11 @@ def update_student(student_id: int, name: str = None, class_name: str = None, db
 
 
 @router.delete("/{student_id}", dependencies=[Depends(role_required(RoleId.SUPER_ADMIN, RoleId.ADMIN))])
-def delete_student(student_id: int, db: Session = Depends(get_db)):
+def delete_student(student_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     s = db.query(Student).filter(Student.id == student_id).first()
     if not s:
+        raise HTTPException(404, "Student not found")
+    if current_user.role_id != RoleId.SUPER_ADMIN and s.school_id != current_user.school_id:
         raise HTTPException(404, "Student not found")
     s.class_name = f"DELETED-{s.class_name}"
     db.commit()

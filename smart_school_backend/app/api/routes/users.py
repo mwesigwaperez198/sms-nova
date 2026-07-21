@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.api.deps import role_required
+from app.api.deps import get_current_user, role_required
 from app.core.roles import RoleId
 from app.db.session import get_db
 from app.models.user import User
@@ -36,9 +36,11 @@ def list_users(db: Session = Depends(get_db)):
 
 
 @router.get("/{user_id}", dependencies=[Depends(role_required(RoleId.SUPER_ADMIN, RoleId.ADMIN))])
-def get_user(user_id: int, db: Session = Depends(get_db)):
+def get_user(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     u = db.query(User).filter(User.id == user_id).first()
     if not u:
+        raise HTTPException(404, "User not found")
+    if current_user.role_id != RoleId.SUPER_ADMIN and u.school_id != current_user.school_id:
         raise HTTPException(404, "User not found")
     return {
         "id": u.id,
@@ -50,9 +52,11 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
 
 
 @router.patch("/{user_id}", dependencies=[Depends(role_required(RoleId.SUPER_ADMIN, RoleId.ADMIN))])
-def update_user(user_id: int, name: str = None, is_active: bool = None, db: Session = Depends(get_db)):
+def update_user(user_id: int, name: str = None, is_active: bool = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     u = db.query(User).filter(User.id == user_id).first()
     if not u:
+        raise HTTPException(404, "User not found")
+    if current_user.role_id != RoleId.SUPER_ADMIN and u.school_id != current_user.school_id:
         raise HTTPException(404, "User not found")
     if name is not None:
         u.name = name

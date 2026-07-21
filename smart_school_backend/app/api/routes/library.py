@@ -125,6 +125,9 @@ def get_book(
     if not book:
         from fastapi import HTTPException
         raise HTTPException(404, "Book not found")
+    if current_user.school_id and book.school_id != current_user.school_id:
+        from fastapi import HTTPException
+        raise HTTPException(404, "Book not found")
     return book
 
 
@@ -141,6 +144,9 @@ def update_book(
     from app.models.library import LibraryBook
     book = db.query(LibraryBook).filter(LibraryBook.id == book_id).first()
     if not book:
+        from fastapi import HTTPException
+        raise HTTPException(404, "Book not found")
+    if current_user.school_id and book.school_id != current_user.school_id:
         from fastapi import HTTPException
         raise HTTPException(404, "Book not found")
     if title:
