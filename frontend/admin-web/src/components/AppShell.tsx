@@ -2,7 +2,6 @@ import { Bell, LogOut, Menu, Search, User, X } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { RoleKey, RoleProfile } from "../types";
 import type { Session } from "../api";
-import { schoolProfile } from "../data/mockData";
 import { NovaraLogo } from "./NovaraLogo";
 
 interface AppShellProps {
@@ -69,8 +68,8 @@ export function AppShell({
           <div className="sidebar-brand">
             <div className="brand-icon"><NovaraLogo size={24} /></div>
             <div className="brand-text">
-              <strong>{schoolProfile.name}</strong>
-              <span>{schoolProfile.term} · {schoolProfile.academicYear}</span>
+              <strong>{session?.user?.school ?? "NOVARA School"}</strong>
+              <span>{activeRole.label}</span>
             </div>
             <button type="button" className="mobile-menu-btn" onClick={closeSidebar} style={{marginLeft:"auto"}}>
               <X size={20} />
@@ -165,9 +164,7 @@ export function AppShell({
 
         <footer className="footer-modern">
           <div className="footer-brand">
-            <span>{schoolProfile.name}</span>
-            <span className="footer-divider">·</span>
-            <span>{schoolProfile.term} {schoolProfile.academicYear}</span>
+            <span>{session?.user?.school ?? "NOVARA School"}</span>
           </div>
           <a className="footer-powered" href="https://novara-tech-africa.kesug.com" target="_blank" rel="noopener noreferrer">Powered by Novara</a>
         </footer>

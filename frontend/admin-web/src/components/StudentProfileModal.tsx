@@ -135,9 +135,9 @@ export function StudentProfileModal({ studentId, studentName, onClose }: Student
 
         try {
           const [assessData, attendData, feeData] = await Promise.allSettled([
-            apiRequest<AssessmentRow[]>(`/api/v1/students/${studentId}/assessments`).catch(() => []),
-            apiRequest<AttendanceRow[]>(`/api/v1/students/${studentId}/attendance`).catch(() => []),
-            apiRequest<FeeRow[]>(`/api/v1/students/${studentId}/fees`).catch(() => []),
+            apiRequest<AssessmentRow[]>(`/api/v1/assessments/student/${studentId}`).catch(() => []),
+            apiRequest<AttendanceRow[]>(`/api/v1/attendance/student/${studentId}`).catch(() => []),
+            apiRequest<FeeRow[]>(`/api/v1/fees/student/${studentId}`).catch(() => []),
           ]);
           if (cancelled) return;
           if (assessData.status === "fulfilled") setAssessments(assessData.value);

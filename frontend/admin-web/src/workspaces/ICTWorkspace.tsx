@@ -174,8 +174,8 @@ export function ICTWorkspace({ view, data, onViewChange }: ICTWorkspaceProps) {
                   <td><span className="badge warning">{s.status}</span></td>
                   <td>
                     <div style={{display:"flex",gap:4}}>
-                      <button className="tool-button primary" style={{minHeight:26,fontSize:"0.78rem"}} onClick={() => apiRequest(`/api/v1/users/${s.admissionNo}`, { method: "PATCH", body: JSON.stringify({ is_active: true }) }).then(() => window.location.reload())}><CheckCircle size={12} />Approve</button>
-                      <button className="tool-button" style={{minHeight:26,fontSize:"0.78rem"}} onClick={() => apiRequest(`/api/v1/users/${s.admissionNo}`, { method: "DELETE" }).then(() => window.location.reload())}><UserX size={12} />Reject</button>
+                      <button className="tool-button primary" style={{minHeight:26,fontSize:"0.78rem"}} onClick={() => s.userId && apiRequest(`/api/v1/users/${s.userId}`, { method: "PATCH", body: JSON.stringify({ is_active: true }) }).then(() => window.location.reload())}><CheckCircle size={12} />Approve</button>
+                      <button className="tool-button" style={{minHeight:26,fontSize:"0.78rem"}} onClick={() => s.userId && apiRequest(`/api/v1/users/${s.userId}`, { method: "DELETE" }).then(() => window.location.reload())}><UserX size={12} />Reject</button>
                     </div>
                   </td>
                 </tr>
