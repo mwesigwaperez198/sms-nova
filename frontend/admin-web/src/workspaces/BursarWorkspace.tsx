@@ -12,7 +12,9 @@ import {
   fetchQuotations, createQuotation,
   fetchRequisitions, createRequisition,
   fetchBankAccount, updateBankAccount,
-  downloadReceiptPDF
+  downloadReceiptPDF,
+  recordFeePayment,
+  apiRequest
 } from "../api";
 import { printElement, exportAsCSV } from "../utils/exportUtils";
 
@@ -184,6 +186,14 @@ export function BursarWorkspace({ view, data, onViewChange, onShareFinance }: Bu
   const [showBankForm, setShowBankForm] = useState(false);
   const [notice, setNotice] = useState("");
 
+  const [paymentStudentId, setPaymentStudentId] = useState<number | "">("");
+  const [paymentInvoices, setPaymentInvoices] = useState<any[]>([]);
+  const [paymentInvoiceId, setPaymentInvoiceId] = useState<number | "">("");
+  const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("mobile_money");
+  const [paymentReference, setPaymentReference] = useState("");
+  const [paymentLoading, setPaymentLoading] = useState(false);
+
   const [receiptForm, setReceiptForm] = useState({ student: "", amount: "", method: "mobile_money", description: "" });
   const [cashForm, setCashForm] = useState({ date: "", description: "", amount: "", paidBy: "", paymentMethod: "cash" });
   const [quotationForm, setQuotationForm] = useState({ customer: "", date: "", notes: "" });
@@ -333,6 +343,48 @@ export function BursarWorkspace({ view, data, onViewChange, onShareFinance }: Bu
     setReceiptForm({ student: "", amount: "", method: "mobile_money", description: "" });
     setShowReceiptForm(false);
     setNotice("Receipt " + receiptNo + " issued");
+  };
+
+  const handlePaymentStudentChange = async (studentId: number | "") => {
+    setPaymentStudentId(studentId);
+    setPaymentInvoiceId("");
+    setPaymentInvoices([]);
+    setPaymentAmount("");
+    if (!studentId) return;
+    setPaymentLoading(true);
+    try {
+      const result = await apiRequest<any>(`/api/v1/fees/student/${studentId}`);
+      setPaymentInvoices(result.invoices ?? []);
+    } catch {
+      setNotice("Failed to load student invoices");
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
+  const handleRecordPayment = async () => {
+    if (!paymentInvoiceId) { setNotice("Select an invoice"); return; }
+    const amount = parseFloat(paymentAmount);
+    if (isNaN(amount) || amount <= 0) { setNotice("Enter a valid amount"); return; }
+    setSubmitting(true);
+    try {
+      await recordFeePayment({
+        invoice_id: Number(paymentInvoiceId),
+        amount,
+        method: paymentMethod,
+        reference: paymentReference || undefined,
+      });
+      setPaymentStudentId("");
+      setPaymentInvoiceId("");
+      setPaymentAmount("");
+      setPaymentReference("");
+      setShowReceiptForm(false);
+      setNotice("Payment recorded successfully");
+    } catch (e: any) {
+      setNotice(e.message ?? "Failed to record payment");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleCashEntry = async () => {
@@ -549,24 +601,57 @@ export function BursarWorkspace({ view, data, onViewChange, onShareFinance }: Bu
             <div className="panel-title">
               <div className="panel-title-left">
                 <p className="eyebrow">Receipts</p>
-                <strong>Issue Manual Receipt</strong>
+                <strong>Record Payment</strong>
               </div>
               <Receipt size={18} />
             </div>
             <div className="office-form">
-              <label>Student Name<input placeholder="Student name" value={receiptForm.student} onChange={e => setReceiptForm(p => ({...p, student: e.target.value}))} /></label>
-              <label>Amount (UGX)<input type="number" min="0" placeholder="Amount" value={receiptForm.amount} onChange={e => setReceiptForm(p => ({...p, amount: e.target.value}))} /></label>
+              <label>Student
+                <select value={paymentStudentId} onChange={e => handlePaymentStudentChange(e.target.value ? Number(e.target.value) : "")}>
+                  <option value="">Select student…</option>
+                  {data.students.map(s => (
+                    <option key={s.id} value={s.id}>{s.name} ({s.admissionNo})</option>
+                  ))}
+                </select>
+              </label>
+              {paymentLoading && <span style={{fontSize:"0.82rem",color:"var(--muted)"}}>Loading invoices…</span>}
+              {paymentInvoices.length > 0 && (
+                <>
+                  <label>Invoice
+                    <select value={paymentInvoiceId} onChange={e => {
+                      const invId = Number(e.target.value);
+                      setPaymentInvoiceId(invId);
+                      const inv = paymentInvoices.find((i: any) => i.id === invId);
+                      if (inv) setPaymentAmount(String(inv.amount));
+                    }}>
+                      <option value="">Select invoice…</option>
+                      {paymentInvoices.filter((i: any) => i.status !== "paid").map((inv: any) => (
+                        <option key={inv.id} value={inv.id}>#{inv.id} — UGX {Number(inv.amount).toLocaleString()} ({inv.term} {inv.academic_year})</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>Amount (UGX)
+                    <input type="number" min="0" placeholder="Amount" value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)} />
+                  </label>
+                </>
+              )}
+              {paymentStudentId && !paymentLoading && paymentInvoices.length === 0 && (
+                <span style={{fontSize:"0.82rem",color:"var(--muted)"}}>No outstanding invoices for this student</span>
+              )}
               <label>Payment Method
-                <select value={receiptForm.method} onChange={e => setReceiptForm(p => ({...p, method: e.target.value}))}>
+                <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)}>
                   <option value="mobile_money">Mobile Money</option>
                   <option value="bank_account">Bank Account</option>
                   <option value="cash">Cash</option>
                 </select>
               </label>
-              <label>Description<input placeholder="Optional description" value={receiptForm.description} onChange={e => setReceiptForm(p => ({...p, description: e.target.value}))} /></label>
+              <label>Reference<input placeholder="Transaction reference" value={paymentReference} onChange={e => setPaymentReference(e.target.value)} /></label>
               <div style={{display:"flex",gap:8}}>
-                <button className="tool-button primary" onClick={handleIssueReceipt}><Plus size={15}/>Issue Receipt</button>
-                <button className="tool-button" onClick={() => setShowReceiptForm(false)}>Cancel</button>
+                <button className="tool-button primary" disabled={submitting || !paymentInvoiceId} onClick={handleRecordPayment}>
+                  {submitting ? <LoaderCircle size={15} style={{animation:"spin 0.8s linear infinite"}} /> : <CreditCard size={15}/>}
+                  {submitting ? "Recording…" : "Record Payment"}
+                </button>
+                <button className="tool-button" onClick={() => { setShowReceiptForm(false); setPaymentStudentId(""); setPaymentInvoiceId(""); }}>Cancel</button>
               </div>
             </div>
           </div>
@@ -574,7 +659,7 @@ export function BursarWorkspace({ view, data, onViewChange, onShareFinance }: Bu
         <div className="table-panel glass-card">
           <div className="office-filters">
             <label><Search size={15}/><input placeholder="Search student or receipt…" value={search} onChange={e => setSearch(e.target.value)} /></label>
-            <button className="tool-button primary" onClick={() => setShowReceiptForm(true)}><Plus size={15}/>Issue Receipt</button>
+            <button className="tool-button primary" onClick={() => setShowReceiptForm(true)}><CreditCard size={15}/>Record Payment</button>
             <button className="tool-button" onClick={() => printElement("export-receipts-list")}><Printer size={15}/>Print Register</button>
           </div>
           <div id="export-receipts-list" className="table-wrap">

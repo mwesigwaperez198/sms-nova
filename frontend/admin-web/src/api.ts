@@ -323,7 +323,7 @@ const DEFAULT_HOME: AdminHomeData = {
 
 const ROLE_NAV: Record<RoleKey, string[]> = {
   "super-admin": ["Dashboard", "Schools", "Registrations", "Keys", "Plans", "Audit Log", "Users", "System Alerts", "System Check", "Support"],
-  admin: ["Home", "Approvals", "Students", "Staff", "Finance", "Communication", "Reports", "Settings", "Notifications"],
+  admin: ["Home", "Approvals", "Students", "Staff", "Finance", "Communication", "Reports", "Report Cards", "Settings", "Notifications"],
   headteacher: ["Dashboard", "Staff", "Attendance", "Performance", "Leave Requests", "Messages"],
   secretary: ["Dashboard", "Register Student", "Student Profiles", "Student Requirements", "Import Students", "Guardians", "Documents"],
   bursar: ["Home", "Payments", "Receipts", "Cashbook", "Quotations", "Requisitions", "Reports", "Settings"],
@@ -1252,6 +1252,44 @@ export async function deleteSchoolClass(classId: number): Promise<any> {
   return apiRequest(`/api/v1/academics/classes/${classId}`, { method: "DELETE" });
 }
 
+// ─── Report Cards ────────────────────────────────────────────
+
+export async function submitReportCard(payload: {
+  student_id: number;
+  subject: string;
+  score: number;
+  grade?: string;
+  teacher_remarks?: string;
+  academic_year: string;
+  term: string;
+}): Promise<any> {
+  return apiRequest("/api/v1/report-cards/submit", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function approveReportCard(reportCardId: number, payload?: { class_teacher_remarks?: string; head_teacher_remarks?: string }): Promise<any> {
+  return apiRequest(`/api/v1/report-cards/${reportCardId}/approve`, {
+    method: "POST",
+    body: JSON.stringify(payload ?? {}),
+  });
+}
+
+export async function publishReportCard(reportCardId: number): Promise<any> {
+  return apiRequest(`/api/v1/report-cards/${reportCardId}/publish`, {
+    method: "POST",
+  });
+}
+
+export async function fetchStudentReportCards(studentId: number): Promise<any[]> {
+  return apiRequest(`/api/v1/report-cards/student/${studentId}`);
+}
+
+export async function downloadClassReportCards(className: string, term: string, academicYear: string): Promise<{ total_students: number; report_cards_generated: number; report_card_ids: number[] }> {
+  return apiRequest(`/api/v1/report-cards/download-class/${encodeURIComponent(className)}?term=${encodeURIComponent(term)}&academic_year=${encodeURIComponent(academicYear)}`);
+}
+
 // ─── PDF Downloads ───────────────────────────────────────────
 
 export async function downloadReportCardPDF(reportCardId: number): Promise<void> {
@@ -1292,4 +1330,64 @@ export async function downloadReceiptPDF(receiptId: number): Promise<void> {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(a.href);
+}
+
+// ─── Report Card Management ──────────────────────────────────
+
+export async function submitReportCard(payload: {
+  student_id: number;
+  academic_year: string;
+  term: string;
+  subject: string;
+  score: number;
+  grade: string;
+  teacher_remarks?: string;
+}): Promise<any> {
+  return apiRequest("/api/v1/report-cards/submit", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function approveReportCard(
+  reportCardId: number,
+  payload: { class_teacher_remarks?: string; head_teacher_remarks?: string } = {}
+): Promise<any> {
+  return apiRequest(`/api/v1/report-cards/${reportCardId}/approve`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function publishReportCard(reportCardId: number): Promise<any> {
+  return apiRequest(`/api/v1/report-cards/${reportCardId}/publish`, {
+    method: "POST",
+  });
+}
+
+export async function fetchStudentReportCards(studentId: number): Promise<any[]> {
+  return apiRequest(`/api/v1/report-cards/student/${studentId}`);
+}
+
+export async function fetchClassReportCards(
+  className: string,
+  academicYear: string,
+  term: string
+): Promise<any[]> {
+  const params = new URLSearchParams({ academic_year: academicYear, term });
+  return apiRequest(`/api/v1/report-cards/download-class/${encodeURIComponent(className)}?${params}`);
+}
+
+// ─── Fee Payment ─────────────────────────────────────────────
+
+export async function recordFeePayment(payload: {
+  invoice_id: number;
+  amount: number;
+  method: string;
+  reference?: string;
+}): Promise<any> {
+  return apiRequest("/api/v1/fees/payment", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }

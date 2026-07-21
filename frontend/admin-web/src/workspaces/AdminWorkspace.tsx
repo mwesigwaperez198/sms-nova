@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { UserRoundCog, Users, Download, FileText, Database, User, GraduationCap, Search, MessageSquare, Bell, CheckCircle, XCircle, RotateCcw, Send, Phone, Mail, ArrowRight, ShieldCheck, TrendingUp, BarChart3, PieChart, Activity, AlertTriangle, Eye, Printer, RefreshCw } from "lucide-react";
+import { UserRoundCog, Users, Download, FileText, Database, User, GraduationCap, Search, MessageSquare, Bell, CheckCircle, XCircle, RotateCcw, Send, Phone, Mail, ArrowRight, ShieldCheck, TrendingUp, BarChart3, PieChart, Activity, AlertTriangle, Eye, Printer, RefreshCw, FileDown, BookOpen } from "lucide-react";
 import type { ConnectedData } from "../api";
-import { sendSmsBatch, sendRoleNotification, resetPassword } from "../api";
+import { sendSmsBatch, sendRoleNotification, resetPassword, submitReportCard, approveReportCard, publishReportCard, fetchStudentReportCards, downloadReportCardPDF, downloadClassReportCards } from "../api";
 import { printElement, downloadElement, exportAsCSV } from "../utils/exportUtils";
 
 interface AdminWorkspaceProps {
@@ -18,6 +18,7 @@ const roleAccent: Record<string, string> = {
   Finance: "#7c3aed",
   Communication: "#ea580c",
   Reports: "#4f46e5",
+  "Report Cards": "#4f46e5",
   Settings: "#94a3b8",
   Notifications: "#dc2626",
 };
@@ -39,6 +40,20 @@ export function AdminWorkspace({ view, data, onViewChange }: AdminWorkspaceProps
   const [pwdMsg, setPwdMsg] = useState("");
   const [pwdSaving, setPwdSaving] = useState(false);
 
+  const [rcSearch, setRcSearch] = useState("");
+  const [rcClass, setRcClass] = useState("");
+  const [rcTerm, setRcTerm] = useState("Term 1");
+  const [rcYear, setRcYear] = useState(new Date().getFullYear().toString());
+  const [rcStudent, setRcStudent] = useState<number | null>(null);
+  const [rcSubject, setRcSubject] = useState("");
+  const [rcScore, setRcScore] = useState("");
+  const [rcRemarks, setRcRemarks] = useState("");
+  const [rcSubmitting, setRcSubmitting] = useState(false);
+  const [rcMsg, setRcMsg] = useState("");
+  const [rcViewing, setRcViewing] = useState<number | null>(null);
+  const [rcCards, setRcCards] = useState<any[]>([]);
+  const [rcLoading, setRcLoading] = useState(false);
+
   const handlePasswordChange = async () => {
     if (!pwdCurrent || !pwdNew || !pwdConfirm) { setPwdMsg("All fields required"); return; }
     if (pwdNew !== pwdConfirm) { setPwdMsg("New passwords do not match"); return; }
@@ -51,6 +66,61 @@ export function AdminWorkspace({ view, data, onViewChange }: AdminWorkspaceProps
       setPwdMsg(e.message);
     } finally {
       setPwdSaving(false);
+    }
+  };
+
+  const rcGradeFromScore = (score: number): string => {
+    if (score >= 90) return "A+";
+    if (score >= 80) return "A";
+    if (score >= 70) return "B";
+    if (score >= 60) return "C";
+    if (score >= 50) return "D";
+    return "F";
+  };
+
+  const rcFilteredStudents = data.students.filter(s =>
+    (!rcSearch || s.name?.toLowerCase().includes(rcSearch.toLowerCase()) || s.admissionNo?.toLowerCase().includes(rcSearch.toLowerCase())) &&
+    (!rcClass || s.className === rcClass)
+  );
+
+  const rcClassOptions = [...new Set(data.students.map(s => s.className).filter(Boolean))];
+
+  const handleSubmitReportCard = async (studentId: number) => {
+    const scoreNum = parseFloat(rcScore);
+    if (!rcSubject.trim() || isNaN(scoreNum) || scoreNum < 0 || scoreNum > 100) { setRcMsg("Subject and valid score (0-100) required"); return; }
+    setRcSubmitting(true);
+    try {
+      await submitReportCard({
+        student_id: studentId,
+        subject: rcSubject.trim(),
+        score: scoreNum,
+        grade: rcGradeFromScore(scoreNum),
+        teacher_remarks: rcRemarks.trim() || undefined,
+        academic_year: rcYear,
+        term: rcTerm,
+      });
+      setRcMsg("Report card submitted successfully");
+      setRcSubject(""); setRcScore(""); setRcRemarks(""); setRcStudent(null);
+    } catch (e: any) {
+      setRcMsg(`Error: ${e.message}`);
+    } finally {
+      setRcSubmitting(false);
+      setTimeout(() => setRcMsg(""), 4000);
+    }
+  };
+
+  const handleViewReportCards = async (studentId: number) => {
+    setRcViewing(studentId);
+    setRcLoading(true);
+    try {
+      const cards = await fetchStudentReportCards(studentId);
+      setRcCards(cards);
+    } catch (e: any) {
+      setRcCards([]);
+      setRcMsg(`Error: ${e.message}`);
+      setTimeout(() => setRcMsg(""), 4000);
+    } finally {
+      setRcLoading(false);
     }
   };
 
@@ -337,6 +407,177 @@ export function AdminWorkspace({ view, data, onViewChange }: AdminWorkspaceProps
     );
   }
 
+  if (view === "Report Cards") {
+    return (
+      <div className="content-grid">
+        <div className="table-panel glass-card">
+          <div className="panel-title">
+            <strong style={{fontSize:"0.9rem", color: accent}}>Report Cards</strong>
+            <span className="badge info">{rcFilteredStudents.length} students</span>
+          </div>
+
+          <div className="office-filters">
+            <label><Search size={15}/><input placeholder="Search student name or admission no…" value={rcSearch} onChange={e => setRcSearch(e.target.value)} /></label>
+            <select value={rcClass} onChange={e => setRcClass(e.target.value)}>
+              <option value="">All Classes</option>
+              {rcClassOptions.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <select value={rcTerm} onChange={e => setRcTerm(e.target.value)}>
+              <option>Term 1</option>
+              <option>Term 2</option>
+              <option>Term 3</option>
+            </select>
+            <label style={{fontSize:"0.82rem",color:"var(--muted)",display:"flex",alignItems:"center",gap:6}}>
+              Year
+              <input value={rcYear} onChange={e => setRcYear(e.target.value)} style={{width:80}} />
+            </label>
+          </div>
+
+          <div style={{display:"flex",gap:8,padding:"0 16px 12px",flexWrap:"wrap"}}>
+            <button
+              className="tool-button primary"
+              onClick={async () => {
+                const firstClass = rcClass || rcClassOptions[0];
+                if (!firstClass) { setRcMsg("No classes available"); setTimeout(() => setRcMsg(""), 3000); return; }
+                if (!rcTerm || !rcYear) { setRcMsg("Select term and academic year"); setTimeout(() => setRcMsg(""), 3000); return; }
+                try {
+                  const result = await downloadClassReportCards(firstClass, rcTerm, rcYear);
+                  setRcMsg(`${result.report_cards_generated}/${result.total_students} report cards found for ${firstClass}`);
+                  setTimeout(() => setRcMsg(""), 5000);
+                } catch (e: any) {
+                  setRcMsg(`Error: ${e.message}`);
+                  setTimeout(() => setRcMsg(""), 4000);
+                }
+              }}
+            >
+              <FileDown size={15}/>Download Class Report Cards
+            </button>
+            {rcMsg && <span className={`notice-strip ${rcMsg.startsWith("Error") ? "" : "success"}`} style={{fontSize:"0.82rem",margin:0,padding:"6px 12px"}}>{rcMsg}</span>}
+          </div>
+
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th>Name</th><th>Class</th><th>Admission No</th><th>Actions</th></tr></thead>
+              <tbody>
+                {rcFilteredStudents.map(s => (
+                  <tr key={s.admissionNo}>
+                    <td><strong>{s.name}</strong></td>
+                    <td>{s.className}</td>
+                    <td><code>{s.admissionNo}</code></td>
+                    <td>
+                      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                        <button
+                          className="tool-button primary"
+                          style={{minHeight:28,fontSize:"0.78rem"}}
+                          onClick={() => setRcStudent(rcStudent === s.id ? null : s.id)}
+                        >
+                          <BookOpen size={12}/>Submit
+                        </button>
+                        <button
+                          className="tool-button"
+                          style={{minHeight:28,fontSize:"0.78rem"}}
+                          onClick={() => handleViewReportCards(s.id)}
+                        >
+                          <Eye size={12}/>View
+                        </button>
+                        <button
+                          className="tool-button"
+                          style={{minHeight:28,fontSize:"0.78rem"}}
+                          onClick={async () => {
+                            try {
+                              const cards = await fetchStudentReportCards(s.id);
+                              if (cards.length > 0) await downloadReportCardPDF(cards[0].id);
+                              else setRcMsg("No report cards to download");
+                              setTimeout(() => setRcMsg(""), 3000);
+                            } catch { setRcMsg("Download failed"); setTimeout(() => setRcMsg(""), 3000); }
+                          }}
+                        >
+                          <Download size={12}/>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {rcFilteredStudents.length === 0 && <tr><td colSpan={4} className="empty-state">No students found</td></tr>}
+              </tbody>
+            </table>
+          </div>
+
+          {rcStudent !== null && (
+            <div className="detail-panel glass-card" style={{margin:16,padding:16,borderTop:`3px solid ${accent}`}}>
+              <div className="panel-title">
+                <strong style={{fontSize:"0.9rem"}}>Submit Report Card — {data.students.find(s => s.id === rcStudent)?.name}</strong>
+                <button className="tool-button" style={{minHeight:28,fontSize:"0.78rem"}} onClick={() => setRcStudent(null)}><XCircle size={12}/>Close</button>
+              </div>
+              <div className="office-form">
+                <label>Subject<input value={rcSubject} onChange={e => setRcSubject(e.target.value)} placeholder="e.g. Mathematics" /></label>
+                <label>Score (0-100)<input type="number" min={0} max={100} value={rcScore} onChange={e => setRcScore(e.target.value)} placeholder="0" /></label>
+                <label>Grade<input readOnly value={rcScore ? rcGradeFromScore(parseFloat(rcScore) || 0) : ""} placeholder="Auto-calculated" /></label>
+                <label>Teacher Remarks<textarea value={rcRemarks} onChange={e => setRcRemarks(e.target.value)} placeholder="Optional remarks…" maxLength={500} /></label>
+                <label>Academic Year<input value={rcYear} onChange={e => setRcYear(e.target.value)} /></label>
+                <label>Term
+                  <select value={rcTerm} onChange={e => setRcTerm(e.target.value)}>
+                    <option>Term 1</option>
+                    <option>Term 2</option>
+                    <option>Term 3</option>
+                  </select>
+                </label>
+                <button
+                  className="tool-button primary"
+                  disabled={rcSubmitting}
+                  onClick={() => handleSubmitReportCard(rcStudent)}
+                >
+                  {rcSubmitting ? <span className="spinner"/> : <Send size={15}/>}
+                  {rcSubmitting ? "Submitting…" : "Submit Report Card"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {rcViewing !== null && (
+            <div className="detail-panel glass-card" style={{margin:16,padding:16,borderTop:`3px solid ${accent}`}}>
+              <div className="panel-title">
+                <strong style={{fontSize:"0.9rem"}}>Report Cards — {data.students.find(s => s.id === rcViewing)?.name}</strong>
+                <button className="tool-button" style={{minHeight:28,fontSize:"0.78rem"}} onClick={() => { setRcViewing(null); setRcCards([]); }}><XCircle size={12}/>Close</button>
+              </div>
+              {rcLoading ? (
+                <p className="empty-state"><span className="spinner"/></p>
+              ) : rcCards.length === 0 ? (
+                <p className="empty-state">No report cards found for this student</p>
+              ) : (
+                <div className="table-wrap">
+                  <table>
+                    <thead><tr><th>Subject</th><th>Score</th><th>Grade</th><th>Term</th><th>Year</th><th>Remarks</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody>
+                      {rcCards.map((card: any) => (
+                        <tr key={card.id}>
+                          <td><strong>{card.subject}</strong></td>
+                          <td>{card.score}</td>
+                          <td><span className="badge info">{card.grade}</span></td>
+                          <td>{card.term}</td>
+                          <td>{card.academic_year}</td>
+                          <td style={{fontSize:"0.82rem",color:"var(--muted)"}}>{card.teacher_remarks || "—"}</td>
+                          <td><span className={`badge ${card.status === "published" ? "success" : card.status === "approved" ? "info" : "warning"}`}>{card.status || "Draft"}</span></td>
+                          <td>
+                            <div style={{display:"flex",gap:4}}>
+                              <button className="tool-button" style={{minHeight:26,fontSize:"0.75rem"}} onClick={() => approveReportCard(card.id, { class_teacher_remarks: "Approved by class teacher", head_teacher_remarks: "Approved by head teacher" }).then(() => handleViewReportCards(rcViewing))}>Approve</button>
+                              <button className="tool-button" style={{minHeight:26,fontSize:"0.75rem"}} onClick={() => publishReportCard(card.id).then(() => handleViewReportCards(rcViewing))}>Publish</button>
+                              <button className="tool-button" style={{minHeight:26,fontSize:"0.75rem"}} onClick={() => downloadReportCardPDF(card.id)}>PDF</button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   if (view === "Communication") {
     return (
       <div className="office-layout">
@@ -476,7 +717,7 @@ export function AdminWorkspace({ view, data, onViewChange }: AdminWorkspaceProps
         <div className="metric amber" style={{borderTop: "3px solid #f59e0b"}}><div className="metric-icon"><FileText size={22}/></div><div className="metric-body"><strong>{fs.collection_rate}%</strong><span>Fee Collection</span></div></div>
         <div className="metric red" style={{borderTop: "3px solid #ef4444"}}><div className="metric-icon"><Bell size={22}/></div><div className="metric-body"><strong>{data.approvals.filter(a=>a.status==="Pending").length}</strong><span>Approvals</span></div></div>
       </div>
-      <div className="notice-strip" style={{borderLeft: `4px solid ${accent}`}}>Select a view — Home, Approvals, Students, Staff, Finance, Communication, Reports, Settings, or Notifications.</div>
+      <div className="notice-strip" style={{borderLeft: `4px solid ${accent}`}}>Select a view — Home, Approvals, Students, Staff, Finance, Communication, Reports, Report Cards, Settings, or Notifications.</div>
     </div>
   );
 }
