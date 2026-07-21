@@ -3,6 +3,7 @@ import { Lock, Shield, ArrowLeft } from "lucide-react";
 import type { FaceChallenge, Session, TwoFactorChallenge } from "../api";
 import { verify2faLogin } from "../api";
 import { roles } from "../data/mockData";
+import { NovaraLogo } from "./NovaraLogo";
 
 interface LoginScreenProps {
   loading: boolean;
@@ -79,7 +80,7 @@ export function LoginScreen({ loading, error, onLogin, onSession, onForgotPasswo
         <div className="login-background-orb login-orb-2" />
         <section className="login-panel">
           <div className="login-brand">
-            <div className="brand-mark">N</div>
+            <NovaraLogo size={40} />
             <div>
               <p>Two-Factor Authentication</p>
               <h1>Enter Verification Code</h1>
@@ -128,7 +129,7 @@ export function LoginScreen({ loading, error, onLogin, onSession, onForgotPasswo
       <div className="login-background-orb login-orb-2" />
       <section className="login-panel">
         <div className="login-brand">
-          <div className="brand-mark">N</div>
+          <NovaraLogo size={40} />
           <div>
             <p>Smart School Management</p>
             <h1>Welcome back</h1>

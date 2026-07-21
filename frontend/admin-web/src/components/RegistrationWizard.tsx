@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { registerSchool, fetchPlans, checkRegistrationEmail } from "../api";
 import type { PlanItem } from "../api";
+import { NovaraLogo } from "./NovaraLogo";
 
 interface Props {
   onBack: () => void;
@@ -115,7 +116,7 @@ export function RegistrationWizard({ onBack, onComplete }: Props) {
         <div className="login-background-orb login-orb-2" />
         <section className="login-panel" style={{ maxWidth: 520 }}>
           <div className="login-brand">
-            <div className="brand-mark">N</div>
+            <NovaraLogo size={40} />
             <div>
               <p>Smart School Management</p>
               <h1>Registration Received</h1>
@@ -188,11 +189,11 @@ export function RegistrationWizard({ onBack, onComplete }: Props) {
       <div className="login-background-orb login-orb-1" />
       <div className="login-background-orb login-orb-2" />
       <section className="login-panel" style={{ maxWidth: 560 }}>
-        <div className="login-brand">
-          <div className="brand-mark">N</div>
-          <div>
-            <p>Smart School Management</p>
-            <h1>Register Your School</h1>
+          <div className="login-brand">
+            <NovaraLogo size={40} />
+            <div>
+              <p>Smart School Management</p>
+              <h1>Register Your School</h1>
           </div>
         </div>
 

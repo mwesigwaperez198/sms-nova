@@ -30,6 +30,7 @@ import { SignUpScreen } from "./components/SignUpScreen";
 import { TwoFactorSetup } from "./components/TwoFactorSetup";
 import { PhotoCapture } from "./components/PhotoCapture";
 import { FaceVerification } from "./components/FaceVerification";
+import { NovaraLogo } from "./components/NovaraLogo";
 import { StatusBadge } from "./components/StatusBadge";
 import { roles } from "./data/mockData";
 import type { RoleKey } from "./types";
@@ -255,7 +256,7 @@ function App() {
           <div className="login-background-orb login-orb-2" />
           <section className="login-panel">
             <div className="login-brand">
-              <div className="brand-mark">N</div>
+              <NovaraLogo size={40} />
               <div>
                 <p>Smart School Management</p>
                 <h1>Face Verification</h1>

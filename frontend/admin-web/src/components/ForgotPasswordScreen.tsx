@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ArrowLeft, Mail, KeyRound } from "lucide-react";
+import { NovaraLogo } from "./NovaraLogo";
 
 interface ForgotPasswordScreenProps {
   onBack: () => void;
@@ -73,7 +74,7 @@ export function ForgotPasswordScreen({ onBack }: ForgotPasswordScreenProps) {
       <div className="login-background-orb login-orb-2" />
       <section className="login-panel">
         <div className="login-brand">
-          <div className="brand-mark">N</div>
+          <NovaraLogo size={40} />
           <div>
             <p>Smart School Management</p>
             <h1>{step === "request" ? "Forgot password" : "Reset code"}</h1>

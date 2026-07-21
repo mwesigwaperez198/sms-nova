@@ -1,8 +1,28 @@
-export function NovaraLogo({ size = 32 }: { size?: number }) {
+interface NovaraLogoProps {
+  size?: number;
+  variant?: "white" | "black" | "auto";
+  className?: string;
+}
+
+export function NovaraLogo({ size = 32, variant = "white", className }: NovaraLogoProps) {
+  const src = variant === "black"
+    ? "/novara-black-logo.png"
+    : "/novara-white-logo.png";
+
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="32" height="32" rx="8" fill="#1e40af" />
-      <path d="M8 10h4l4 6 4-6h4l-6 9v5h-4v-5L8 10z" fill="white" />
-    </svg>
+    <img
+      src={src}
+      alt="NOVARA"
+      width={size}
+      height={size}
+      className={className}
+      style={{
+        width: size,
+        height: size,
+        objectFit: "contain",
+        display: "block",
+        flexShrink: 0,
+      }}
+    />
   );
 }

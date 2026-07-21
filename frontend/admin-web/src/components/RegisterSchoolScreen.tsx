@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Building2, ArrowLeft, Smartphone, Landmark, CreditCard, Check } from "lucide-react";
 import { registerSchool, fetchPlans } from "../api";
 import type { PlanItem } from "../api";
+import { NovaraLogo } from "./NovaraLogo";
 
 interface RegisterSchoolScreenProps {
   onBack: () => void;
@@ -56,7 +57,7 @@ export function RegisterSchoolScreen({ onBack }: RegisterSchoolScreenProps) {
         <div className="login-background-orb login-orb-2" />
         <section className="login-panel">
           <div className="login-brand">
-            <div className="brand-mark">N</div>
+            <NovaraLogo size={40} />
             <div>
               <p>Smart School Management</p>
               <h1>Registration Submitted</h1>
@@ -84,11 +85,11 @@ export function RegisterSchoolScreen({ onBack }: RegisterSchoolScreenProps) {
       <div className="login-background-orb login-orb-1" />
       <div className="login-background-orb login-orb-2" />
       <section className="login-panel">
-        <div className="login-brand">
-          <div className="brand-mark">N</div>
-          <div>
-            <p>Smart School Management</p>
-            <h1>Register Your School</h1>
+          <div className="login-brand">
+            <NovaraLogo size={40} />
+            <div>
+              <p>Smart School Management</p>
+              <h1>Register Your School</h1>
           </div>
         </div>
         <form className="login-card" onSubmit={handleSubmit}>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { UserPlus, ArrowLeft, KeyRound, Eye, EyeOff, Camera } from "lucide-react";
 import { completeRegistration } from "../api";
 import { PhotoCapture } from "./PhotoCapture";
+import { NovaraLogo } from "./NovaraLogo";
 
 interface SignUpScreenProps {
   onBack: () => void;
@@ -80,7 +81,7 @@ export function SignUpScreen({ onBack, onComplete }: SignUpScreenProps) {
         <div className="login-background-orb login-orb-2" />
         <section className="login-panel">
           <div className="login-brand">
-            <div className="brand-mark">N</div>
+            <NovaraLogo size={40} />
             <div>
               <p>Smart School Management</p>
               <h1>Welcome Aboard!</h1>
@@ -105,11 +106,11 @@ export function SignUpScreen({ onBack, onComplete }: SignUpScreenProps) {
       <div className="login-background-orb login-orb-1" />
       <div className="login-background-orb login-orb-2" />
       <section className="login-panel">
-        <div className="login-brand">
-          <div className="brand-mark">N</div>
-          <div>
-            <p>Smart School Management</p>
-            <h1>Activate Your Account</h1>
+          <div className="login-brand">
+            <NovaraLogo size={40} />
+            <div>
+              <p>Smart School Management</p>
+              <h1>Activate Your Account</h1>
           </div>
         </div>
         <form className="login-card" onSubmit={handleSubmit}>
