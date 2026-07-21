@@ -180,6 +180,41 @@ def list_receipts(
     ]
 
 
+@router.get("/receipt/{receipt_id}/pdf")
+def download_receipt_pdf(
+    receipt_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(role_required(RoleId.ADMIN, RoleId.BURSAR, RoleId.PARENT)),
+):
+    from fastapi import HTTPException
+    from fastapi.responses import Response
+    from app.models.school import School
+    from app.services.receipt_pdf_service import generate_receipt_pdf
+
+    receipt = db.query(Receipt).filter(Receipt.id == receipt_id).first()
+    if not receipt:
+        raise HTTPException(404, "Receipt not found")
+
+    payment = db.query(Payment).filter(Payment.id == receipt.payment_id).first()
+    if not payment:
+        raise HTTPException(404, "Payment not found")
+
+    if payment.school_id != current_user.school_id:
+        raise HTTPException(404, "Receipt not found")
+
+    student = db.query(Student).filter(Student.id == payment.student_id).first()
+    invoice = db.query(Invoice).filter(Invoice.id == payment.invoice_id).first()
+    school = db.query(School).filter(School.id == payment.school_id).first()
+
+    pdf_bytes = generate_receipt_pdf(school, payment, receipt, student, invoice)
+    filename = f"receipt_{receipt.receipt_number}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 @router.get("/balances", dependencies=[Depends(role_required(RoleId.SUPER_ADMIN, RoleId.ADMIN, RoleId.BURSAR))])
 def fee_balances(
     db: Session = Depends(get_db),

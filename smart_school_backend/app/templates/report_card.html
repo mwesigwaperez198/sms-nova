@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  @page {
+    size: A4;
+    margin: 20mm 15mm 20mm 15mm;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 11px;
+    color: #1a1a1a;
+    line-height: 1.4;
+  }
+  .header {
+    text-align: center;
+    border-bottom: 3px solid #1a5276;
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+  }
+  .school-name {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1a5276;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .school-motto {
+    font-style: italic;
+    color: #555;
+    font-size: 11px;
+    margin-top: 2px;
+  }
+  .school-contact {
+    font-size: 9px;
+    color: #666;
+    margin-top: 4px;
+  }
+  .report-title {
+    text-align: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: #1a5276;
+    margin: 14px 0 10px;
+    text-decoration: underline;
+  }
+  .info-grid {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    gap: 12px;
+  }
+  .info-box {
+    flex: 1;
+    background: #f4f7fa;
+    border: 1px solid #d5dbdb;
+    border-radius: 4px;
+    padding: 8px 10px;
+  }
+  .info-box .label {
+    font-size: 9px;
+    color: #666;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .info-box .value {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-top: 2px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 14px;
+  }
+  th {
+    background: #1a5276;
+    color: white;
+    padding: 6px 8px;
+    text-align: left;
+    font-size: 10px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  td {
+    padding: 5px 8px;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 11px;
+  }
+  tr:nth-child(even) td {
+    background: #fafbfc;
+  }
+  .grade-dist {
+    margin-bottom: 14px;
+  }
+  .grade-dist h3 {
+    font-size: 12px;
+    color: #1a5276;
+    margin-bottom: 6px;
+    border-bottom: 1px solid #d5dbdb;
+    padding-bottom: 3px;
+  }
+  .grade-dist table th {
+    background: #2e86c1;
+    font-size: 9px;
+  }
+  .summary-box {
+    background: #f4f7fa;
+    border: 1px solid #d5dbdb;
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 14px;
+  }
+  .summary-box h3 {
+    font-size: 12px;
+    color: #1a5276;
+    margin-bottom: 6px;
+  }
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+    border-bottom: 1px dotted #ccc;
+  }
+  .summary-row:last-child {
+    border-bottom: none;
+  }
+  .summary-label {
+    font-weight: 600;
+    font-size: 10px;
+  }
+  .summary-value {
+    font-size: 10px;
+  }
+  .remarks-section {
+    margin-bottom: 14px;
+  }
+  .remarks-section h3 {
+    font-size: 12px;
+    color: #1a5276;
+    margin-bottom: 6px;
+    border-bottom: 1px solid #d5dbdb;
+    padding-bottom: 3px;
+  }
+  .remark-row {
+    margin-bottom: 6px;
+  }
+  .remark-label {
+    font-weight: 600;
+    font-size: 10px;
+    color: #333;
+  }
+  .remark-text {
+    font-size: 10px;
+    color: #555;
+    margin-top: 2px;
+    min-height: 14px;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 3px;
+  }
+  .signatures {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+    padding-top: 10px;
+  }
+  .sig-block {
+    text-align: center;
+    width: 30%;
+  }
+  .sig-line {
+    border-top: 1px solid #333;
+    margin-top: 40px;
+    padding-top: 4px;
+  }
+  .sig-title {
+    font-size: 9px;
+    font-weight: 600;
+    color: #333;
+  }
+  .footer {
+    text-align: center;
+    margin-top: 16px;
+    padding-top: 8px;
+    border-top: 2px solid #1a5276;
+    font-size: 8px;
+    color: #888;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="school-name">{{ school_name }}</div>
+  <div class="school-motto">{{ school_motto }}</div>
+  <div class="school-contact">
+    {{ school_address }}{% if school_phone %} | Tel: {{ school_phone }}{% endif %}{% if school_email %} | Email: {{ school_email }}{% endif %}
+  </div>
+</div>
+
+<div class="report-title">STUDENT REPORT CARD</div>
+
+<div class="info-grid">
+  <div class="info-box">
+    <div class="label">Student Name</div>
+    <div class="value">{{ student_name }}</div>
+  </div>
+  <div class="info-box">
+    <div class="label">Admission No.</div>
+    <div class="value">{{ admission_number }}</div>
+  </div>
+  <div class="info-box">
+    <div class="label">Class</div>
+    <div class="value">{{ class_name }}{% if stream_name %} - {{ stream_name }}{% endif %}</div>
+  </div>
+  <div class="info-box">
+    <div class="label">Academic Year</div>
+    <div class="value">{{ academic_year }}</div>
+  </div>
+  <div class="info-box">
+    <div class="label">Term</div>
+    <div class="value">{{ term }}</div>
+  </div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Subject</th>
+      <th>BOT Score</th>
+      <th>MOT Score</th>
+      <th>EOT Score</th>
+      <th>Average</th>
+      <th>Grade</th>
+      <th>Remarks</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for subject in subjects %}
+    <tr>
+      <td><strong>{{ subject.name }}</strong></td>
+      <td>{{ subject.bot if subject.bot != None else '-' }}</td>
+      <td>{{ subject.mot if subject.mot != None else '-' }}</td>
+      <td>{{ subject.eot if subject.eot != None else '-' }}</td>
+      <td><strong>{{ subject.average }}</strong></td>
+      <td><strong>{{ subject.grade }}</strong></td>
+      <td>{{ subject.remarks or '-' }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="summary-box">
+  <h3>PERFORMANCE SUMMARY</h3>
+  <div class="summary-row">
+    <span class="summary-label">Total Subjects:</span>
+    <span class="summary-value">{{ total_subjects }}</span>
+  </div>
+  <div class="summary-row">
+    <span class="summary-label">Overall Average:</span>
+    <span class="summary-value">{{ overall_average }}</span>
+  </div>
+  <div class="summary-row">
+    <span class="summary-label">Overall Grade:</span>
+    <span class="summary-value">{{ overall_grade }}</span>
+  </div>
+  <div class="summary-row">
+    <span class="summary-label">Class Position:</span>
+    <span class="summary-value">{{ class_position }} out of {{ total_students }}</span>
+  </div>
+  <div class="summary-row">
+    <span class="summary-label">Attendance Rate:</span>
+    <span class="summary-value">{{ attendance_rate }}%</span>
+  </div>
+  {% if conduct %}
+  <div class="summary-row">
+    <span class="summary-label">Conduct:</span>
+    <span class="summary-value">{{ conduct }}</span>
+  </div>
+  {% endif %}
+  {% if effort %}
+  <div class="summary-row">
+    <span class="summary-label">Effort:</span>
+    <span class="summary-value">{{ effort }}</span>
+  </div>
+  {% endif %}
+  {% if participation %}
+  <div class="summary-row">
+    <span class="summary-label">Participation:</span>
+    <span class="summary-value">{{ participation }}</span>
+  </div>
+  {% endif %}
+</div>
+
+<div class="remarks-section">
+  <h3>REMARKS</h3>
+  <div class="remark-row">
+    <div class="remark-label">Class Teacher's Remarks:</div>
+    <div class="remark-text">{{ class_teacher_remarks or 'No remarks' }}</div>
+  </div>
+  <div class="remark-row">
+    <div class="remark-label">Head Teacher's Remarks:</div>
+    <div class="remark-text">{{ head_teacher_remarks or 'No remarks' }}</div>
+  </div>
+</div>
+
+<div class="signatures">
+  <div class="sig-block">
+    <div class="sig-line">
+      <div class="sig-title">Class Teacher</div>
+    </div>
+  </div>
+  <div class="sig-block">
+    <div class="sig-line">
+      <div class="sig-title">Head Teacher</div>
+    </div>
+  </div>
+  <div class="sig-block">
+    <div class="sig-line">
+      <div class="sig-title">Parent/Guardian</div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  Generated by {{ school_name }} School Management System | {{ generated_date }}
+</div>
+
+</body>
+</html>

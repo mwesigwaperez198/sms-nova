@@ -11,9 +11,11 @@ from app.models.leave import LeaveRequest
 from app.models.notification import Notification
 from app.models.registration import RegistrationKey, RegistrationRequest
 from app.models.report_card import ReportCard
+from app.models.report_remark import ReportRemark
 from app.models.role import Role
 from app.models.school import School
 from app.models.student import Student, StudentGuardian
+from app.models.subject import SchoolClass, Subject
 from app.models.subscription import ProductKey, SchoolSubscription, SubscriptionPlan
 from app.models.sync import SyncChange
 from app.models.system_check import SystemCheck
@@ -44,11 +46,14 @@ __all__ = [
     "RegistrationRequest",
     "Requisition",
     "ReportCard",
+    "ReportRemark",
     "Role",
     "School",
+    "SchoolClass",
     "SchoolSubscription",
     "Student",
     "StudentGuardian",
+    "Subject",
     "SubscriptionPlan",
     "SyncChange",
     "SystemCheck",

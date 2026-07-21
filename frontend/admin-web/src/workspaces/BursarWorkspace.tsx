@@ -11,7 +11,8 @@ import {
   fetchCashbook, createCashEntry,
   fetchQuotations, createQuotation,
   fetchRequisitions, createRequisition,
-  fetchBankAccount, updateBankAccount
+  fetchBankAccount, updateBankAccount,
+  downloadReceiptPDF
 } from "../api";
 import { printElement, exportAsCSV } from "../utils/exportUtils";
 
@@ -578,6 +579,7 @@ export function BursarWorkspace({ view, data, onViewChange, onShareFinance }: Bu
           </div>
           <div id="export-receipts-list" className="table-wrap">
             <table>
+              <thead><tr><th>Receipt No</th><th>Student</th><th>Amount</th><th>Method</th><th>Date</th><th>Issued By</th><th></th></tr></thead>
               <tbody>
                 {filteredReceipts.map(r => (
                   <tr key={r.id}>
@@ -587,9 +589,16 @@ export function BursarWorkspace({ view, data, onViewChange, onShareFinance }: Bu
                     <td>{r.method}</td>
                     <td>{r.date}</td>
                     <td>{r.issuedBy}</td>
+                    <td>
+                      <button className="tool-button" style={{ minHeight: 28 }} onClick={async () => {
+                        try { await downloadReceiptPDF(Number(r.id)); } catch { alert("Failed to download receipt PDF"); }
+                      }}>
+                        <Download size={13} />PDF
+                      </button>
+                    </td>
                   </tr>
                 ))}
-                {filteredReceipts.length === 0 && <tr><td colSpan={6} className="empty-state">No receipts found</td></tr>}
+                {filteredReceipts.length === 0 && <tr><td colSpan={7} className="empty-state">No receipts found</td></tr>}
               </tbody>
             </table>
           </div>

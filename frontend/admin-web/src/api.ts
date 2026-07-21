@@ -328,7 +328,7 @@ const ROLE_NAV: Record<RoleKey, string[]> = {
   secretary: ["Dashboard", "Register Student", "Student Profiles", "Student Requirements", "Import Students", "Guardians", "Documents"],
   bursar: ["Home", "Payments", "Receipts", "Cashbook", "Quotations", "Requisitions", "Reports", "Settings"],
   librarian: ["Catalog", "Issue & Return", "Book Requests", "Upload to Students", "Reports"],
-  teacher: ["My Classes", "Attendance", "Assessments", "Report Remarks", "Messages"],
+  teacher: ["My Classes", "Attendance", "Assessments", "Report Remarks", "Ranking", "Messages"],
   parent: ["Home", "Fees", "Receipts", "Attendance", "Report Card", "Messages"],
   student: ["Dashboard", "My Fees", "Attendance", "Report Card", "Library", "Announcements"],
   "ict-admin": ["Dashboard", "User Verification", "System Health", "Notifications"]
@@ -1148,4 +1148,148 @@ export async function submitBookRequest(payload: {
     method: "POST",
     body: JSON.stringify(payload),
   });
+}
+
+// ─── Bulk Import ─────────────────────────────────────────────
+
+export async function bulkImportStudents(students: Array<{
+  name: string;
+  admission_number?: string;
+  class_name?: string;
+  stream_name?: string;
+  gender?: string;
+  date_of_birth?: string;
+  parent_name?: string;
+  parent_phone?: string;
+}>): Promise<{ total: number; imported: number; skipped: number; errors: Array<{ row: number; error: string }> }> {
+  return apiRequest("/api/v1/import/students", {
+    method: "POST",
+    body: JSON.stringify({ students }),
+  });
+}
+
+export async function bulkImportStudentsCSV(file: File): Promise<{ total: number; imported: number; skipped: number; errors: Array<{ row: number; error: string }> }> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const token = sessionStorage.getItem("novara_token");
+  const url = `${API_URL}/api/v1/import/students/csv`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: formData,
+  });
+  if (!response.ok) {
+    const detail = await response.json().catch(() => ({ detail: "Import failed" }));
+    throw new Error(detail.detail ?? "Import failed");
+  }
+  return response.json();
+}
+
+// ─── Report Remarks ──────────────────────────────────────────
+
+export async function saveReportRemarks(payload: {
+  student_id: number;
+  academic_year: string;
+  term: string;
+  conduct?: string;
+  effort?: string;
+  participation?: string;
+  general_remarks?: string;
+}): Promise<any> {
+  return apiRequest("/api/v1/report-remarks/", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function fetchReportRemarks(studentId: number, academicYear: string, term: string): Promise<any> {
+  return apiRequest(`/api/v1/report-remarks/student/${studentId}?academic_year=${encodeURIComponent(academicYear)}&term=${encodeURIComponent(term)}`);
+}
+
+// ─── Class Ranking ───────────────────────────────────────────
+
+export async function fetchClassRanking(class_name: string, academic_year: string, term: string): Promise<Array<{
+  student_id: number;
+  student_name: string;
+  average: number;
+  grade: string;
+  position: number | null;
+}>> {
+  return apiRequest(`/api/v1/ranking/class/${encodeURIComponent(class_name)}?academic_year=${encodeURIComponent(academic_year)}&term=${encodeURIComponent(term)}`);
+}
+
+// ─── Subjects & Classes ──────────────────────────────────────
+
+export async function fetchSubjects(): Promise<any[]> {
+  return apiRequest("/api/v1/academics/subjects");
+}
+
+export async function createSubject(payload: { name: string; code?: string; category?: string }): Promise<any> {
+  return apiRequest("/api/v1/academics/subjects", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteSubject(subjectId: number): Promise<any> {
+  return apiRequest(`/api/v1/academics/subjects/${subjectId}`, { method: "DELETE" });
+}
+
+export async function fetchSchoolClasses(): Promise<any[]> {
+  return apiRequest("/api/v1/academics/classes");
+}
+
+export async function createSchoolClass(payload: { name: string; section?: string; capacity?: number }): Promise<any> {
+  return apiRequest("/api/v1/academics/classes", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteSchoolClass(classId: number): Promise<any> {
+  return apiRequest(`/api/v1/academics/classes/${classId}`, { method: "DELETE" });
+}
+
+// ─── PDF Downloads ───────────────────────────────────────────
+
+export async function downloadReportCardPDF(reportCardId: number): Promise<void> {
+  const token = sessionStorage.getItem("novara_token");
+  const url = `${API_URL}/api/v1/report-cards/download/${reportCardId}?format=pdf`;
+  const response = await fetch(url, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!response.ok) throw new Error("Failed to download report card");
+  const blob = await response.blob();
+  const disposition = response.headers.get("Content-Disposition") ?? "";
+  const filenameMatch = disposition.match(/filename="?(.+?)"?$/);
+  const filename = filenameMatch ? filenameMatch[1] : `report_card_${reportCardId}.pdf`;
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
+export async function downloadReceiptPDF(receiptId: number): Promise<void> {
+  const token = sessionStorage.getItem("novara_token");
+  const url = `${API_URL}/api/v1/fees/receipt/${receiptId}/pdf`;
+  const response = await fetch(url, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!response.ok) throw new Error("Failed to download receipt");
+  const blob = await response.blob();
+  const disposition = response.headers.get("Content-Disposition") ?? "";
+  const filenameMatch = disposition.match(/filename="?(.+?)"?$/);
+  const filename = filenameMatch ? filenameMatch[1] : `receipt_${receiptId}.pdf`;
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
 }

@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Users, UserPlus, FileText, Upload, Search, Download, X, CheckCircle, AlertCircle, ClipboardList, Eye } from "lucide-react";
 import type { ConnectedData, GuardianInfo } from "../api";
-import { fetchSecretaryGuardianList, apiRequest } from "../api";
+import { fetchSecretaryGuardianList, apiRequest, bulkImportStudents } from "../api";
 import { printElement } from "../utils/exportUtils";
 
 interface SecretaryWorkspaceProps {
@@ -567,30 +567,28 @@ export function SecretaryWorkspace({ view, data, onViewChange }: SecretaryWorksp
                       onClick={async () => {
                         setImporting(true);
                         setImportResults(null);
-                        let success = 0, failed = 0;
-                        const errors: string[] = [];
-                        for (const row of f.preview) {
-                          const payload: Record<string, string> = {};
-                          for (const [k, v] of Object.entries(row)) {
-                            const lk = k.toLowerCase();
-                            if (lk.includes("name")) payload.name = v;
-                            if (lk.includes("admission") || lk.includes("adm")) payload.admission_number = v;
-                            if (lk.includes("class") || lk.includes("grade")) payload.class_name = v;
-                            if (lk.includes("gender") || lk.includes("sex")) payload.sex = v;
-                            if (lk.includes("stream")) payload.stream_name = v;
-                          }
-                          try {
-                            await apiRequest("/api/v1/students/", {
-                              method: "POST",
-                              body: JSON.stringify(payload),
-                            });
-                            success++;
-                          } catch (err: any) {
-                            failed++;
-                            errors.push(`Row ${success + failed}: ${err.message || "Error"}`);
-                          }
+                        try {
+                          const students = f.preview.map((row: Record<string, string>) => {
+                            const payload: Record<string, string> = {};
+                            for (const [k, v] of Object.entries(row)) {
+                              const lk = k.toLowerCase();
+                              if (lk.includes("name")) payload.name = v;
+                              if (lk.includes("admission") || lk.includes("adm")) payload.admission_number = v;
+                              if (lk.includes("class") || lk.includes("grade")) payload.class_name = v;
+                              if (lk.includes("gender") || lk.includes("sex")) payload.gender = v;
+                              if (lk.includes("stream")) payload.stream_name = v;
+                            }
+                            return payload as any;
+                          });
+                          const result = await bulkImportStudents(students);
+                          setImportResults({
+                            success: result.imported,
+                            failed: result.skipped,
+                            errors: result.errors.map(e => `Row ${e.row}: ${e.error}`),
+                          });
+                        } catch (err: any) {
+                          setImportResults({ success: 0, failed: f.preview.length, errors: [err.message || "Import failed"] });
                         }
-                        setImportResults({ success, failed, errors });
                         setImporting(false);
                       }}
                     >

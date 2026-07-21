@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { Users, BookOpen, MessageSquare, Save, CheckCircle, Star, UserPlus, FileText, Download, Eye } from "lucide-react";
+import { Users, BookOpen, MessageSquare, Save, CheckCircle, Star, UserPlus, FileText, Download, Eye, Trophy } from "lucide-react";
 import type { ConnectedData, TeacherClassInfo } from "../api";
-import { attendanceMark, submitAssessment, fetchTeacherClasses } from "../api";
+import { attendanceMark, submitAssessment, fetchTeacherClasses, saveReportRemarks, fetchClassRanking } from "../api";
 
 interface TeacherWorkspaceProps {
   view: string;
@@ -84,6 +84,8 @@ export function TeacherWorkspace({ view, data, onViewChange, onSendSms }: Teache
 
   const [remarks, setRemarks] = useState<Record<string, StudentRemark>>({});
   const [remarksSaved, setRemarksSaved] = useState(false);
+  const [ranking, setRanking] = useState<Array<{ student_id: number; student_name: string; average: number; grade: string; position: number | null }>>([]);
+  const [rankingLoading, setRankingLoading] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -200,13 +202,39 @@ export function TeacherWorkspace({ view, data, onViewChange, onSendSms }: Teache
   };
 
   const handleSaveRemarks = async (studentId: string) => {
+    const rem = remarks[studentId] ?? { conduct: "", effort: "", participation: "", generalRemarks: "" };
     setSaveStatus(p => ({ ...p, [`remark-${studentId}`]: "saving" }));
     try {
-      await new Promise(r => setTimeout(r, 500));
+      await saveReportRemarks({
+        student_id: parseInt(studentId, 10),
+        academic_year: data.school.academic_year,
+        term: data.school.term,
+        conduct: rem.conduct || undefined,
+        effort: rem.effort || undefined,
+        participation: rem.participation || undefined,
+        general_remarks: rem.generalRemarks || undefined,
+      });
       setSaveStatus(p => ({ ...p, [`remark-${studentId}`]: "saved" }));
       setTimeout(() => setSaveStatus(p => ({ ...p, [`remark-${studentId}`]: "" })), 2000);
     } catch {
       setSaveStatus(p => ({ ...p, [`remark-${studentId}`]: "" }));
+    }
+  };
+
+  const handleLoadRanking = async () => {
+    if (!classData) return;
+    setRankingLoading(true);
+    try {
+      const result = await fetchClassRanking(
+        classData.name,
+        data.school.academic_year,
+        data.school.term
+      );
+      setRanking(result);
+    } catch {
+      setRanking([]);
+    } finally {
+      setRankingLoading(false);
     }
   };
 
@@ -537,6 +565,57 @@ export function TeacherWorkspace({ view, data, onViewChange, onSendSms }: Teache
     );
   }
 
+  if (view === "Ranking") {
+    return (
+      <div className="content-grid">
+        <div className="welcome-banner">
+          <h2>Class Ranking</h2>
+          <p>View student positions based on assessment averages for the current term.</p>
+        </div>
+        <div className="table-panel glass-card">
+          <div className="office-filters">
+            {classesLoading ? (
+              <span style={{ color: "var(--muted)", fontSize: "0.85rem" }}>Loading classes\u2026</span>
+            ) : classSelector}
+            <button className="tool-button primary" onClick={handleLoadRanking} disabled={rankingLoading || !classData}>
+              <Trophy size={15} />{rankingLoading ? "Loading\u2026" : "Load Ranking"}
+            </button>
+          </div>
+          {ranking.length > 0 && (
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Position</th><th>Student</th><th>Average</th><th>Grade</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ranking.map((r, idx) => (
+                    <tr key={r.student_id} style={idx < 3 ? { background: idx === 0 ? "#fef9c3" : idx === 1 ? "#f0f0f0" : "#fff7ed" } : {}}>
+                      <td>
+                        <strong style={{ fontSize: "1rem" }}>
+                          {r.position === 1 ? "\ud83e\udd47" : r.position === 2 ? "\ud83e\udd48" : r.position === 3 ? "\ud83e\udd49" : `#${r.position}`}
+                        </strong>
+                      </td>
+                      <td><strong style={{ fontSize: "0.9rem" }}>{r.student_name}</strong></td>
+                      <td><strong>{r.average}</strong></td>
+                      <td><span className="badge info">{r.grade}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {ranking.length === 0 && !rankingLoading && (
+            <p className="empty-state" style={{ padding: 20 }}>
+              Select a class and click "Load Ranking" to view positions
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   if (view === "Student Register") {
     return (
       <div className="content-grid">
@@ -701,6 +780,7 @@ export function TeacherWorkspace({ view, data, onViewChange, onSendSms }: Teache
     { label: "Attendance", view: "Attendance", icon: <Users size={15} /> },
     { label: "Assessments", view: "Assessments", icon: <FileText size={15} /> },
     { label: "Report Remarks", view: "Report Remarks", icon: <Star size={15} /> },
+    { label: "Ranking", view: "Ranking", icon: <Trophy size={15} /> },
     { label: "Student Register", view: "Student Register", icon: <UserPlus size={15} /> },
     { label: "Messages", view: "Messages", icon: <MessageSquare size={15} /> },
   ];

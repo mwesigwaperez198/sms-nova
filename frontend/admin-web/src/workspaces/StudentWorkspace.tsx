@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { GraduationCap, BookOpen, LibraryBig, Camera, Download, ExternalLink, Calendar, FileText, Bell, Loader2 } from "lucide-react";
 import type { ConnectedData } from "../api";
-import { fetchStudentSelfData, apiRequest } from "../api";
+import { fetchStudentSelfData, apiRequest, downloadReportCardPDF } from "../api";
 import { downloadElement } from "../utils/exportUtils";
 import type { StudentSelfData } from "../types";
 
@@ -377,8 +377,14 @@ export function StudentWorkspace({ view, data, session }: StudentWorkspaceProps)
             <strong style={{ fontSize: "1.1rem" }}>{studentName}</strong>
             <p style={{ margin: "4px 0 0", opacity: 0.85, fontSize: "0.88rem" }}>{className} · {reportCards.length > 0 ? `${reportCards[0].term}, ${reportCards[0].academic_year}` : "Term 1, 2026"}</p>
           </div>
-          <button className="tool-button" style={{ marginLeft: "auto", background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)", color: "#fff" }} onClick={() => downloadElement("export-report-card", studentName.replace(/\s+/g, "-") + "-report-card.html")}>
-            <Download size={15} />Download
+          <button className="tool-button" style={{ marginLeft: "auto", background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)", color: "#fff" }} onClick={async () => {
+            if (reportCards.length > 0 && reportCards[0].id) {
+              try { await downloadReportCardPDF(reportCards[0].id); } catch { downloadElement("export-report-card", studentName.replace(/\s+/g, "-") + "-report-card.html"); }
+            } else {
+              downloadElement("export-report-card", studentName.replace(/\s+/g, "-") + "-report-card.html");
+            }
+          }}>
+            <Download size={15} />Download PDF
           </button>
         </div>
         <div id="export-report-card" className="table-panel glass-card">

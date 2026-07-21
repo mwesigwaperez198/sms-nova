@@ -230,6 +230,76 @@ def _run_migrations(db):
             db.rollback()
             logger.warning("Migration incidents: %s", e)
 
+    if "report_remarks" not in inspector.get_table_names():
+        try:
+            db.execute(text("""
+                CREATE TABLE report_remarks (
+                    id SERIAL PRIMARY KEY,
+                    student_id INTEGER NOT NULL REFERENCES students(id),
+                    school_id INTEGER NOT NULL REFERENCES schools(id),
+                    academic_year VARCHAR(20) NOT NULL,
+                    term VARCHAR(20) NOT NULL,
+                    conduct VARCHAR(50),
+                    effort VARCHAR(50),
+                    participation VARCHAR(50),
+                    general_remarks TEXT,
+                    teacher_id INTEGER REFERENCES users(id),
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    UNIQUE(student_id, academic_year, term)
+                )
+            """))
+            db.execute(text("CREATE INDEX idx_report_remarks_student_id ON report_remarks(student_id)"))
+            db.execute(text("CREATE INDEX idx_report_remarks_school_id ON report_remarks(school_id)"))
+            db.commit()
+            logger.info("Created report_remarks table")
+        except Exception as e:
+            db.rollback()
+            logger.warning("Migration report_remarks: %s", e)
+
+    if "subjects" not in inspector.get_table_names():
+        try:
+            db.execute(text("""
+                CREATE TABLE subjects (
+                    id SERIAL PRIMARY KEY,
+                    school_id INTEGER NOT NULL REFERENCES schools(id),
+                    name VARCHAR(100) NOT NULL,
+                    code VARCHAR(20),
+                    category VARCHAR(50),
+                    is_active BOOLEAN NOT NULL DEFAULT true,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    UNIQUE(school_id, name)
+                )
+            """))
+            db.execute(text("CREATE INDEX idx_subjects_school_id ON subjects(school_id)"))
+            db.commit()
+            logger.info("Created subjects table")
+        except Exception as e:
+            db.rollback()
+            logger.warning("Migration subjects: %s", e)
+
+    if "school_classes" not in inspector.get_table_names():
+        try:
+            db.execute(text("""
+                CREATE TABLE school_classes (
+                    id SERIAL PRIMARY KEY,
+                    school_id INTEGER NOT NULL REFERENCES schools(id),
+                    name VARCHAR(80) NOT NULL,
+                    section VARCHAR(80),
+                    capacity INTEGER,
+                    class_teacher_id INTEGER REFERENCES users(id),
+                    is_active BOOLEAN NOT NULL DEFAULT true,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    UNIQUE(school_id, name)
+                )
+            """))
+            db.execute(text("CREATE INDEX idx_school_classes_school_id ON school_classes(school_id)"))
+            db.commit()
+            logger.info("Created school_classes table")
+        except Exception as e:
+            db.rollback()
+            logger.warning("Migration school_classes: %s", e)
+
 
 def create_app() -> FastAPI:
     settings = get_settings()
