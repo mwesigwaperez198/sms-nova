@@ -234,66 +234,141 @@ export function SchoolsListPage({ onSelectSchool }: SchoolsListPageProps) {
       )}
 
       {activeTab === "pending" && (
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden">
+        <div className="space-y-3">
           {pendingRegs.length === 0 ? (
-            <div className="px-4 py-12 text-center">
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-12 text-center">
               <CheckCircle2 size={32} className="text-emerald-500/40 mx-auto mb-2" />
               <p className="text-zinc-400 dark:text-zinc-600 text-sm">All caught up — no pending registrations</p>
               <p className="text-zinc-300 dark:text-zinc-700 text-xs mt-1">New school registrations will appear here for review</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-zinc-200 dark:border-zinc-800 text-xs text-zinc-500 uppercase tracking-wider">
-                    <th className="text-left px-4 py-3 font-medium">School</th>
-                    <th className="text-left px-4 py-3 font-medium">Admin</th>
-                    <th className="text-left px-4 py-3 font-medium">Plan</th>
-                    <th className="text-left px-4 py-3 font-medium hidden md:table-cell">Payment</th>
-                    <th className="text-left px-4 py-3 font-medium hidden md:table-cell">Date</th>
-                    <th className="text-right px-4 py-3 font-medium">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pendingRegs.map((reg: any) => (
-                    <tr
-                      key={reg.id}
-                      onClick={() => setSelectedReg(reg)}
-                      className="border-b border-zinc-200/50 dark:border-zinc-800/50 hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30 cursor-pointer transition-colors"
-                    >
-                      <td className="px-4 py-3">
-                        <div className="font-medium text-zinc-900 dark:text-zinc-100">{reg.school_name}</div>
-                        <div className="text-xs text-zinc-500">{reg.admin_email}</div>
-                      </td>
-                      <td className="px-4 py-3 text-zinc-500 dark:text-zinc-400 text-xs">{reg.admin_name}</td>
-                      <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300 text-xs">{reg.plan_name || "—"}</td>
-                      <td className="px-4 py-3 text-zinc-500 text-xs hidden md:table-cell">{reg.payment_method || "—"}</td>
-                      <td className="px-4 py-3 text-zinc-500 text-xs hidden md:table-cell">
-                        {reg.created_at ? new Date(reg.created_at).toLocaleDateString() : "—"}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
-                          <button
-                            onClick={() => handleReject(reg.id)}
-                            disabled={rejectingId === reg.id}
-                            className="px-2 py-1 text-xs rounded-md bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-colors disabled:opacity-50"
-                          >
-                            {rejectingId === reg.id ? "..." : "Reject"}
-                          </button>
-                          <button
-                            onClick={() => handleApprove(reg.id, reg.school_name, reg.admin_email)}
-                            disabled={approvingId === reg.id}
-                            className="px-2 py-1 text-xs rounded-md bg-emerald-500 text-white hover:bg-emerald-600 transition-colors disabled:opacity-50"
-                          >
-                            {approvingId === reg.id ? "..." : "Approve"}
-                          </button>
+            <>
+              <div className="flex items-center gap-2 px-1">
+                <div className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
+                <span className="text-xs text-zinc-500 dark:text-zinc-400">{pendingRegs.length} registration{pendingRegs.length !== 1 ? "s" : ""} awaiting review</span>
+              </div>
+              {pendingRegs.map((reg: any) => {
+                const hasPayment = reg.payment_method && reg.payment_method !== "none";
+                const hasRef = reg.payment_details && reg.payment_details.trim().length > 0;
+                const daysAgo = reg.created_at ? Math.floor((Date.now() - new Date(reg.created_at).getTime()) / 86400000) : null;
+                const isUrgent = daysAgo !== null && daysAgo >= 2;
+
+                return (
+                  <div
+                    key={reg.id}
+                    onClick={() => setSelectedReg(reg)}
+                    className={`bg-white dark:bg-zinc-900 border rounded-xl overflow-hidden transition-all hover:shadow-lg hover:shadow-zinc-900/10 dark:hover:shadow-black/20 cursor-pointer ${
+                      isUrgent ? "border-amber-500/30 dark:border-amber-500/20" : "border-zinc-200 dark:border-zinc-800"
+                    }`}
+                  >
+                    <div className="flex items-stretch">
+                      <div className="flex-1 p-4 space-y-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-lg bg-indigo-500/10 dark:bg-indigo-500/20 flex items-center justify-center shrink-0">
+                              <Building2 size={18} className="text-indigo-500 dark:text-indigo-400" />
+                            </div>
+                            <div>
+                              <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{reg.school_name}</h3>
+                              <p className="text-xs text-zinc-500 dark:text-zinc-400">by {reg.admin_name}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            {isUrgent && (
+                              <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                                {daysAgo}d waiting
+                              </span>
+                            )}
+                            <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                              Pending
+                            </span>
+                          </div>
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          <div className="space-y-0.5">
+                            <div className="text-[10px] uppercase tracking-wider text-zinc-400 dark:text-zinc-600 font-medium">Email</div>
+                            <div className="text-xs text-zinc-700 dark:text-zinc-300 flex items-center gap-1">
+                              <Mail size={11} className="text-zinc-400 shrink-0" />
+                              <span className="truncate">{reg.admin_email}</span>
+                            </div>
+                          </div>
+                          {reg.admin_phone && (
+                            <div className="space-y-0.5">
+                              <div className="text-[10px] uppercase tracking-wider text-zinc-400 dark:text-zinc-600 font-medium">Phone</div>
+                              <div className="text-xs text-zinc-700 dark:text-zinc-300 flex items-center gap-1">
+                                <Phone size={11} className="text-zinc-400 shrink-0" />
+                                {reg.admin_phone}
+                              </div>
+                            </div>
+                          )}
+                          <div className="space-y-0.5">
+                            <div className="text-[10px] uppercase tracking-wider text-zinc-400 dark:text-zinc-600 font-medium">Plan</div>
+                            <div className="text-xs text-zinc-700 dark:text-zinc-300 flex items-center gap-1">
+                              <FileText size={11} className="text-zinc-400 shrink-0" />
+                              {reg.plan_name || "Not selected"}
+                            </div>
+                          </div>
+                          <div className="space-y-0.5">
+                            <div className="text-[10px] uppercase tracking-wider text-zinc-400 dark:text-zinc-600 font-medium">Registered</div>
+                            <div className="text-xs text-zinc-700 dark:text-zinc-300 flex items-center gap-1">
+                              <Clock size={11} className="text-zinc-400 shrink-0" />
+                              {reg.created_at ? new Date(reg.created_at).toLocaleDateString() : "—"}
+                            </div>
+                          </div>
+                        </div>
+
+                        {hasPayment && (
+                          <div className="flex items-center gap-2 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg px-3 py-2">
+                            <div className="flex items-center gap-1.5">
+                              {reg.payment_method?.includes("MTN") ? (
+                                <Smartphone size={12} className="text-amber-500" />
+                              ) : reg.payment_method?.includes("Airtel") ? (
+                                <Smartphone size={12} className="text-red-400" />
+                              ) : (
+                                <Landmark size={12} className="text-blue-400" />
+                              )}
+                              <span className="text-[11px] font-medium text-zinc-600 dark:text-zinc-400">{reg.payment_method}</span>
+                            </div>
+                            {hasRef && (
+                              <>
+                                <span className="text-zinc-300 dark:text-zinc-700">·</span>
+                                <span className="text-[11px] font-mono text-zinc-500 dark:text-zinc-400">{reg.payment_details}</span>
+                              </>
+                            )}
+                            {!hasRef && (
+                              <>
+                                <span className="text-zinc-300 dark:text-zinc-700">·</span>
+                                <span className="text-[11px] text-amber-500 dark:text-amber-400">No reference provided</span>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex flex-col items-center justify-center gap-2 px-4 border-l border-zinc-100 dark:border-zinc-800/50" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => handleApprove(reg.id, reg.school_name, reg.admin_email)}
+                          disabled={approvingId === reg.id}
+                          className="flex items-center gap-1.5 px-4 py-2 text-xs font-medium rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white transition-colors disabled:opacity-50 shadow-sm shadow-emerald-500/20"
+                        >
+                          <Check size={13} />
+                          {approvingId === reg.id ? "Approving..." : "Approve"}
+                        </button>
+                        <button
+                          onClick={() => handleReject(reg.id)}
+                          disabled={rejectingId === reg.id}
+                          className="flex items-center gap-1.5 px-4 py-2 text-xs rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 border border-zinc-200 dark:border-zinc-700 hover:border-red-500/30 transition-colors disabled:opacity-50"
+                        >
+                          <X size={13} />
+                          {rejectingId === reg.id ? "Rejecting..." : "Reject"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </>
           )}
         </div>
       )}
