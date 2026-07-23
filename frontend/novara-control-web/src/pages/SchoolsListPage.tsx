@@ -19,7 +19,7 @@ export function SchoolsListPage({ onSelectSchool }: SchoolsListPageProps) {
   const [selectedReg, setSelectedReg] = useState<any>(null);
   const [approvingId, setApprovingId] = useState<number | null>(null);
   const [rejectingId, setRejectingId] = useState<number | null>(null);
-  const [keyModal, setKeyModal] = useState<{ key: string; schoolName: string; email: string; emailSent: boolean; tempPassword?: string; apiKey?: string } | null>(null);
+  const [keyModal, setKeyModal] = useState<{ schoolName: string; email: string; emailSent: boolean; tempPassword?: string; apiKey?: string } | null>(null);
   const [copied, setCopied] = useState(false);
 
   const filtered = (schools ?? []).filter((s) => {
@@ -45,7 +45,7 @@ export function SchoolsListPage({ onSelectSchool }: SchoolsListPageProps) {
     setApprovingId(id);
     try {
       const res = await approveRegistration(id);
-      setKeyModal({ key: res.product_key, schoolName, email, emailSent: res.email_sent, tempPassword: res.temp_password, apiKey: res.api_key });
+      setKeyModal({ schoolName, email, emailSent: res.email_sent, tempPassword: res.temp_password, apiKey: res.api_key });
       refreshRegs();
       refresh();
     } catch (e: any) {
@@ -636,16 +636,6 @@ export function SchoolsListPage({ onSelectSchool }: SchoolsListPageProps) {
                   </div>
                 </div>
               )}
-
-              <div>
-                <div className="text-xs text-zinc-500 mb-1.5">Registration Key</div>
-                <div className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg p-3">
-                  <code className="text-sm text-zinc-800 dark:text-zinc-200 font-mono break-all flex-1">{keyModal.key}</code>
-                  <button onClick={() => { navigator.clipboard.writeText(keyModal.key); setCopied(true); setTimeout(() => setCopied(false), 2000); }} className="p-1 rounded text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 shrink-0">
-                    {copied ? <CheckCircle2 size={16} className="text-emerald-400" /> : <Copy size={16} />}
-                  </button>
-                </div>
-              </div>
             </div>
             <div className="px-5 py-4 border-t border-zinc-200 dark:border-zinc-800 flex justify-end">
               <button onClick={() => setKeyModal(null)} className="bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-medium rounded-lg px-4 py-2 transition-colors">

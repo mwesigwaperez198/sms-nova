@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { ShieldCheck, Server, AlertTriangle, CheckCircle, Clock, Activity, Settings, Ticket, Search, FileText, Key, CreditCard, Users, Eye, Ban, Check, X, Plus, RefreshCw, Trash2, Globe, Mail, Phone as PhoneIcon, Copy, ClipboardCheck, Building2, User, Calendar } from "lucide-react";
-import type { AuditLogItem, KeyItem, PlanItem, PlatformStats, RegistrationRequestItem, SchoolAdminItem, PlatformUserItem, ApiKeyItem, SystemCheckItem, AddSchoolPayload } from "../api";
+import type { AuditLogItem, KeyItem, PlanItem, PlatformStats, RegistrationRequestItem, SchoolAdminItem, SchoolDetail, PlatformUserItem, ApiKeyItem, SystemCheckItem, AddSchoolPayload } from "../api";
 import { printElement, exportAsCSV } from "../utils/exportUtils";
 import {
-  fetchPlatformStats, fetchPlatformSchools, toggleSchoolStatus,
+  fetchPlatformStats, fetchPlatformSchools, fetchSchoolDetail, toggleSchoolStatus,
   fetchRegistrations, approveRegistration,
   fetchPlans, createPlan,
   fetchKeys, generateKey,
@@ -177,6 +177,16 @@ export function SuperAdminWorkspace({ view, data, onViewChange }: SuperAdminWork
     const [addSchoolPayload, setAddSchoolPayload] = useState<Partial<AddSchoolPayload>>({});
     const [addSchoolNotice, setAddSchoolNotice] = useState<string | null>(null);
     const [addingSchool, setAddingSchool] = useState(false);
+    const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; school: SchoolAdminItem } | null>(null);
+    const [schoolDetail, setSchoolDetail] = useState<SchoolDetail | null>(null);
+    const [showDetail, setShowDetail] = useState(false);
+    const [copiedCode, setCopiedCode] = useState(false);
+    const [showKeyGen, setShowKeyGen] = useState(false);
+    const [keyGenSchool, setKeyGenSchool] = useState<SchoolAdminItem | null>(null);
+    const [keyGenPlan, setKeyGenPlan] = useState<number>(0);
+    const [keyGenResult, setKeyGenResult] = useState<string | null>(null);
+    const [generating, setGenerating] = useState(false);
+    const ctxRef = useRef<HTMLDivElement>(null);
 
     const handleAddSchool = async () => {
       if (!addSchoolPayload.name || !addSchoolPayload.admin_email || !addSchoolPayload.admin_name || !addSchoolPayload.plan_id) {
@@ -194,6 +204,54 @@ export function SuperAdminWorkspace({ view, data, onViewChange }: SuperAdminWork
         setAddSchoolNotice(e.message);
       } finally {
         setAddingSchool(false);
+      }
+    };
+
+    useEffect(() => {
+      const close = (e: MouseEvent) => {
+        if (ctxRef.current && !ctxRef.current.contains(e.target as Node)) setCtxMenu(null);
+      };
+      if (ctxMenu) document.addEventListener("mousedown", close);
+      return () => document.removeEventListener("mousedown", close);
+    }, [ctxMenu]);
+
+    const handleViewDetail = async (s: SchoolAdminItem) => {
+      setCtxMenu(null);
+      try {
+        const detail = await fetchSchoolDetail(s.id);
+        setSchoolDetail(detail);
+        setShowDetail(true);
+      } catch (e: any) {
+        alert(e.message);
+      }
+    };
+
+    const handleCopyCode = (code: string) => {
+      setCtxMenu(null);
+      navigator.clipboard.writeText(code);
+      setCopiedCode(true);
+      setTimeout(() => setCopiedCode(false), 2000);
+    };
+
+    const handleGenKey = (s: SchoolAdminItem) => {
+      setCtxMenu(null);
+      setKeyGenSchool(s);
+      setKeyGenPlan(0);
+      setKeyGenResult(null);
+      setShowKeyGen(true);
+    };
+
+    const handleGenKeySubmit = async () => {
+      if (!keyGenSchool || !keyGenPlan) return;
+      setGenerating(true);
+      try {
+        const result = await generateKey(keyGenSchool.id, keyGenPlan);
+        setKeyGenResult(result.product_key);
+        fetchPlatformSchools().then(setSchools);
+      } catch (e: any) {
+        setKeyGenResult("Error: " + e.message);
+      } finally {
+        setGenerating(false);
       }
     };
 
@@ -242,7 +300,7 @@ export function SuperAdminWorkspace({ view, data, onViewChange }: SuperAdminWork
               <thead><tr><th>Code</th><th>School Name</th><th>Contact</th><th>Students</th><th>Users</th><th>Status</th><th>Since</th><th>Actions</th></tr></thead>
               <tbody>
                 {filteredSchools.map(s => (
-                  <tr key={s.id}>
+                  <tr key={s.id} onContextMenu={e => { e.preventDefault(); setCtxMenu({ x: e.clientX, y: e.clientY, school: s }); }} style={{cursor:"context-menu"}}>
                     <td><code>{s.school_code}</code></td>
                     <td><strong>{s.name}</strong></td>
                     <td style={{fontSize:"0.82rem"}}>{s.email ?? "—"}</td>
@@ -265,6 +323,97 @@ export function SuperAdminWorkspace({ view, data, onViewChange }: SuperAdminWork
               </tbody>
             </table>
           </div>
+
+          {ctxMenu && (
+            <div ref={ctxRef} style={{position:"fixed",left:ctxMenu.x,top:ctxMenu.y,zIndex:1000,background:"var(--surface, #1e1e2e)",border:"1px solid var(--border, #333)",borderRadius:8,boxShadow:"0 8px 24px rgba(0,0,0,0.4)",padding:4,minWidth:180}}>
+              <div style={{padding:"6px 12px",fontSize:"0.75rem",color:"var(--muted,#888)",borderBottom:"1px solid var(--border,#333)",marginBottom:4}}>
+                <strong>{ctxMenu.school.name}</strong>
+              </div>
+              <button className="tool-button" style={{width:"100%",justifyContent:"flex-start",gap:8,padding:"7px 12px"}} onClick={() => handleViewDetail(ctxMenu.school)}>
+                <Eye size={14}/> View Details
+              </button>
+              {ctxMenu.school.subscription_status !== "suspended" ? (
+                <button className="tool-button" style={{width:"100%",justifyContent:"flex-start",gap:8,padding:"7px 12px",color:"var(--danger)"}} onClick={() => { setCtxMenu(null); toggleSchoolStatus(ctxMenu.school.id, "suspended").then(() => fetchPlatformSchools().then(setSchools)); }}>
+                  <Ban size={14}/> Suspend School
+                </button>
+              ) : (
+                <button className="tool-button" style={{width:"100%",justifyContent:"flex-start",gap:8,padding:"7px 12px",color:"#10b981"}} onClick={() => { setCtxMenu(null); toggleSchoolStatus(ctxMenu.school.id, "active").then(() => fetchPlatformSchools().then(setSchools)); }}>
+                  <Check size={14}/> Reactivate School
+                </button>
+              )}
+              <button className="tool-button" style={{width:"100%",justifyContent:"flex-start",gap:8,padding:"7px 12px"}} onClick={() => handleGenKey(ctxMenu.school)}>
+                <Key size={14}/> Generate Key
+              </button>
+              <button className="tool-button" style={{width:"100%",justifyContent:"flex-start",gap:8,padding:"7px 12px"}} onClick={() => handleCopyCode(ctxMenu.school.school_code)}>
+                {copiedCode ? <ClipboardCheck size={14} style={{color:"#10b981"}}/> : <Copy size={14}/>} Copy School Code
+              </button>
+            </div>
+          )}
+
+          {showDetail && schoolDetail && (
+            <div className="modal-overlay" onClick={() => setShowDetail(false)}>
+              <div className="modal-panel glass-card" onClick={e => e.stopPropagation()} style={{maxWidth:480,padding:24}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+                  <strong style={{fontSize:"1.1rem"}}>{schoolDetail.name}</strong>
+                  <button className="tool-button" onClick={() => setShowDetail(false)}><X size={16}/></button>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,fontSize:"0.85rem"}}>
+                  <div><span style={{color:"var(--muted)"}}>School Code</span><br/><code>{schoolDetail.school_code}</code></div>
+                  <div><span style={{color:"var(--muted)"}}>Status</span><br/><span className={`badge ${schoolDetail.subscription_status==="active" ? "success" : schoolDetail.subscription_status==="trial" ? "info" : "muted"}`}>{schoolDetail.subscription_status}</span></div>
+                  <div><span style={{color:"var(--muted)"}}>Email</span><br/>{schoolDetail.email || "—"}</div>
+                  <div><span style={{color:"var(--muted)"}}>Phone</span><br/>{schoolDetail.phone || "—"}</div>
+                  <div><span style={{color:"var(--muted)"}}>Address</span><br/>{schoolDetail.address || "—"}</div>
+                  <div><span style={{color:"var(--muted)"}}>Country</span><br/>{schoolDetail.country || "—"}</div>
+                  <div><span style={{color:"var(--muted)"}}>Admin</span><br/>{schoolDetail.admin_name || "—"}</div>
+                  <div><span style={{color:"var(--muted)"}}>Admin Email</span><br/>{schoolDetail.admin_email || "—"}</div>
+                  <div><span style={{color:"var(--muted)"}}>Students</span><br/>{schoolDetail.student_count}</div>
+                  <div><span style={{color:"var(--muted)"}}>Users</span><br/>{schoolDetail.user_count}</div>
+                  <div style={{gridColumn:"span 2"}}><span style={{color:"var(--muted)"}}>Created</span><br/>{new Date(schoolDetail.created_at).toLocaleString()}</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showKeyGen && keyGenSchool && (
+            <div className="modal-overlay" onClick={() => setShowKeyGen(false)}>
+              <div className="modal-panel glass-card" onClick={e => e.stopPropagation()} style={{maxWidth:420,padding:24}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+                  <strong>Generate Key — {keyGenSchool.name}</strong>
+                  <button className="tool-button" onClick={() => setShowKeyGen(false)}><X size={16}/></button>
+                </div>
+                {!keyGenResult ? (
+                  <div style={{display:"grid",gap:12}}>
+                    <label className="form-label">Plan
+                      <select value={keyGenPlan} onChange={e => setKeyGenPlan(Number(e.target.value))}>
+                        <option value={0}>Select plan</option>
+                        {plans.map(p => <option key={p.id} value={p.id}>{p.name} — UGX {p.price.toLocaleString()}</option>)}
+                      </select>
+                    </label>
+                    <button className="tool-button primary" disabled={!keyGenPlan || generating} onClick={handleGenKeySubmit}>{generating ? "Generating..." : "Generate Key"}</button>
+                  </div>
+                ) : (
+                  <div style={{display:"grid",gap:12}}>
+                    {keyGenResult.startsWith("Error") ? (
+                      <div style={{color:"var(--danger)",fontSize:"0.85rem"}}>{keyGenResult}</div>
+                    ) : (
+                      <>
+                        <div style={{padding:12,borderRadius:8,background:"rgba(16,185,129,0.1)",border:"1px solid rgba(16,185,129,0.2)"}}>
+                          <div style={{fontSize:"0.75rem",color:"var(--muted)",marginBottom:4}}>Registration Key</div>
+                          <div style={{display:"flex",alignItems:"center",gap:8}}>
+                            <code style={{fontSize:"0.9rem",wordBreak:"break-all",flex:1}}>{keyGenResult}</code>
+                            <button className="tool-button" onClick={() => { navigator.clipboard.writeText(keyGenResult); setCopiedCode(true); setTimeout(() => setCopiedCode(false), 2000); }}>
+                              {copiedCode ? <ClipboardCheck size={14} style={{color:"#10b981"}}/> : <Copy size={14}/>}
+                            </button>
+                          </div>
+                        </div>
+                        <button className="tool-button" onClick={() => setShowKeyGen(false)}>Done</button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );

@@ -869,18 +869,6 @@ def approve_registration(
             {"sid": school_id, "kh": key_hash, "kp": key_prefix, "uid": admin_user[0]},
         )
 
-    from app.models.registration import RegistrationKey
-    key_value = secrets_mod.token_hex(16).upper()
-    reg_key = RegistrationKey(
-        key=key_value,
-        school_name=school_name,
-        admin_email=admin_email,
-        plan_id=plan_id,
-    )
-    db.add(reg_key)
-    db.flush()
-    db.refresh(reg_key)
-
     db.execute(
         text("UPDATE registration_requests SET status = 'approved', updated_at = NOW() WHERE id = :id"),
         {"id": request_id},
@@ -907,7 +895,7 @@ def approve_registration(
             <div style="font-family:sans-serif;max-width:500px;margin:0 auto">
               <h2 style="color:#4f46e5">Welcome to NOVARA SMS</h2>
               <p>Hi <strong>{admin_name}</strong>,</p>
-              <p>Your school <strong>{school_name}</strong> has been approved and provisioned.</p>
+              <p>Your school <strong>{school_name}</strong> has been approved and is ready to use.</p>
               <div style="background:#f4f4f5;padding:16px;border-radius:10px;margin:20px 0">
                 <p style="margin:0 0 8px;font-weight:600">Login Credentials</p>
                 <p style="margin:0">Email: <code>{admin_email}</code></p>
@@ -922,6 +910,7 @@ def approve_registration(
                 <p style="margin:0;font-family:monospace;font-size:0.9rem;word-break:break-all">{raw_key}</p>
                 <p style="margin:8px 0 0;color:#666;font-size:0.85rem">Keep this key confidential. Use it to authenticate API requests.</p>
               </div>
+              <p style="margin:16px 0 0;font-weight:600">Log in at <a href="https://sms-nova.pages.dev">sms-nova.pages.dev</a> with the email and password above.</p>
               <p style="color:#999;margin-top:24px;font-size:0.8rem">Novara System Software LTD</p>
             </div>
             """,
@@ -930,13 +919,12 @@ def approve_registration(
         logger.error("Failed to send approval email: %s", e)
 
     return {
-        "product_key": reg_key.key,
         "school_id": school_id,
         "temp_password": temp_password,
         "api_key": raw_key,
         "email_sent": email_sent,
-        "message": f"Registration approved. School provisioned. Credentials emailed to {admin_email}." if email_sent
-                   else f"Registration approved. School provisioned. Email failed — copy credentials manually.",
+        "message": f"School provisioned. Login credentials emailed to {admin_email}. User can now log in with email + password." if email_sent
+                   else f"School provisioned. Email failed — copy credentials manually. Login: {admin_email} / {temp_password}",
     }
 
 
