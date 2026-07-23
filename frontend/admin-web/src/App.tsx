@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import type { ReactNode } from "react";
 import {
   ShieldCheck, Activity, AlertTriangle, TrendingUp, Printer, Download,
-  Users, BarChart3, Eye, RotateCcw, Camera, Scan, ArrowLeft
+  Users, BarChart3, Eye, RotateCcw, Camera, Scan, ArrowLeft, Smartphone
 } from "lucide-react";
 import {
   approvalDecision as submitApprovalDecision,
@@ -128,6 +128,22 @@ function App() {
   const [showSignUp, setShowSignUp] = useState(false);
   const [twoFactorChallenge, setTwoFactorChallenge] = useState<TwoFactorChallenge | null>(null);
   const [pendingFaceToken, setPendingFaceToken] = useState<string | null>(null);
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
+
+  useEffect(() => {
+    const handler = (e: any) => { e.preventDefault(); setInstallPrompt(e); setShowInstallBanner(true); };
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  const handleInstall = useCallback(async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === "accepted") setShowInstallBanner(false);
+    setInstallPrompt(null);
+  }, [installPrompt]);
 
   const activeRole = useMemo(() => roles.find((role) => role.key === roleKey) ?? roles[1], [roleKey]);
 
@@ -337,6 +353,14 @@ function App() {
       onOpenProfile={() => setShowProfile(true)}
     >
       {showProfile && session && <ProfileModal session={session} data={data} roleKey={roleKey} onClose={() => setShowProfile(false)} />}
+      {showInstallBanner && (
+        <div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 16px",margin:"0 16px",background:"rgba(99,102,241,0.12)",borderRadius:10,border:"1px solid rgba(99,102,241,0.2)"}}>
+          <Smartphone size={18} style={{color:"#818cf8",flexShrink:0}} />
+          <span style={{fontSize:"0.85rem",flex:1}}>Install NOVARA SMS on your device for quick access</span>
+          <button className="tool-button primary" onClick={handleInstall} style={{fontSize:"0.8rem"}}>Install</button>
+          <button className="tool-button" onClick={() => setShowInstallBanner(false)} style={{fontSize:"0.8rem"}}>Later</button>
+        </div>
+      )}
       {notice || connectionError ? <div className={connectionError ? "notice notice-error" : "notice"}>{connectionError ?? notice}</div> : null}
       {!data ? (
         <section className="panel">Loading connected dashboard...</section>

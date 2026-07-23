@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ShieldCheck, Server, AlertTriangle, CheckCircle, Clock, Activity, Settings, Ticket, Search, FileText, Key, CreditCard, Users, Eye, Ban, Check, X, Plus, RefreshCw, Trash2, Globe, Mail, Phone as PhoneIcon } from "lucide-react";
+import { ShieldCheck, Server, AlertTriangle, CheckCircle, Clock, Activity, Settings, Ticket, Search, FileText, Key, CreditCard, Users, Eye, Ban, Check, X, Plus, RefreshCw, Trash2, Globe, Mail, Phone as PhoneIcon, Copy, ClipboardCheck, Building2, User, Calendar } from "lucide-react";
 import type { AuditLogItem, KeyItem, PlanItem, PlatformStats, RegistrationRequestItem, SchoolAdminItem, PlatformUserItem, ApiKeyItem, SystemCheckItem, AddSchoolPayload } from "../api";
 import { printElement, exportAsCSV } from "../utils/exportUtils";
 import {
@@ -13,6 +13,18 @@ import {
   addSchool,
 } from "../api";
 import type { ConnectedData } from "../api";
+
+function copyToClipboard(text: string, onSuccess?: () => void) {
+  navigator.clipboard.writeText(text).then(() => onSuccess?.()).catch(() => {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    onSuccess?.();
+  });
+}
 
 interface SuperAdminWorkspaceProps {
   view: string;
@@ -260,11 +272,16 @@ export function SuperAdminWorkspace({ view, data, onViewChange }: SuperAdminWork
 
   // ===================== Registrations =====================
   if (view === "Registrations") {
-    const [regFilter, setRegFilter] = useState("");
+    const [regFilter, setRegFilter] = useState<"">("");
     const [approving, setApproving] = useState<number | null>(null);
     const [regNotice, setRegNotice] = useState<string | null>(null);
+    const [regTab, setRegTab] = useState<"pending" | "all">("pending");
+    const [selectedReg, setSelectedReg] = useState<RegistrationRequestItem | null>(null);
+    const [approvedResult, setApprovedResult] = useState<{ key: string; password: string; apiKey: string; schoolName: string } | null>(null);
+    const [copied, setCopied] = useState<string | null>(null);
 
-    const filtered = registrations.filter(r => !regFilter || r.status === regFilter);
+    const pendingRegs = registrations.filter(r => r.status === "pending");
+    const filtered = regTab === "pending" ? pendingRegs : registrations;
 
     const planName = (pid: number | null) => {
       if (!pid) return "—";
@@ -272,11 +289,23 @@ export function SuperAdminWorkspace({ view, data, onViewChange }: SuperAdminWork
       return p ? p.name : `Plan #${pid}`;
     };
 
+    const daysWaiting = (dateStr: string) => {
+      const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000);
+      return diff;
+    };
+
     const handleApprove = async (id: number) => {
       setApproving(id);
       try {
         const result = await approveRegistration(id);
         setRegNotice(result.message);
+        const reg = registrations.find(r => r.id === id);
+        setApprovedResult({
+          key: result.product_key,
+          password: "Check email for password",
+          apiKey: "Check email for API key",
+          schoolName: reg?.school_name ?? "School"
+        });
         fetchRegistrations().then(setRegistrations);
       } catch (e: any) {
         setRegNotice(e.message);
@@ -285,45 +314,159 @@ export function SuperAdminWorkspace({ view, data, onViewChange }: SuperAdminWork
       }
     };
 
+    const handleCopy = (text: string, label: string) => {
+      copyToClipboard(text, () => {
+        setCopied(label);
+        setTimeout(() => setCopied(null), 1500);
+      });
+    };
+
     return (
       <div className="content-grid">
+        {approvedResult && (
+          <div className="panel glass-card" style={{padding:20,marginBottom:16,borderLeft:"4px solid #10b981"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                <CheckCircle size={20} style={{color:"#10b981"}} />
+                <strong style={{fontSize:"1rem"}}>{approvedResult.schoolName} — Provisioned</strong>
+              </div>
+              <button className="tool-button" onClick={() => setApprovedResult(null)}><X size={14}/></button>
+            </div>
+            <p style={{fontSize:"0.85rem",color:"var(--muted)",margin:0}}>School created and credentials sent via email. Copy the key below:</p>
+            <div style={{display:"grid",gap:10,marginTop:12}}>
+              <div style={{display:"flex",alignItems:"center",gap:8,padding:"10px 14px",background:"rgba(255,255,255,0.04)",borderRadius:8,border:"1px solid rgba(255,255,255,0.08)"}}>
+                <Key size={15} style={{color:"var(--primary)",flexShrink:0}} />
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:"0.75rem",color:"var(--muted)"}}>Registration Key</div>
+                  <code style={{fontSize:"0.85rem",wordBreak:"break-all"}}>{approvedResult.key}</code>
+                </div>
+                <button className="tool-button" onClick={() => handleCopy(approvedResult.key, "key")} style={{flexShrink:0}}>
+                  {copied === "key" ? <ClipboardCheck size={14} style={{color:"#10b981"}}/> : <Copy size={14}/>}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="table-panel glass-card">
           <div className="office-filters">
-            <select value={regFilter} onChange={e => setRegFilter(e.target.value)} style={{padding:"4px 8px",borderRadius:4,background:"var(--surface)",color:"var(--text)",border:"1px solid var(--border)"}}>
-              <option value="">All</option>
-              <option value="pending">Pending</option>
-              <option value="approved">Approved</option>
-              <option value="rejected">Rejected</option>
-            </select>
+            <div style={{display:"flex",gap:4}}>
+              <button className={`tool-button ${regTab === "pending" ? "primary" : ""}`} onClick={() => setRegTab("pending")}>
+                Pending <span className="badge warning" style={{marginLeft:4}}>{pendingRegs.length}</span>
+              </button>
+              <button className={`tool-button ${regTab === "all" ? "primary" : ""}`} onClick={() => setRegTab("all")}>All Registrations</button>
+            </div>
             <span style={{fontSize:"0.85rem",color:"var(--muted)"}}>{filtered.length} registration(s)</span>
           </div>
           {regNotice && <div className="notice">{regNotice}</div>}
-          <div className="table-wrap">
-            <table>
-              <thead><tr><th>School</th><th>Admin</th><th>Plan</th><th>Payment</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
-              <tbody>
-                {filtered.map(r => (
-                  <tr key={r.id}>
-                    <td><strong>{r.school_name}</strong></td>
-                    <td>{r.admin_name}</td>
-                    <td style={{fontSize:"0.82rem"}}>{planName(r.plan_id)}</td>
-                    <td style={{fontSize:"0.82rem"}}>{r.payment_method}</td>
-                    <td><span className={`badge ${r.status==="approved" ? "success" : r.status==="pending" ? "warning" : "error"}`}>{r.status}</span></td>
-                    <td style={{fontSize:"0.82rem"}}>{new Date(r.created_at).toLocaleDateString()}</td>
-                    <td>
-                      {r.status === "pending" && (
-                        <button className="tool-button primary" disabled={approving === r.id} onClick={() => handleApprove(r.id)}>
-                          {approving === r.id ? "Approving..." : "Approve"}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-                {filtered.length === 0 && <tr><td colSpan={7} className="empty-state">No registrations</td></tr>}
-              </tbody>
-            </table>
-          </div>
+
+          {regTab === "pending" && pendingRegs.length > 0 && (
+            <div style={{display:"grid",gap:12,padding:"12px 0"}}>
+              {pendingRegs.map(r => {
+                const days = daysWaiting(r.created_at);
+                return (
+                  <div key={r.id} style={{padding:"16px 18px",background:"rgba(255,255,255,0.03)",borderRadius:12,border:"1px solid rgba(255,255,255,0.08)",display:"flex",alignItems:"flex-start",gap:14,cursor:"pointer"}} onClick={() => setSelectedReg(r)}>
+                    <div style={{width:44,height:44,borderRadius:10,background:"linear-gradient(135deg,#6366f1,#8b5cf6)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                      <Building2 size={22} style={{color:"#fff"}} />
+                    </div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+                        <strong style={{fontSize:"0.95rem"}}>{r.school_name}</strong>
+                        {days >= 2 && <span style={{fontSize:"0.7rem",padding:"2px 8px",borderRadius:10,background:"rgba(239,68,68,0.15)",color:"#fca5a5",fontWeight:600}}>{days}d waiting</span>}
+                      </div>
+                      <div style={{display:"flex",flexWrap:"wrap",gap:12,fontSize:"0.82rem",color:"var(--muted)"}}>
+                        <span style={{display:"flex",alignItems:"center",gap:4}}><User size={13}/> {r.admin_name}</span>
+                        <span style={{display:"flex",alignItems:"center",gap:4}}><Mail size={13}/> {r.admin_email}</span>
+                        <span style={{display:"flex",alignItems:"center",gap:4}}><CreditCard size={13}/> {r.payment_method}</span>
+                        <span style={{display:"flex",alignItems:"center",gap:4}}><Calendar size={13}/> {planName(r.plan_id)}</span>
+                      </div>
+                    </div>
+                    <div style={{display:"flex",gap:6,flexShrink:0}} onClick={e => e.stopPropagation()}>
+                      <button className="tool-button primary" disabled={approving === r.id} onClick={() => handleApprove(r.id)}>
+                        {approving === r.id ? "Approving..." : <><Check size={14}/>Approve</>}
+                      </button>
+                      <button className="tool-button" style={{color:"var(--danger)"}} onClick={() => {}}>
+                        <X size={14}/>Reject
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {regTab === "pending" && pendingRegs.length === 0 && (
+            <div style={{padding:40,textAlign:"center"}}>
+              <CheckCircle size={40} style={{color:"#10b981",marginBottom:10}} />
+              <p style={{fontSize:"0.95rem",fontWeight:600}}>All clear</p>
+              <p style={{fontSize:"0.85rem",color:"var(--muted)"}}>No pending registrations</p>
+            </div>
+          )}
+
+          {regTab === "all" && (
+            <div className="table-wrap">
+              <table>
+                <thead><tr><th>School</th><th>Admin</th><th>Plan</th><th>Payment</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+                <tbody>
+                  {filtered.map(r => (
+                    <tr key={r.id}>
+                      <td><strong>{r.school_name}</strong></td>
+                      <td>{r.admin_name}</td>
+                      <td style={{fontSize:"0.82rem"}}>{planName(r.plan_id)}</td>
+                      <td style={{fontSize:"0.82rem"}}>{r.payment_method}</td>
+                      <td><span className={`badge ${r.status==="approved" ? "success" : r.status==="pending" ? "warning" : "error"}`}>{r.status}</span></td>
+                      <td style={{fontSize:"0.82rem"}}>{new Date(r.created_at).toLocaleDateString()}</td>
+                      <td>
+                        {r.status === "pending" && (
+                          <button className="tool-button primary" disabled={approving === r.id} onClick={() => handleApprove(r.id)}>
+                            {approving === r.id ? "Approving..." : "Approve"}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  {filtered.length === 0 && <tr><td colSpan={7} className="empty-state">No registrations</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
+
+        {selectedReg && (
+          <div className="modal-overlay" onClick={() => setSelectedReg(null)}>
+            <div className="modal-panel" onClick={e => e.stopPropagation()} style={{maxWidth:480}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
+                <strong style={{fontSize:"1.05rem"}}>Registration Details</strong>
+                <button className="tool-button" onClick={() => setSelectedReg(null)}><X size={14}/></button>
+              </div>
+              <div style={{display:"grid",gap:10}}>
+                {[
+                  ["School", selectedReg.school_name],
+                  ["Admin", selectedReg.admin_name],
+                  ["Email", selectedReg.admin_email],
+                  ["Phone", selectedReg.admin_phone],
+                  ["Plan", planName(selectedReg.plan_id)],
+                  ["Payment", selectedReg.payment_method],
+                  ["Status", selectedReg.status],
+                  ["Submitted", new Date(selectedReg.created_at).toLocaleString()],
+                ].map(([label, val]) => (
+                  <div key={label} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+                    <span style={{fontSize:"0.82rem",color:"var(--muted)"}}>{label}</span>
+                    <span style={{fontSize:"0.88rem",fontWeight:500}}>{val}</span>
+                  </div>
+                ))}
+              </div>
+              {selectedReg.status === "pending" && (
+                <div style={{display:"flex",gap:8,marginTop:18}}>
+                  <button className="primary-button" disabled={approving === selectedReg.id} onClick={() => { handleApprove(selectedReg.id); setSelectedReg(null); }}>
+                    {approving === selectedReg.id ? "Approving..." : "Approve & Provision"}
+                  </button>
+                  <button className="secondary-button" onClick={() => setSelectedReg(null)}>Close</button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -341,6 +484,9 @@ export function SuperAdminWorkspace({ view, data, onViewChange }: SuperAdminWork
     const [apiSelectedSchool, setApiSelectedSchool] = useState("");
     const [apiKeyDesc, setApiKeyDesc] = useState("");
     const [isGenerating, setIsGenerating] = useState(false);
+    const [lastGeneratedKey, setLastGeneratedKey] = useState<string | null>(null);
+    const [lastGeneratedApiKey, setLastGeneratedApiKey] = useState<string | null>(null);
+    const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
     const filteredKeys = keys.filter(k => {
       if (keyFilter === "used") return k.is_used;
@@ -353,6 +499,7 @@ export function SuperAdminWorkspace({ view, data, onViewChange }: SuperAdminWork
       try {
         const result = await generateKey(Number(selectedSchool), Number(selectedPlan));
         setKeyNotice(result.message);
+        setLastGeneratedKey(result.product_key);
         setShowGenerate(false);
         fetchKeys().then(setKeys);
       } catch (e: any) {
@@ -370,6 +517,7 @@ export function SuperAdminWorkspace({ view, data, onViewChange }: SuperAdminWork
       try {
         const result = await generateApiKey(Number(apiSelectedSchool), apiKeyDesc || undefined);
         setKeyNotice(result.message);
+        setLastGeneratedApiKey(result.api_key);
         setShowApiGenerate(false);
         setApiKeyDesc("");
         loadApiKeys();
@@ -378,6 +526,13 @@ export function SuperAdminWorkspace({ view, data, onViewChange }: SuperAdminWork
       } finally {
         setIsGenerating(false);
       }
+    };
+
+    const handleCopyKey = (text: string, label: string) => {
+      copyToClipboard(text, () => {
+        setCopiedKey(label);
+        setTimeout(() => setCopiedKey(null), 1500);
+      });
     };
 
     const handleRevoke = async (id: number) => {
@@ -402,6 +557,20 @@ export function SuperAdminWorkspace({ view, data, onViewChange }: SuperAdminWork
             </div>
           </div>
           {keyNotice && <div className="notice">{keyNotice}</div>}
+
+          {lastGeneratedKey && (
+            <div className="panel glass-card" style={{padding:14,marginBottom:16,borderLeft:"4px solid #10b981",display:"flex",alignItems:"center",gap:10}}>
+              <Key size={16} style={{color:"#10b981",flexShrink:0}} />
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:"0.75rem",color:"var(--muted)"}}>Generated Product Key</div>
+                <code style={{fontSize:"0.88rem",wordBreak:"break-all"}}>{lastGeneratedKey}</code>
+              </div>
+              <button className="tool-button" onClick={() => handleCopyKey(lastGeneratedKey, "product")} style={{flexShrink:0}}>
+                {copiedKey === "product" ? <ClipboardCheck size={14} style={{color:"#10b981"}}/> : <Copy size={14}/>}
+              </button>
+              <button className="tool-button" onClick={() => setLastGeneratedKey(null)} style={{flexShrink:0}}><X size={14}/></button>
+            </div>
+          )}
 
           {keyTab === "product" && (
             <>
@@ -471,6 +640,20 @@ export function SuperAdminWorkspace({ view, data, onViewChange }: SuperAdminWork
                     <button className="primary-button" disabled={!apiSelectedSchool || isGenerating} onClick={handleApiGenerate}>{isGenerating ? "Generating..." : "Generate"}</button>
                     <button className="secondary-button" onClick={() => setShowApiGenerate(false)}>Cancel</button>
                   </div>
+                </div>
+              )}
+
+              {lastGeneratedApiKey && (
+                <div className="panel glass-card" style={{padding:14,marginBottom:16,borderLeft:"4px solid #10b981",display:"flex",alignItems:"center",gap:10}}>
+                  <Key size={16} style={{color:"#10b981",flexShrink:0}} />
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:"0.75rem",color:"var(--muted)"}}>Generated API Key</div>
+                    <code style={{fontSize:"0.88rem",wordBreak:"break-all"}}>{lastGeneratedApiKey}</code>
+                  </div>
+                  <button className="tool-button" onClick={() => handleCopyKey(lastGeneratedApiKey, "api")} style={{flexShrink:0}}>
+                    {copiedKey === "api" ? <ClipboardCheck size={14} style={{color:"#10b981"}}/> : <Copy size={14}/>}
+                  </button>
+                  <button className="tool-button" onClick={() => setLastGeneratedApiKey(null)} style={{flexShrink:0}}><X size={14}/></button>
                 </div>
               )}
 

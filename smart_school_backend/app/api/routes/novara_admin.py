@@ -129,6 +129,8 @@ def dashboard_stats(
 
 @router.get("/schools")
 def list_schools(
+    limit: int = 50,
+    offset: int = 0,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -146,7 +148,9 @@ def list_schools(
             LEFT JOIN school_subscriptions ss ON ss.school_id = s.id AND ss.status = 'active'
             LEFT JOIN subscription_plans sp ON sp.id = ss.plan_id
             ORDER BY s.created_at DESC
-        """)
+            LIMIT :limit OFFSET :offset
+        """),
+        {"limit": limit, "offset": offset},
     ).fetchall()
 
     return [
@@ -730,6 +734,8 @@ def toggle_maintenance(
 @router.get("/registrations")
 def list_registrations(
     status: str = "",
+    limit: int = 50,
+    offset: int = 0,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -743,11 +749,11 @@ def list_registrations(
         FROM registration_requests rr
         LEFT JOIN subscription_plans sp ON sp.id = rr.plan_id
     """
-    params = {}
+    params = {"limit": limit, "offset": offset}
     if status:
         q += " WHERE rr.status = :status"
         params["status"] = status
-    q += " ORDER BY rr.created_at DESC"
+    q += " ORDER BY rr.created_at DESC LIMIT :limit OFFSET :offset"
 
     rows = db.execute(text(q), params).fetchall()
 

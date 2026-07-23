@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { Lock, Shield, ArrowLeft } from "lucide-react";
+import { useState, useRef } from "react";
+import { Lock, Shield, ArrowLeft, Scan } from "lucide-react";
 import type { FaceChallenge, Session, TwoFactorChallenge } from "../api";
-import { verify2faLogin } from "../api";
+import { verify2faLogin, faceLogin } from "../api";
 import { roles } from "../data/mockData";
 import { NovaraLogo } from "./NovaraLogo";
 
@@ -25,6 +25,10 @@ export function LoginScreen({ loading, error, onLogin, onSession, onForgotPasswo
   const [twoFactorCode, setTwoFactorCode] = useState("");
   const [twoFactorError, setTwoFactorError] = useState<string | null>(null);
   const [twoFactorVerifying, setTwoFactorVerifying] = useState(false);
+  const [faceLoading, setFaceLoading] = useState(false);
+  const [faceError, setFaceError] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const effectiveChallenge = externalChallenge ?? null;
 
@@ -69,6 +73,35 @@ export function LoginScreen({ loading, error, onLogin, onSession, onForgotPasswo
       setTwoFactorError(err.message);
     } finally {
       setTwoFactorVerifying(false);
+    }
+  };
+
+  const handleFaceLogin = async () => {
+    if (!email) {
+      setFaceError("Enter your email first, then click Face Login.");
+      return;
+    }
+    setFaceLoading(true);
+    setFaceError(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: 320, height: 240 } });
+      const video = document.createElement("video");
+      video.srcObject = stream;
+      video.autoplay = true;
+      await new Promise<void>((resolve) => { video.onloadedmetadata = () => resolve(); });
+      await new Promise(r => setTimeout(r, 800));
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext("2d")!.drawImage(video, 0, 0);
+      stream.getTracks().forEach(t => t.stop());
+      const imageData = canvas.toDataURL("image/jpeg", 0.8);
+      const result = await faceLogin(email, imageData);
+      onSession(result);
+    } catch (err: any) {
+      setFaceError(err.message || "Face login failed. Make sure your face is registered.");
+    } finally {
+      setFaceLoading(false);
     }
   };
 
@@ -160,6 +193,7 @@ export function LoginScreen({ loading, error, onLogin, onSession, onForgotPasswo
           </div>
 
           {error && <div className="login-error"><span className="error-icon">⚠</span>{error}</div>}
+          {faceError && <div className="login-error"><span className="error-icon">⚠</span>{faceError}</div>}
 
           <div className="login-actions" style={{gridTemplateColumns:"1fr 1fr"}}>
             <button type="button" className={`secondary-button ${showDemo ? 'active' : ''}`} onClick={() => setShowDemo(!showDemo)}>
@@ -169,6 +203,10 @@ export function LoginScreen({ loading, error, onLogin, onSession, onForgotPasswo
               {loading ? <span className="button-with-spinner"><span className="spinner" /> Signing in...</span> : "Sign In"}
             </button>
           </div>
+
+          <button type="button" className="secondary-button" style={{width:"100%",marginTop:8,display:"flex",alignItems:"center",justifyContent:"center",gap:8}} onClick={handleFaceLogin} disabled={faceLoading || loading}>
+            {faceLoading ? <span className="button-with-spinner"><span className="spinner" /> Scanning face...</span> : <><Scan size={16} /> Login with Face</>}
+          </button>
         </form>
 
         <div className="login-help" style={{display:"grid",gap:8}}>

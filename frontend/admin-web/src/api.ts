@@ -219,6 +219,15 @@ export async function verifyFaceLogin(tempToken: string, imageData: string): Pro
   return mapUserToSession(result);
 }
 
+export async function faceLogin(email: string, imageData: string): Promise<Session> {
+  const result = await apiRequest<any>("/api/v1/face-auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email, image_data: imageData }),
+  });
+
+  return mapUserToSession(result);
+}
+
 export function clearSessionTokens(): void {
   sessionStorage.removeItem("novara_token");
   sessionStorage.removeItem("novara_refresh_token");

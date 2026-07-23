@@ -143,6 +143,17 @@ def list_schools(
     search: str = Query("", max_length=100),
     status: str = Query("", pattern=r"^(active|suspended|trial|expired|)$"),
 ) -> list[SchoolAdminRead]:
+    user_counts = dict(
+        db.query(User.school_id, sa_func.count(User.id))
+        .group_by(User.school_id)
+        .all()
+    )
+    student_counts = dict(
+        db.query(Student.school_id, sa_func.count(Student.id))
+        .group_by(Student.school_id)
+        .all()
+    )
+
     q = db.query(School)
     if search:
         q = q.filter(School.name.ilike(f"%{search}%") | School.email.ilike(f"%{search}%") | School.school_code.ilike(f"%{search}%"))
@@ -150,21 +161,21 @@ def list_schools(
         q = q.filter(School.subscription_status == status)
     q = q.order_by(School.created_at.desc())
 
-    results = []
-    for school in q.all():
-        results.append(SchoolAdminRead(
-            id=school.id,
-            name=school.name,
-            school_code=school.school_code,
-            email=school.email,
-            phone=school.phone,
-            address=school.address,
-            subscription_status=school.subscription_status,
-            user_count=db.query(sa_func.count(User.id)).filter(User.school_id == school.id).scalar() or 0,
-            student_count=db.query(sa_func.count(Student.id)).filter(Student.school_id == school.id).scalar() or 0,
-            created_at=school.created_at,
-        ))
-    return results
+    return [
+        SchoolAdminRead(
+            id=s.id,
+            name=s.name,
+            school_code=s.school_code,
+            email=s.email,
+            phone=s.phone,
+            address=s.address,
+            subscription_status=s.subscription_status,
+            user_count=user_counts.get(s.id, 0),
+            student_count=student_counts.get(s.id, 0),
+            created_at=s.created_at,
+        )
+        for s in q.all()
+    ]
 
 
 @router.get("/schools/{school_id}", response_model=SchoolDetail)
@@ -216,11 +227,13 @@ def list_registrations(
     db: Session = Depends(get_db),
     _user: User = Depends(role_required(RoleId.SUPER_ADMIN)),
     status: str = Query("", pattern=r"^(pending|approved|rejected|)$"),
+    limit: int = Query(50, le=200),
+    offset: int = Query(0, ge=0),
 ) -> list[RegistrationRequestRead]:
     q = db.query(RegistrationRequest)
     if status:
         q = q.filter(RegistrationRequest.status == status)
-    return q.order_by(RegistrationRequest.created_at.desc()).all()
+    return q.order_by(RegistrationRequest.created_at.desc()).offset(offset).limit(limit).all()
 
 
 @router.post("/registrations/{request_id}/approve", response_model=GenerateKeyResponse)

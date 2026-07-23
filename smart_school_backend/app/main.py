@@ -331,6 +331,7 @@ def create_app() -> FastAPI:
 
     @app.middleware("http")
     async def maintenance_and_security(request: Request, call_next) -> Response:
+        import time as _time
         path = request.url.path
         allowed_during_maintenance = (
             path.startswith("/api/health")
@@ -343,20 +344,25 @@ def create_app() -> FastAPI:
         )
         if not allowed_during_maintenance:
             try:
-                from sqlalchemy import text
-                with _engine.connect() as conn:
-                    row = conn.execute(
-                        text("SELECT value FROM system_settings WHERE key = 'maintenance_mode'")
-                    ).one_or_none()
-                    if row and row[0] == "true":
-                        from fastapi.responses import JSONResponse
-                        return JSONResponse(
-                            status_code=503,
-                            content={
-                                "detail": "System is currently under maintenance. Please try again later.",
-                                "maintenance": True,
-                            },
-                        )
+                now = _time.monotonic()
+                cached = getattr(app.state, "_maintenance_cache", None)
+                if cached and now - cached[1] < 60:
+                    is_maint = cached[0]
+                else:
+                    with _engine.connect() as conn:
+                        row = conn.execute(
+                            text("SELECT value FROM system_settings WHERE key = 'maintenance_mode'")
+                        ).one_or_none()
+                        is_maint = row and row[0] == "true"
+                    app.state._maintenance_cache = (is_maint, now)
+                if is_maint:
+                    return JSONResponse(
+                        status_code=503,
+                        content={
+                            "detail": "System is currently under maintenance. Please try again later.",
+                            "maintenance": True,
+                        },
+                    )
             except Exception:
                 pass
 

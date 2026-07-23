@@ -220,26 +220,30 @@ def fee_balances(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_active_subscription),
 ):
-    students = db.query(Student).filter(Student.school_id == current_user.school_id).all()
+    from sqlalchemy import text
+
+    rows = db.execute(
+        text("""
+            SELECT s.id, s.name,
+                   COALESCE(SUM(i.amount), 0) AS total_invoiced,
+                   COALESCE(SUM(p.amount), 0) AS total_paid
+            FROM students s
+            LEFT JOIN invoices i ON i.student_id = s.id
+            LEFT JOIN payments p ON p.student_id = s.id
+            WHERE s.school_id = :sid
+            GROUP BY s.id, s.name
+        """),
+        {"sid": current_user.school_id},
+    ).fetchall()
     result = []
-    for s in students:
-        total_inv = (
-            db.query(func.coalesce(func.sum(Invoice.amount), 0))
-            .filter(Invoice.student_id == s.id)
-            .scalar()
-        )
-        total_paid = (
-            db.query(func.coalesce(func.sum(Payment.amount), 0))
-            .filter(Payment.student_id == s.id)
-            .scalar()
-        )
-        balance = float(total_inv) - float(total_paid)
+    for r in rows:
+        balance = float(r[2]) - float(r[3])
         if balance > 0:
             result.append({
-                "student_id": s.id,
-                "student_name": s.name,
-                "total_invoiced": float(total_inv),
-                "total_paid": float(total_paid),
+                "student_id": r[0],
+                "student_name": r[1],
+                "total_invoiced": float(r[2]),
+                "total_paid": float(r[3]),
                 "balance": balance,
             })
     return result

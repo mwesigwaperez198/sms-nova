@@ -233,9 +233,12 @@ def list_leave_requests(
     leaves = q.order_by(LeaveModel.start_date.desc()).all()
 
     role_map = {r.id: r.name for r in db.query(Role).all()}
+    user_ids = list({lv.user_id for lv in leaves})
+    users = db.query(User).filter(User.id.in_(user_ids)).all() if user_ids else []
+    user_map = {u.id: u for u in users}
     result = []
     for lv in leaves:
-        staff = db.get(User, lv.user_id)
+        staff = user_map.get(lv.user_id)
         result.append(LeaveRequest(
             id=lv.id,
             staff_name=staff.name if staff else "Unknown",
